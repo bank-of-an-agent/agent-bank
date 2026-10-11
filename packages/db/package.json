@@ -1,0 +1,24 @@
+{
+  "name": "@agentbank/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PostgreSQL access for Agent Bank: a small SqlClient over node-postgres or PGlite, serializable transactions with retry, and SQL migrations.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "migrate": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
+  }
+}

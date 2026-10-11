@@ -1,0 +1,62 @@
+# Build context for the root Dockerfile. The pruner stage copies the whole context, so
+# keep it small, deterministic and free of anything secret.
+
+# VCS, CI and editor metadata
+.git
+.github
+.gitignore
+.gitattributes
+.vscode
+.idea
+**/.DS_Store
+**/*.swp
+
+# Dependencies and build artefacts: rebuilt inside the image
+**/node_modules
+**/.pnpm-store
+**/.turbo
+**/dist
+**/.next
+**/out
+**/coverage
+**/.nyc_output
+**/*.tsbuildinfo
+**/.vercel
+**/.cache
+
+# Nix / direnv
+.direnv
+.envrc
+result
+result-*
+
+# Secrets and local configuration: never baked into images (use Secrets Manager)
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.keystore
+**/secrets
+**/.secrets
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+
+# Not needed to build or run the Node services
+infra
+contracts/out
+contracts/cache
+contracts/broadcast
+contracts/lib
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform
+
+# The Dockerfile itself (BuildKit reads it separately; keeps edits from busting COPY caches)
+Dockerfile
+.dockerignore

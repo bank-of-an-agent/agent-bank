@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+**/dist
+**/.next
+**/coverage
+**/.turbo
+**/.vitepress/cache
+**/.vitepress/dist
+infra/**/.terraform
+docs/design.md

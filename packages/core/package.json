@@ -1,0 +1,26 @@
+{
+  "name": "@agentbank/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared primitives for Agent Bank: money, ids, errors, chains, EIP-712 messages, HTTP message signatures and the public API contract.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "openapi": "tsx scripts/generate-openapi.ts"
+  },
+  "dependencies": {
+    "viem": "^2.57.4",
+    "zod": "^4.6.6",
+    "@noble/hashes": "^2.4.0"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2"
+  }
+}
