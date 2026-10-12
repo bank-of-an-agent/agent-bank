@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Agent Bank mark">
+  <defs>
+    <linearGradient id="mark-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#13203F"/>
+      <stop offset="1" stop-color="#070B16"/>
+    </linearGradient>
+    <linearGradient id="mark-ring" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#5B8CFF"/>
+      <stop offset="1" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <radialGradient id="mark-glow" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#4C7DFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#4C7DFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#mark-bg)"/>
+  <rect width="512" height="512" rx="116" fill="url(#mark-glow)"/>
+  <rect x="5" y="5" width="502" height="502" rx="111" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="3"/>
+  <g stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="6" stroke-linecap="round">
+    <line x1="256" y1="152" x2="256" y2="166"/>
+    <line x1="346" y1="204" x2="334" y2="211"/>
+    <line x1="346" y1="308" x2="334" y2="301"/>
+    <line x1="256" y1="360" x2="256" y2="346"/>
+    <line x1="166" y1="308" x2="178" y2="301"/>
+    <line x1="166" y1="204" x2="178" y2="211"/>
+  </g>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="url(#mark-ring)" stroke-width="30"/>
+  <circle cx="256" cy="236" r="40" fill="#EEF2FA"/>
+  <path d="M236 262 H276 L290 322 Q292 332 282 332 H230 Q220 332 222 322 Z" fill="#EEF2FA"/>
+  <circle cx="256" cy="106" r="27" fill="#F5B947" stroke="#0A1022" stroke-width="10"/>
+  <circle cx="385.9" cy="331" r="27" fill="#2DD4BF" stroke="#0A1022" stroke-width="10"/>
+  <circle cx="126.1" cy="331" r="27" fill="#A78BFA" stroke="#0A1022" stroke-width="10"/>
+</svg>
