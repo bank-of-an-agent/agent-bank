@@ -1,0 +1,45 @@
+{
+  "name": "@agentbank/proofs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private proofs for Agent Bank (schema agentbank.claims.v1): attested-facts Merkle tree, proof requests, the Groth16 prover and verifier, root resolvers, a stateless HTTP proof gate and the agentbank-prove CLI.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "agentbank-prove": "./bin/agentbank-prove.mjs"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./field": "./src/field.ts",
+    "./tree": "./src/tree.ts",
+    "./request": "./src/request.ts",
+    "./verifier": "./src/verifier.ts",
+    "./http": "./src/http.ts",
+    "./prover": "./src/prover.ts",
+    "./artifacts": "./src/artifacts.ts",
+    "./cli": "./src/cli.ts",
+    "./verification_key.json": "./artifacts/verification_key.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "vectors": "tsx scripts/generate-vectors.ts",
+    "sync-circuits": "scripts/sync-circuits.sh",
+    "prove": "node bin/agentbank-prove.mjs"
+  },
+  "dependencies": {
+    "@agentbank/core": "workspace:*",
+    "@noble/hashes": "^2.4.0",
+    "poseidon-lite": "0.3.0",
+    "snarkjs": "0.7.6",
+    "tsx": "^4.23.15",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2"
+  }
+}

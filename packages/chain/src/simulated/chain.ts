@@ -18,8 +18,15 @@ import {
 import { accountFactoryArgs, predictAccountAddress, wrapSetupSafe } from "../account";
 import { erc20Abi } from "../abis";
 import {
+  parseAttestationRoot,
+  publishAttestationRootCall,
+  revokeAttestationRootsCall,
+  toAttestationRootInfo,
+} from "../attestations";
+import {
   DEFAULT_OWNER_OP_TTL_SECONDS,
   DEFAULT_SESSION_OP_TTL_SECONDS,
+  SIMULATED_ATTESTER,
   SIMULATED_CONTRACTS,
 } from "../constants";
 import { decodeCalls } from "../decode";
@@ -30,6 +37,7 @@ import { stubOwnerSignature, stubSessionSignature } from "../signing";
 import { logInvolves, normalizeLog, sortLogs, type RawLog } from "../logs";
 import type {
   AccountDeployment,
+  AttestationRootInfo,
   BlockRef,
   BlockTag,
   ChainContracts,
@@ -41,12 +49,16 @@ import type {
   PreparedOperation,
   PrepareOperationInput,
   PrepareOwnerOperationInput,
+  PublishAttestationRootInput,
   RelayCallInput,
+  RevokeAttestationRootsInput,
   SettleAuthorizationInput,
   SubmitOperationInput,
+  TransactionReceiptInfo,
 } from "../types";
 import { checkPreparedOperation, decodePreparedOperation, hashUserOperation } from "../userop";
 import { SimAccounts, type SimAccountRecord } from "./accounts";
+import { SimAttestationRegistry } from "./attestationRegistry";
 import { ecrecover, splitSignature } from "./ecdsa";
 import { OperationRejected, SimEntryPoint } from "./entryPoint";
 import { SimEscrow, type SimEscrowRecord } from "./escrow";
@@ -66,6 +78,11 @@ export const SIMULATED_PAYMASTER: Address = getAddress("0x0000000000000000000000
 export const SIMULATED_RELAYER: Address = getAddress("0x00000000000000000000000000000000000fee02");
 /** `from` of faucet mints. */
 export const SIMULATED_FAUCET: Address = getAddress("0x00000000000000000000000000000000000fee03");
+/**
+ * Default owner (admin) of the simulated `AgentAttestationRegistry`: stands in for the governance
+ * multisig (revokes roots, rotates the attester). Send its calls with `sendTransaction`.
+ */
+export const SIMULATED_ADMIN: Address = getAddress("0x00000000000000000000000000000000000fee04");
 
 const ERC6492_SUFFIX = "6492649264926492649264926492649264926492649264926492649264926492";
 
@@ -92,6 +109,13 @@ export interface SimulatedChainOptions {
   automine?: boolean;
   /** Sponsor operations with {@link SIMULATED_PAYMASTER}, like production's Pimlico paymaster (default true). */
   sponsor?: boolean;
+  /**
+   * Attester of the `AgentAttestationRegistry` (default {@link SIMULATED_ATTESTER}, the address of
+   * the public `SIMULATED_ATTESTER_KEY`; sign with `simulatedAttesterAccount(1337)`).
+   */
+  attester?: Address;
+  /** Owner (admin) of the `AgentAttestationRegistry` (default {@link SIMULATED_ADMIN}). */
+  registryOwner?: Address;
 }
 
 /** Options of {@link SimulatedChain.injectReorg}. */
@@ -165,8 +189,9 @@ function mulberry32(seed: number): () => number {
  * Safe7579 accounts (counterfactual addresses identical to production), the owner path
  * (OwnableValidator) and the session path (Smart Sessions + 2-of-2 OwnableValidator with Agent
  * Bank's policies), AgentPolicyHook, USDC with EIP-3009/EIP-2612, AgentEscrow, PaymentStreams,
- * TimeLockVaults and TopUpExecutor, blocks with `latest`/`safe`/`finalized` tags, time control and
- * reorg injection. `gateway` implements {@link ChainGateway}.
+ * TimeLockVaults, TopUpExecutor and the AgentAttestationRegistry (private-proof roots; the claims
+ * verifier is not modeled), blocks with `latest`/`safe`/`finalized` tags, time control and reorg
+ * injection. `gateway` implements {@link ChainGateway}.
  */
 export class SimulatedChain {
   readonly chainId: number;
@@ -186,6 +211,7 @@ export class SimulatedChain {
   readonly vaults: SimVaults;
   readonly hook: SimPolicyHook;
   readonly topUp: SimTopUp;
+  readonly attestations: SimAttestationRegistry;
   readonly smartSessions: SimSmartSessions;
   readonly accounts: SimAccounts;
   private readonly entryPoint: SimEntryPoint;
@@ -247,6 +273,11 @@ export class SimulatedChain {
       this.required(c.topUpExecutor, "topUpExecutor"),
       (ctx, executor, account, callData) =>
         this.accounts.executeFromExecutor(ctx, executor, account, callData),
+    );
+    this.attestations = new SimAttestationRegistry(
+      this.world,
+      this.required(c.attestationRegistry, "attestationRegistry"),
+      { owner: options.registryOwner ?? SIMULATED_ADMIN, attester: options.attester ?? SIMULATED_ATTESTER },
     );
     this.smartSessions = new SimSmartSessions(this.world, c.smartSessions, c);
     this.accounts = new SimAccounts(this.world, c, this.hook, {
@@ -344,6 +375,7 @@ export class SimulatedChain {
       c.vaults,
       c.policyHook,
       c.topUpExecutor,
+      c.attestationRegistry,
       c.smartSessions,
       c.ownableValidator,
       c.entryPoint,
@@ -360,6 +392,7 @@ export class SimulatedChain {
     if (t === this.streams.address.toLowerCase()) return this.streams.handle(ctx, from, data);
     if (t === this.vaults.address.toLowerCase()) return this.vaults.handle(ctx, from, data);
     if (t === this.topUp.address.toLowerCase()) return this.topUp.handle(ctx, from, data);
+    if (t === this.attestations.address.toLowerCase()) return this.attestations.handle(ctx, from, data);
     if (t === this.smartSessions.address.toLowerCase()) return this.smartSessions.handle(ctx, from, data);
     if (t === this.hook.address.toLowerCase()) return this.hook.handle(ctx, from, data);
     if (t === this.contracts.ownableValidator.toLowerCase())
@@ -863,10 +896,10 @@ export class SimulatedChain {
     return userOpHash;
   }
 
-  /** @internal Relay an EOA call (dry-run first; reverts throw). */
-  _relay(from: Address, to: Address, data: Hex): Hex {
+  /** @internal Send an EOA call from a bank key (dry-run first; reverts throw), e.g. a relay or the attester. */
+  _relay(from: Address, to: Address, data: Hex, label = "relay"): Hex {
     const tx: SimTx = {
-      hash: this.nextTxHash("relay", concatHex([from, to, data])),
+      hash: this.nextTxHash(label, concatHex([from, to, data])),
       intent: { kind: "call", from, to, data },
     };
     const result = this.dryRun(tx);
@@ -1206,6 +1239,44 @@ class SimulatedGateway implements ChainGateway {
     assertRelayableCall(input.call, this.contracts);
     const from = input.relayer?.address ?? SIMULATED_RELAYER;
     return { txHash: this.chain._relay(getAddress(from), getAddress(input.call.to), input.call.data) };
+  }
+
+  async publishAttestationRoot(input: PublishAttestationRootInput): Promise<{ txHash: Hex }> {
+    assertTestnet(this.chainId);
+    const { root, epoch, snapshotAt, validUntil, leafCount } = input;
+    const call = publishAttestationRootCall({
+      registry: this.chain.attestations.address,
+      root,
+      epoch,
+      snapshotAt,
+      validUntil,
+      leafCount,
+    });
+    return {
+      txHash: this.chain._relay(getAddress(input.attester.address), call.to, call.data, "attester"),
+    };
+  }
+
+  async revokeAttestationRoots(input: RevokeAttestationRootsInput): Promise<{ txHash: Hex }> {
+    assertTestnet(this.chainId);
+    const call = revokeAttestationRootsCall({
+      registry: this.chain.attestations.address,
+      roots: input.roots,
+    });
+    return {
+      txHash: this.chain._relay(getAddress(input.attester.address), call.to, call.data, "attester"),
+    };
+  }
+
+  async getAttestationRoot(root: Hex): Promise<AttestationRootInfo | null> {
+    const r = parseAttestationRoot(root);
+    const registry = this.chain.attestations;
+    return toAttestationRootInfo(registry.rootInfo(r), registry.isValidRoot(r, this.chain.head.timestamp));
+  }
+
+  async getTransactionReceipt(hash: Hex): Promise<TransactionReceiptInfo | null> {
+    const tx = this.chain.transaction(hash);
+    return tx ? { status: tx.success ? "success" : "reverted", blockNumber: tx.blockNumber } : null;
   }
 
   async authorizationState(token: Address, authorizer: Address, nonce: Hex): Promise<boolean> {

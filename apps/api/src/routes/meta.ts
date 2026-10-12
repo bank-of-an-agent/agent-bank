@@ -19,6 +19,8 @@ const CONTRACT_KEYS: Record<string, string> = {
   policyHook: "policy_hook",
   topUpExecutor: "top_up_executor",
   sweepExecutor: "sweep_executor",
+  attestationRegistry: "attestation_registry",
+  claimsVerifier: "claims_verifier",
 };
 
 export const metaHandlers: Pick<Handlers, "health" | "getMeta"> = {

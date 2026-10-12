@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  getAddress,
   toEventSelector,
   toFunctionSelector,
   type Abi,
@@ -10,6 +11,8 @@ import {
   type AbiParameter,
 } from "viem";
 import {
+  agentAttestationRegistryAbi,
+  agentClaimsVerifierAbi,
   agentEscrowAbi,
   agentPolicyHookAbi,
   contractsFromDeployment,
@@ -62,6 +65,13 @@ function check(name: string, typed: Abi): void {
           `${name} event ${item.name} indexed`,
         ).toEqual(item.inputs.map((i) => Boolean(i.indexed)));
         expect(match?.inputs.map((i) => i.name)).toEqual(item.inputs.map((i) => i.name));
+      } else if (item.type === "error") {
+        const match = abi.find(
+          (x): x is Extract<Abi[number], { type: "error" }> =>
+            x.type === "error" && x.name === item.name && canonical(x.inputs) === canonical(item.inputs),
+        );
+        expect(match, `${name} error ${item.name}(${canonical(item.inputs)})`).toBeDefined();
+        expect(match?.inputs.map((i) => i.name)).toEqual(item.inputs.map((i) => i.name));
       }
     }
   });
@@ -74,6 +84,8 @@ describe("typed ABIs match the contracts repository's exported ABIs", () => {
   check("AgentPolicyHook", agentPolicyHookAbi);
   check("TopUpExecutor", topUpExecutorAbi);
   check("SweepExecutor", sweepExecutorAbi);
+  check("AgentAttestationRegistry", agentAttestationRegistryAbi);
+  check("AgentClaimsVerifier", agentClaimsVerifierAbi);
   // MockUSDC mirrors FiatToken v2.2 on Anvil: our whole USDC surface must exist there too.
   check("MockUSDC", erc20Abi);
 
@@ -86,6 +98,19 @@ describe("typed ABIs match the contracts repository's exported ABIs", () => {
 });
 
 describe("deployment files", () => {
+  it("map the private-proof contracts", () => {
+    const contracts = contractsFromDeployment(baseSepoliaContracts(), {
+      chainId: 84532,
+      contracts: {
+        AgentAttestationRegistry: "0x000000000000000000000000000000000000a77e",
+        AgentClaimsVerifier: "0x000000000000000000000000000000000000c1a1",
+      },
+    });
+    expect(contracts.attestationRegistry).toBe(getAddress("0x000000000000000000000000000000000000a77e"));
+    expect(contracts.claimsVerifier).toBe(getAddress("0x000000000000000000000000000000000000c1a1"));
+    expect(contracts.escrow).toBeUndefined();
+  });
+
   const files = existsSync(join(dir, "deployments")) ? readdirSync(join(dir, "deployments")) : [];
   it.skipIf(files.length === 0)("load into ChainContracts", () => {
     for (const f of files.filter((x) => x.endsWith(".json"))) {

@@ -1,17 +1,30 @@
 import {
   encodeAbiParameters,
+  encodeErrorResult,
   getAddress,
   toEventSelector,
+  type Abi,
   type AbiEvent,
   type AbiParameter,
   type Address,
+  type ContractErrorArgs,
+  type ContractErrorName,
+  type EncodeErrorResultParameters,
   type Hex,
 } from "viem";
+import { formatContractError } from "../attestations";
 import type { Journal } from "./journal";
 
 /** A revert inside the simulator (the EVM `revert`). */
 export class SimRevert extends Error {
-  constructor(readonly reason: string) {
+  /**
+   * @param reason Human-readable reason (`Name(arg, ...)` for custom errors).
+   * @param data ABI-encoded revert data, when the revert is a custom error from an ABI.
+   */
+  constructor(
+    readonly reason: string,
+    readonly data?: Hex,
+  ) {
     super(reason);
     this.name = "SimRevert";
   }
@@ -20,6 +33,20 @@ export class SimRevert extends Error {
 /** Revert with `reason`. */
 export function revert(reason: string): never {
   throw new SimRevert(reason);
+}
+
+/**
+ * Revert with a custom error of `abi`, exactly as Solidity's `revert Name(args)`: the data is the
+ * ABI-encoded error and the reason is `Name(arg, ...)` (see `formatContractError`).
+ */
+export function revertWith<const abi extends Abi, name extends ContractErrorName<abi>>(
+  abi: abi,
+  errorName: name,
+  ...args: ContractErrorArgs<abi, name> extends readonly [] ? [] : [ContractErrorArgs<abi, name>]
+): never {
+  const values = (args[0] ?? []) as readonly unknown[];
+  const data = encodeErrorResult({ abi, errorName, args: values } as unknown as EncodeErrorResultParameters);
+  throw new SimRevert(formatContractError(errorName, values), data);
 }
 
 /** `require(condition, reason)`. */

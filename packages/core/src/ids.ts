@@ -36,6 +36,7 @@ export const ID_PREFIXES = {
   audit: "aud",
   x402: "x4p",
   ownerOperation: "oop",
+  proofReservation: "prv",
 } as const;
 
 export type IdKind = keyof typeof ID_PREFIXES;

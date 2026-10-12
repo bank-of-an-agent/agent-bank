@@ -99,6 +99,33 @@ export const ownerPayloads = {
     subject: accountId,
     payload: { account_id: accountId, spend_key_address: spendKeyAddress },
   }),
+  /**
+   * `PUT /v1/agents/{id}/proofs/settings` when the change widens disclosure (enables proofs or
+   * adds a class): subject = agent id; payload = `{ agent_id, enabled, disclose }` with
+   * `disclose` deduplicated and sorted by code point, so signers and verifiers hash the same
+   * JSON whatever order the classes were listed in.
+   */
+  proofsDisclose: (
+    agentId: string,
+    settings: { enabled: boolean; disclose: readonly string[] },
+  ): OwnerActionPayload<"proofs.disclose"> => ({
+    action: "proofs.disclose",
+    subject: agentId,
+    payload: {
+      agent_id: agentId,
+      enabled: settings.enabled,
+      disclose: [...new Set(settings.disclose)].sort(),
+    },
+  }),
+  /**
+   * `POST /v1/proofs/reservations/{id}/release`: the owner releases a proof-of-funds reservation
+   * before it expires; subject = reservation id; payload = `{ reservation_id }`.
+   */
+  proofReservationRelease: (reservationId: string): OwnerActionPayload<"proofs.reservation.release"> => ({
+    action: "proofs.reservation.release",
+    subject: reservationId,
+    payload: { reservation_id: reservationId },
+  }),
 } as const;
 
 /**

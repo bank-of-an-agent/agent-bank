@@ -13,7 +13,7 @@ rejects any change that weakens them.
 1. **Non-custodial.** No code path, upgrade path or admin function lets the co-signer, or any
    bank-held key, move funds alone. Bank keys can only _refuse_ (co-signer) or _trigger_ moves
    between a principal's own accounts that the owner configured (keepers for top-up and sweep
-   executors).
+   executors). The proof attester key publishes attestation roots and can move nothing.
 2. **Testnet only.** `assertTestnet()` (packages/core) refuses mainnet chain ids; the database
    refuses mainnet `account.chain_id`; deploy scripts revert on chain 8453.
 3. **Money is integer minor units** (`bigint` in TypeScript, `bigint` columns in Postgres,
@@ -70,10 +70,12 @@ bounded by the on-chain session scope.
 | `packages/chain`          | `ChainGateway` interface with `SimulatedChain` (in-memory, reorg injection) and `EvmChainGateway` (Base Sepolia/Anvil via viem + permissionless + Rhinestone module-sdk); contract ABIs and addresses                                                                |
 | `packages/sdk-ts`         | `@agentbank/sdk`: typed client, session keys, request signing, x402 client and seller middleware, webhook verification                                                                                                                                               |
 | `packages/mcp`            | `@agentbank/mcp`: MCP server exposing money tools to agents (stdio + streamable HTTP)                                                                                                                                                                                |
+| `packages/proofs`         | `@agentbank/proofs`: private proofs: claims schema, Poseidon tree, request builders, prover (snarkjs), verifier, HTTP proof gate, `agentbank-prove` CLI; circuit artifacts synced from `contracts/circuits`                                                          |
 
 Migrations live in `packages/db/migrations` and are owned by domain: `0001_ledger.sql`
 (ledger), `0002_core.sql` (identity, authority, payments …), `0003_chain.sql` (indexer),
-`0004_x402.sql` (facilitator). The co-signer has its own database and migrations in
+`0004_x402.sql` (facilitator), `0005_api.sql` (API-only state) and `0006_proofs.sql` (private
+proofs). The co-signer has its own database and migrations in
 `apps/cosigner/migrations`.
 
 ## Identity, accounts and keys
@@ -278,6 +280,23 @@ of the deposit at creation.
   calls `topUp(treasury, agent)`; funds only ever move between the org's own accounts.
 - Treasury sweep: `SweepExecutor` into an ERC-4626 fund from the neutral eligibility list.
   **Counsel-gated**: disabled unless `FEATURE_TREASURY_SWEEP=true`.
+
+### Private proofs
+
+Agents prove facts Agent Bank attests about them (verified backer, limits, balance, reserved
+funds, reputation) without revealing which agent they are. Full design:
+[private-proofs.md](private-proofs.md); decision: ADR 0014.
+
+- **Enrollment:** the agent registers `Poseidon(secret)`; the owner enables proofs and picks
+  disclosure classes (`proofs.disclose` owner action when widening).
+- **Roots:** the `proofs-roots` job computes 13 attributes per enrolled account, builds a
+  depth-20 Poseidon tree (`proof_root`, `proof_leaf`), and the attester key publishes the root to
+  `AgentAttestationRegistry` through `ChainGateway.publishAttestationRoot`. Narrowing changes,
+  freezes and early reservation releases rebuild at once and revoke older roots.
+- **Reservations:** `operating → reserved` ledger holds (`ref_type = proof_reservation`) bound to
+  one verifier's scope tag; each adds a leaf; expiry voids the hold.
+- **Proving and verifying:** off-chain in `@agentbank/proofs` (SDK, MCP, `POST
+/v1/proofs/verify`) or on-chain with `AgentClaimsVerifier`.
 
 ## Fees and billing
 

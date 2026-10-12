@@ -1,0 +1,2332 @@
+{
+  "description": "Agent Bank private proofs cross-language vectors (schema agentbank.claims.v1). Secrets and keys here are public test values; never use them for anything real.",
+  "schema": "agentbank.claims.v1",
+  "constants": {
+    "snark_scalar_field": "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+    "max_u64": "18446744073709551615",
+    "tree_depth": 20,
+    "attributes": [
+      "principal_verification",
+      "per_tx_limit",
+      "per_day_limit",
+      "balance",
+      "reserved_amount",
+      "reserved_until",
+      "reserved_for",
+      "account_created_on",
+      "payments_settled",
+      "volume_settled",
+      "escrows_completed",
+      "disputes_lost",
+      "counterparties"
+    ],
+    "disclosure_classes": {
+      "principal": ["principal_verification"],
+      "limits": ["per_tx_limit", "per_day_limit"],
+      "balance": ["balance"],
+      "reservations": ["reserved_amount", "reserved_until", "reserved_for"],
+      "account_age": ["account_created_on"],
+      "reputation": [
+        "payments_settled",
+        "volume_settled",
+        "escrows_completed",
+        "disputes_lost",
+        "counterparties"
+      ]
+    },
+    "scope_domain": "agentbank.proofs.scope.v1"
+  },
+  "disclosure_masks": [
+    {
+      "classes": [],
+      "mask": 0
+    },
+    {
+      "classes": ["principal"],
+      "mask": 1
+    },
+    {
+      "classes": ["limits"],
+      "mask": 6
+    },
+    {
+      "classes": ["balance"],
+      "mask": 8
+    },
+    {
+      "classes": ["reservations"],
+      "mask": 112
+    },
+    {
+      "classes": ["account_age"],
+      "mask": 128
+    },
+    {
+      "classes": ["reputation"],
+      "mask": 7936
+    },
+    {
+      "classes": ["principal", "limits", "reputation"],
+      "mask": 7943
+    },
+    {
+      "classes": ["principal", "limits", "balance", "reservations", "account_age", "reputation"],
+      "mask": 8191
+    }
+  ],
+  "scopes": [
+    {
+      "scope_id": "api.seller.example",
+      "scope": "7783571142662378032774545842123794300551940069470764337997240928210660770474",
+      "scope_bytes32": "0x1135585b91177444ee0ed534b8d928985c16d140e74cb5e321996d5d01e242aa",
+      "tag": "2421086520919343786"
+    },
+    {
+      "scope_id": "a",
+      "scope": "15248070936572895823839177003070068785287157587884950931269451739401995791341",
+      "scope_bytes32": "0x21b61a310a6105db770fca2fa58e6ad7f0b4190c14fa5d0283ba62ce94f5abed",
+      "tag": "9492007804038654957"
+    },
+    {
+      "scope_id": "localhost",
+      "scope": "9934044036766207944697241267329935102122675318705362536403931376201663978964",
+      "scope_bytes32": "0x15f6783c6c798422c2f7fdd6ed7b6c00410681a5ce0b2528abce818d37db1dd4",
+      "tag": "12379974869215550932"
+    },
+    {
+      "scope_id": "tools.example.com",
+      "scope": "2907150772042650039957410204206469911087380850558011822204614642521505818710",
+      "scope_bytes32": "0x066d63973f11a2728221df74acd6ee86f75361f9c3c2b3182fc1f4283aa46856",
+      "tag": "3441300043907491926"
+    },
+    {
+      "scope_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "scope": "728569585002011777689299885490553008025041905694150891705558985823295419659",
+      "scope_bytes32": "0x019c5b13dbe2ff1a3a23990fad6ddb80d534fddec365a14552b33db25f44b50b",
+      "tag": "5959174568253109515"
+    },
+    {
+      "scope_id": "bücher.example",
+      "scope": "5481082246803283459853453380399627302882026418643556262157772269629595201193",
+      "scope_bytes32": "0x0c1e2ebfd29a16973afd700e2e80aca700feef154163d1f1f9514c8752ec2ea9",
+      "tag": "17965224532653125289"
+    }
+  ],
+  "onchain_scopes": [
+    {
+      "chain_id": 84532,
+      "consumer": "0x1111111111111111111111111111111111111111",
+      "context": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "scope": "21482666919260453620420798196477083178592613803978780111850912605372212387887",
+      "tag": "11679463838893023279"
+    },
+    {
+      "chain_id": 84532,
+      "consumer": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "context": "0x6d61726b6574706c6163652e61646d697373696f6e0000000000000000000000",
+      "scope": "8338455469655313161674516697628120586825752578463344819921474319005652670853",
+      "tag": "14847589827566164357"
+    },
+    {
+      "chain_id": 31337,
+      "consumer": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "context": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "scope": "12161478115592592256132410248367640299681992441465266964312437898907801951678",
+      "tag": "12905285381166013886"
+    }
+  ],
+  "money_bounds": [
+    {
+      "attribute": "per_tx_limit",
+      "value": "0",
+      "minor": "0"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "5",
+      "minor": "5000000"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "5.5",
+      "minor": "5500000"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "5.00",
+      "minor": "5000000"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "0.000001",
+      "minor": "1"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "1000000.123456",
+      "minor": "1000000123456"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "18446744073709.551615",
+      "minor": "18446744073709551615"
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "5.0000001",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "05",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "1e3",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": " 5",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "-1",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "5.",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": ".5",
+      "error": true
+    },
+    {
+      "attribute": "per_tx_limit",
+      "value": "18446744073709.551616",
+      "error": true
+    }
+  ],
+  "integer_bounds": [
+    {
+      "attribute": "payments_settled",
+      "value": "0",
+      "value_parsed": "0"
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "42",
+      "value_parsed": "42"
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "18446744073709551615",
+      "value_parsed": "18446744073709551615"
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "18446744073709551616",
+      "error": true
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "1.5",
+      "error": true
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "01",
+      "error": true
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "-1",
+      "error": true
+    },
+    {
+      "attribute": "payments_settled",
+      "value": "0x10",
+      "error": true
+    }
+  ],
+  "requests": [
+    {
+      "name": "empty",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {},
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "canonical_json": "{\"chain_id\":84532,\"constraints\":{},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+      "request_hash": "0x325f641edccf7918cadb444dc48fb3516970dea4d934403cee933faa3ecfe7f9",
+      "mins": ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+      "maxs": [
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615"
+      ]
+    },
+    {
+      "name": "standard",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "balance": {
+            "min": "1000.00"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "payments_settled": {
+            "min": "10"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"account_created_on\":{\"max\":\"1752224100\"},\"balance\":{\"min\":\"1000.00\"},\"disputes_lost\":{\"max\":\"0\"},\"payments_settled\":{\"min\":\"10\"},\"per_tx_limit\":{\"min\":\"5.00\"},\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+      "request_hash": "0x60bd317877e5251c1cda1abc4a281514d8dcd8f3cf823e325c4af18eaa953764",
+      "mins": ["2", "5000000", "0", "1000000000", "0", "0", "0", "0", "10", "0", "0", "0", "0"],
+      "maxs": [
+        "2",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "1752224100",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "0",
+        "18446744073709551615"
+      ]
+    },
+    {
+      "name": "every_kind",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "1"
+          },
+          "per_tx_limit": {
+            "min": "2.50",
+            "max": "250.000001"
+          },
+          "per_day_limit": {
+            "min": "100.00",
+            "max": "1000.00"
+          },
+          "balance": {
+            "min": "0.000001"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1757408100"
+          },
+          "payments_settled": {
+            "min": "10"
+          },
+          "volume_settled": {
+            "min": "1234.50"
+          },
+          "escrows_completed": {
+            "min": "2"
+          },
+          "disputes_lost": {
+            "max": "1"
+          },
+          "counterparties": {
+            "min": "3"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"account_created_on\":{\"max\":\"1757408100\"},\"balance\":{\"min\":\"0.000001\"},\"counterparties\":{\"min\":\"3\"},\"disputes_lost\":{\"max\":\"1\"},\"escrows_completed\":{\"min\":\"2\"},\"payments_settled\":{\"min\":\"10\"},\"per_day_limit\":{\"max\":\"1000.00\",\"min\":\"100.00\"},\"per_tx_limit\":{\"max\":\"250.000001\",\"min\":\"2.50\"},\"principal_verification\":{\"min\":\"1\"},\"reserved_amount\":{\"min\":\"500.00\"},\"reserved_for\":{\"max\":\"2421086520919343786\",\"min\":\"2421086520919343786\"},\"reserved_until\":{\"min\":\"1760003700\"},\"volume_settled\":{\"min\":\"1234.50\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+      "request_hash": "0xae5f62aba91b953d5b6d3e2fbf83d46a4fbf81bc976abfc52f33e1b78d0cb5b2",
+      "mins": [
+        "1",
+        "2500000",
+        "100000000",
+        "1",
+        "500000000",
+        "1760003700",
+        "2421086520919343786",
+        "0",
+        "10",
+        "1234500000",
+        "2",
+        "0",
+        "3"
+      ],
+      "maxs": [
+        "18446744073709551615",
+        "250000001",
+        "1000000000",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "2421086520919343786",
+        "1757408100",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "1",
+        "18446744073709551615"
+      ]
+    },
+    {
+      "name": "intersected",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "3.00"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"per_tx_limit\":{\"min\":\"3.00\"},\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+      "request_hash": "0xbeb14b35b7ea5f34e6de24b8d5d0a6d6eb506f18ff9b8c926ece70555ede055f",
+      "mins": ["2", "3000000", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+      "maxs": [
+        "2",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615"
+      ]
+    }
+  ],
+  "invalid_requests": [
+    {
+      "name": "unknown_attribute",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "shoe_size": {
+            "min": "1"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "min_greater_than_max",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "balance": {
+            "min": "10.00",
+            "max": "9.99"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "fractional_integer",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "payments_settled": {
+            "min": "1.5"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "too_many_decimals",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "balance": {
+            "min": "1.0000001"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "above_u64",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "counterparties": {
+            "min": "18446744073709551616"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "money_above_u64",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "volume_settled": {
+            "min": "18446744073709.551616"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    },
+    {
+      "name": "unknown_bound_key",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "balance": {
+            "at_least": "1"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      }
+    }
+  ],
+  "gate_nonces": {
+    "key_utf8": "agentbank-test-gate-key-0123456789abcdef",
+    "key_hex": "0x6167656e7462616e6b2d746573742d676174652d6b65792d30313233343536373839616263646566",
+    "cases": [
+      {
+        "request_without_nonce": {
+          "type": "agentbank.proof_request.v1",
+          "scope": "api.seller.example",
+          "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+          "issued_at": 1760000100,
+          "expires_at": 1760000400,
+          "constraints": {},
+          "max_root_age_seconds": 7200,
+          "min_anonymity_set": 16,
+          "chain_id": 84532,
+          "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        },
+        "canonical_json": "{\"chain_id\":84532,\"constraints\":{},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+        "nonce": "0x78312412f98e0c1d7d14eedfc5d6df10993f617451b3158ac22cd165812f03"
+      },
+      {
+        "request_without_nonce": {
+          "type": "agentbank.proof_request.v1",
+          "scope": "api.seller.example",
+          "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+          "issued_at": 1760000100,
+          "expires_at": 1760000400,
+          "constraints": {
+            "principal_verification": {
+              "min": "2",
+              "max": "2"
+            },
+            "per_tx_limit": {
+              "min": "5.00"
+            },
+            "balance": {
+              "min": "1000.00"
+            },
+            "account_created_on": {
+              "max": "1752224100"
+            },
+            "payments_settled": {
+              "min": "10"
+            },
+            "disputes_lost": {
+              "max": "0"
+            }
+          },
+          "max_root_age_seconds": 7200,
+          "min_anonymity_set": 16,
+          "chain_id": 84532,
+          "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        },
+        "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"account_created_on\":{\"max\":\"1752224100\"},\"balance\":{\"min\":\"1000.00\"},\"disputes_lost\":{\"max\":\"0\"},\"payments_settled\":{\"min\":\"10\"},\"per_tx_limit\":{\"min\":\"5.00\"},\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+        "nonce": "0xa1231bdf13c30d23635fedd3cc090a0607fcfcd8c995f71547e11765405222"
+      },
+      {
+        "request_without_nonce": {
+          "type": "agentbank.proof_request.v1",
+          "scope": "api.seller.example",
+          "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+          "issued_at": 1760000100,
+          "expires_at": 1760000400,
+          "constraints": {
+            "principal_verification": {
+              "min": "1"
+            },
+            "per_tx_limit": {
+              "min": "2.50",
+              "max": "250.000001"
+            },
+            "per_day_limit": {
+              "min": "100.00",
+              "max": "1000.00"
+            },
+            "balance": {
+              "min": "0.000001"
+            },
+            "reserved_amount": {
+              "min": "500.00"
+            },
+            "reserved_until": {
+              "min": "1760003700"
+            },
+            "reserved_for": {
+              "min": "2421086520919343786",
+              "max": "2421086520919343786"
+            },
+            "account_created_on": {
+              "max": "1757408100"
+            },
+            "payments_settled": {
+              "min": "10"
+            },
+            "volume_settled": {
+              "min": "1234.50"
+            },
+            "escrows_completed": {
+              "min": "2"
+            },
+            "disputes_lost": {
+              "max": "1"
+            },
+            "counterparties": {
+              "min": "3"
+            }
+          },
+          "max_root_age_seconds": 7200,
+          "min_anonymity_set": 16,
+          "chain_id": 84532,
+          "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        },
+        "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"account_created_on\":{\"max\":\"1757408100\"},\"balance\":{\"min\":\"0.000001\"},\"counterparties\":{\"min\":\"3\"},\"disputes_lost\":{\"max\":\"1\"},\"escrows_completed\":{\"min\":\"2\"},\"payments_settled\":{\"min\":\"10\"},\"per_day_limit\":{\"max\":\"1000.00\",\"min\":\"100.00\"},\"per_tx_limit\":{\"max\":\"250.000001\",\"min\":\"2.50\"},\"principal_verification\":{\"min\":\"1\"},\"reserved_amount\":{\"min\":\"500.00\"},\"reserved_for\":{\"max\":\"2421086520919343786\",\"min\":\"2421086520919343786\"},\"reserved_until\":{\"min\":\"1760003700\"},\"volume_settled\":{\"min\":\"1234.50\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
+        "nonce": "0x72b1509bf4ffd05578364a2f4c7cd231dfb141b987dc5634fd46c7e799b173"
+      }
+    ]
+  },
+  "poseidon": {
+    "identity": {
+      "secret": "0x002ac287647eaab3fe5098d3d341ba6cb0fa1633c0e6c354d6d875eee9c0529f",
+      "identity_commitment": "0x159d4616c2acb615d03349c1d71939f02b7936e3c6346edd05b76a23cf8ce8bf"
+    },
+    "leaves": [
+      {
+        "secret": "0x002ac287647eaab3fe5098d3d341ba6cb0fa1633c0e6c354d6d875eee9c0529f",
+        "identity_commitment": "0x159d4616c2acb615d03349c1d71939f02b7936e3c6346edd05b76a23cf8ce8bf",
+        "attributes": {
+          "principal_verification": "2",
+          "per_tx_limit": "25000000",
+          "per_day_limit": "200000000",
+          "balance": "1250000000",
+          "reserved_amount": "0",
+          "reserved_until": "0",
+          "reserved_for": "0",
+          "account_created_on": "1749945600",
+          "payments_settled": "42",
+          "volume_settled": "1337000000",
+          "escrows_completed": "3",
+          "disputes_lost": "0",
+          "counterparties": "7"
+        },
+        "mask": 8191,
+        "attributes_hash": "21689850027437839519940880353539318348743092715358078085504539107305796598424",
+        "leaf": "6528970224002457559766643633317335230721519662079305672466270825348392151204"
+      },
+      {
+        "secret": "0x002ac287647eaab3fe5098d3d341ba6cb0fa1633c0e6c354d6d875eee9c0529f",
+        "identity_commitment": "0x159d4616c2acb615d03349c1d71939f02b7936e3c6346edd05b76a23cf8ce8bf",
+        "attributes": {
+          "principal_verification": "2",
+          "per_tx_limit": "25000000",
+          "per_day_limit": "200000000",
+          "balance": "1250000000",
+          "reserved_amount": "500000000",
+          "reserved_until": "1760007300",
+          "reserved_for": "2421086520919343786",
+          "account_created_on": "1749945600",
+          "payments_settled": "42",
+          "volume_settled": "1337000000",
+          "escrows_completed": "3",
+          "disputes_lost": "0",
+          "counterparties": "7"
+        },
+        "mask": 8191,
+        "attributes_hash": "6318833273145560532207950427667281616147535802604965908681121812743411642731",
+        "leaf": "5327643260151110038547393799005492819971178038235971020888859506600832210544"
+      },
+      {
+        "secret": "0x002b29dd20096d793116b071f68d1e7424aa3f90a00359d17352b62040f5abb4",
+        "identity_commitment": "0x0b642cd7b7d825941ec0da120149482d8cb90181b69f5183c9af8accddce5a19",
+        "attributes": {
+          "principal_verification": "2",
+          "per_tx_limit": "25000000",
+          "per_day_limit": "200000000",
+          "balance": "1250000000",
+          "reserved_amount": "0",
+          "reserved_until": "0",
+          "reserved_for": "0",
+          "account_created_on": "1749945600",
+          "payments_settled": "2",
+          "volume_settled": "1337000000",
+          "escrows_completed": "3",
+          "disputes_lost": "0",
+          "counterparties": "7"
+        },
+        "mask": 8191,
+        "attributes_hash": "17683026663629965244351818075023125379983522583426502771104449175869922478928",
+        "leaf": "20642683226211973329475201911322811638026982345685040497992374905087743466933"
+      },
+      {
+        "secret": "0x002ac287647eaab3fe5098d3d341ba6cb0fa1633c0e6c354d6d875eee9c0529f",
+        "identity_commitment": "0x159d4616c2acb615d03349c1d71939f02b7936e3c6346edd05b76a23cf8ce8bf",
+        "attributes": {
+          "principal_verification": "2",
+          "per_tx_limit": "25000000",
+          "per_day_limit": "200000000",
+          "balance": "1250000000",
+          "reserved_amount": "0",
+          "reserved_until": "0",
+          "reserved_for": "0",
+          "account_created_on": "1749945600",
+          "payments_settled": "42",
+          "volume_settled": "1337000000",
+          "escrows_completed": "3",
+          "disputes_lost": "0",
+          "counterparties": "7"
+        },
+        "mask": 7,
+        "attributes_hash": "16199544260388706054502609663398478980669210030830568818127270222045323547557",
+        "leaf": "15514580820122227402744330561384286847660791567659977870998433007851210630187"
+      }
+    ]
+  },
+  "tree": {
+    "depth": 20,
+    "zero_hashes": [
+      "0",
+      "14744269619966411208579211824598458697587494354926760081771325075741142829156",
+      "7423237065226347324353380772367382631490014989348495481811164164159255474657",
+      "11286972368698509976183087595462810875513684078608517520839298933882497716792",
+      "3607627140608796879659380071776844901612302623152076817094415224584923813162",
+      "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+      "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+      "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+      "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+      "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+      "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+      "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+      "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+      "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+      "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+      "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+      "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+      "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+      "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+      "10941962436777715901943463195175331263348098796018438960955633645115732864202",
+      "15019797232609675441998260052101280400536945603062888308240081994073687793470"
+    ],
+    "leaves": [
+      "6528970224002457559766643633317335230721519662079305672466270825348392151204",
+      "5327643260151110038547393799005492819971178038235971020888859506600832210544",
+      "20642683226211973329475201911322811638026982345685040497992374905087743466933",
+      "21661073134785807212520501653167502379115596222113431836163438660797303455737",
+      "18213989135935013181839224993255873227379025689570517644246638883986116947966",
+      "618680590842391005439336366505419046777637856190242807205138678140683508432",
+      "3831988459108994967163533965878076328781106950029738556918714422199268090621",
+      "14073154959433161865096718659726245455665444873843087975722805445827658224447",
+      "19892766646725875781360505770524515221707083553652317519002437044572426285554",
+      "7716226348691399744777627655452430898879070845524639640107004835985725065282",
+      "4386317473939103217619065301064970033499417331783983682079911199836605483831",
+      "4953888845847420996497295242562949226173645542722978468409081847212413426425",
+      "8835015312411987926345302281411438476150300996648818684628826596186233095908",
+      "18298613284854702328696306321745919800177530711638601856165396087569702411363",
+      "21343215839466871567129801827923207224252708274829758224299308526509360361483",
+      "9671197225830482065206388845021917612344397447937615737120884372583092210153",
+      "6469719896803210834282713040600057799657603351207108772360308863905837168858",
+      "21460799833012915959234700761308969788604673754705155445442128744846853465169",
+      "21389318700245598778795690943093786489622022671707853676540103941355763154404",
+      "11919973598848122349602054383344674049563995201482056932338973864314751577061"
+    ],
+    "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+    "witnesses": [
+      {
+        "index": 0,
+        "leaf": "6528970224002457559766643633317335230721519662079305672466270825348392151204",
+        "siblings": [
+          "5327643260151110038547393799005492819971178038235971020888859506600832210544",
+          "10734310264391169747336115452840295592105763559394512901730710474202770781557",
+          "8624530683406765572362831740297222039316254716834322402482030816830448712226",
+          "18738147025943724560623272916874357992025608923269491307941480566149547111095",
+          "213985659275145666679509907910246101238810937297890967108017527611562637418",
+          "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+          "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+          "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+          "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+          "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+          "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+          "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+          "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+          "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+          "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+          "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+          "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+          "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+          "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+          "10941962436777715901943463195175331263348098796018438960955633645115732864202"
+        ],
+        "path_bits": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "index": 1,
+        "leaf": "5327643260151110038547393799005492819971178038235971020888859506600832210544",
+        "siblings": [
+          "6528970224002457559766643633317335230721519662079305672466270825348392151204",
+          "10734310264391169747336115452840295592105763559394512901730710474202770781557",
+          "8624530683406765572362831740297222039316254716834322402482030816830448712226",
+          "18738147025943724560623272916874357992025608923269491307941480566149547111095",
+          "213985659275145666679509907910246101238810937297890967108017527611562637418",
+          "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+          "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+          "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+          "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+          "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+          "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+          "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+          "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+          "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+          "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+          "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+          "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+          "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+          "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+          "10941962436777715901943463195175331263348098796018438960955633645115732864202"
+        ],
+        "path_bits": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "index": 7,
+        "leaf": "14073154959433161865096718659726245455665444873843087975722805445827658224447",
+        "siblings": [
+          "3831988459108994967163533965878076328781106950029738556918714422199268090621",
+          "2160630875512145718293609451351251508149625906564024234239092232894711750588",
+          "3816561681941603904928498797904879618055505914732677276771359047809036288673",
+          "18738147025943724560623272916874357992025608923269491307941480566149547111095",
+          "213985659275145666679509907910246101238810937297890967108017527611562637418",
+          "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+          "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+          "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+          "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+          "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+          "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+          "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+          "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+          "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+          "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+          "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+          "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+          "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+          "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+          "10941962436777715901943463195175331263348098796018438960955633645115732864202"
+        ],
+        "path_bits": [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "index": 19,
+        "leaf": "11919973598848122349602054383344674049563995201482056932338973864314751577061",
+        "siblings": [
+          "21389318700245598778795690943093786489622022671707853676540103941355763154404",
+          "12933100739672286507912080896408030706638583706127313922953392781395062006047",
+          "7423237065226347324353380772367382631490014989348495481811164164159255474657",
+          "11286972368698509976183087595462810875513684078608517520839298933882497716792",
+          "16535093640856972662959817986762427911800421227311558064414483051879741569553",
+          "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+          "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+          "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+          "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+          "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+          "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+          "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+          "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+          "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+          "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+          "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+          "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+          "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+          "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+          "10941962436777715901943463195175331263348098796018438960955633645115732864202"
+        ],
+        "path_bits": [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      }
+    ]
+  },
+  "proof": {
+    "description": "A gate-issued request (createProofGate with gate.key_utf8 at gate.now) and the agent's presentation from its reservation leaf. A ProofGate configured like `gate` must accept AGENT-PROOF = base64(json({ request, presentation })) at gate.now when the root resolves to root_info, then refuse the same header as nonce_reused.",
+    "gate": {
+      "scope": "api.seller.example",
+      "key_utf8": "agentbank-test-gate-key-0123456789abcdef",
+      "now": 1760000100,
+      "ttl_seconds": 300,
+      "chain_id": 84532,
+      "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "min_anonymity_set": 16,
+      "max_root_age_seconds": 7200
+    },
+    "secret": "0x002ac287647eaab3fe5098d3d341ba6cb0fa1633c0e6c354d6d875eee9c0529f",
+    "witness": {
+      "object": "proof_witness",
+      "schema": "agentbank.claims.v1",
+      "account_id": "acct_01JABCDEFGHJKMNPQRSTVWXYZ0",
+      "chain_id": 84532,
+      "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+      "epoch": "7",
+      "snapshot_at": "2025-10-09T08:53:20.000Z",
+      "valid_until": "2025-10-09T10:53:20.000Z",
+      "leaf_count": 20,
+      "leaf_index": 1,
+      "siblings": [
+        "6528970224002457559766643633317335230721519662079305672466270825348392151204",
+        "10734310264391169747336115452840295592105763559394512901730710474202770781557",
+        "8624530683406765572362831740297222039316254716834322402482030816830448712226",
+        "18738147025943724560623272916874357992025608923269491307941480566149547111095",
+        "213985659275145666679509907910246101238810937297890967108017527611562637418",
+        "19712377064642672829441595136074946683621277828620209496774504837737984048981",
+        "20775607673010627194014556968476266066927294572720319469184847051418138353016",
+        "3396914609616007258851405644437304192397291162432396347162513310381425243293",
+        "21551820661461729022865262380882070649935529853313286572328683688269863701601",
+        "6573136701248752079028194407151022595060682063033565181951145966236778420039",
+        "12413880268183407374852357075976609371175688755676981206018884971008854919922",
+        "14271763308400718165336499097156975241954733520325982997864342600795471836726",
+        "20066985985293572387227381049700832219069292839614107140851619262827735677018",
+        "9394776414966240069580838672673694685292165040808226440647796406499139370960",
+        "11331146992410411304059858900317123658895005918277453009197229807340014528524",
+        "15819538789928229930262697811477882737253464456578333862691129291651619515538",
+        "19217088683336594659449020493828377907203207941212636669271704950158751593251",
+        "21035245323335827719745544373081896983162834604456827698288649288827293579666",
+        "6939770416153240137322503476966641397417391950902474480970945462551409848591",
+        "10941962436777715901943463195175331263348098796018438960955633645115732864202"
+      ],
+      "path_bits": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "attributes": {
+        "principal_verification": "2",
+        "per_tx_limit": "25000000",
+        "per_day_limit": "200000000",
+        "balance": "1250000000",
+        "reserved_amount": "500000000",
+        "reserved_until": "1760007300",
+        "reserved_for": "2421086520919343786",
+        "account_created_on": "1749945600",
+        "payments_settled": "42",
+        "volume_settled": "1337000000",
+        "escrows_completed": "3",
+        "disputes_lost": "0",
+        "counterparties": "7"
+      },
+      "disclosure_mask": 8191,
+      "reservation_id": "prv_01JABCDEFGHJKMNPQRSTVWXYZ0"
+    },
+    "request": {
+      "type": "agentbank.proof_request.v1",
+      "scope": "api.seller.example",
+      "request_id": "9042e173147dfed2e7948ebecf5c321b",
+      "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+      "issued_at": 1760000100,
+      "expires_at": 1760000400,
+      "constraints": {
+        "principal_verification": {
+          "min": "2",
+          "max": "2"
+        },
+        "per_tx_limit": {
+          "min": "5.00"
+        },
+        "reserved_amount": {
+          "min": "500.00"
+        },
+        "reserved_until": {
+          "min": "1760003700"
+        },
+        "reserved_for": {
+          "min": "2421086520919343786",
+          "max": "2421086520919343786"
+        },
+        "account_created_on": {
+          "max": "1752224100"
+        },
+        "disputes_lost": {
+          "max": "0"
+        }
+      },
+      "max_root_age_seconds": 7200,
+      "min_anonymity_set": 16,
+      "chain_id": 84532,
+      "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+    },
+    "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+    "presentation": {
+      "type": "agentbank.proof.v1",
+      "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+      "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+      "proof": {
+        "pi_a": [
+          "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+          "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+          "1"
+        ],
+        "pi_b": [
+          [
+            "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+            "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+          ],
+          [
+            "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+            "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+          ],
+          ["1", "0"]
+        ],
+        "pi_c": [
+          "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+          "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+          "1"
+        ],
+        "protocol": "groth16",
+        "curve": "bn128"
+      }
+    },
+    "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ==",
+    "root_info": {
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+      "epoch": "7",
+      "snapshot_at": 1760000000,
+      "published_at": 1760000012,
+      "valid_until": 1760007200,
+      "leaf_count": 20,
+      "revoked": false
+    },
+    "public_signals": [
+      "3415999076835126084190726985220666576157080945681156937192513792660839945172",
+      "6270059574849017231113411108805510312836853768380550967647071309946369014435",
+      "7783571142662378032774545842123794300551940069470764337997240928210660770474",
+      "31420080906571686854937297380001359533107354194259432544474887279849694774",
+      "2",
+      "5000000",
+      "0",
+      "0",
+      "500000000",
+      "1760003700",
+      "2421086520919343786",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "2",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "2421086520919343786",
+      "1752224100",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "0",
+      "18446744073709551615"
+    ],
+    "expected": {
+      "valid": true,
+      "reason": null,
+      "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3"
+    }
+  },
+  "tampered": [
+    {
+      "name": "malformed_presentation",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0xnot-hex",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "malformed",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4bm90LWhleCIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "root_outside_field",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "malformed",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZiIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "request_expired",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000401,
+      "expected_reason": "request_expired",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "constraints_changed_after_issue",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "4.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0x7a9a6cf3d76f0e625e9b7f77c4a0410d027e9c3dea4ce1641b6b305bf504ae53",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "nonce_invalid",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI0LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHg3YTlhNmNmM2Q3NmYwZTYyNWU5YjdmNzdjNGEwNDEwZDAyN2U5YzNkZWE0Y2UxNjQxYjZiMzA1YmY1MDRhZTUzIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "forged_nonce",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0xababababababababababababababababababababababababababababababab",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "nonce_invalid",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweGFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "replayed",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "submit_twice": true,
+      "expected_reason": "nonce_reused",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "request_hash_mismatch",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0x16388f4c3ed37a77ad4c10dfac2f8e62501d60f0ec01792615138068c1f8fa3f",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "request_hash_mismatch",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHgxNjM4OGY0YzNlZDM3YTc3YWQ0YzEwZGZhYzJmOGU2MjUwMWQ2MGYwZWMwMTc5MjYxNTEzODA2OGMxZjhmYTNmIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "unknown_root",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": null,
+      "now": 1760000100,
+      "expected_reason": "unknown_root",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "root_revoked",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": true
+      },
+      "now": 1760000100,
+      "expected_reason": "root_revoked",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "root_expired",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760000099,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "root_expired",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "root_too_old",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1759992899,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "root_too_old",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "anonymity_set_too_small",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 15,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "anonymity_set_too_small",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "nullifier_swapped",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x0000000000000000000000000000000000000000000000000000000000003039",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": [
+            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
+            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "invalid_proof",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMzAzOSIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    },
+    {
+      "name": "proof_point_not_on_curve",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "api.seller.example",
+        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "per_tx_limit": {
+            "min": "5.00"
+          },
+          "reserved_amount": {
+            "min": "500.00"
+          },
+          "reserved_until": {
+            "min": "1760003700"
+          },
+          "reserved_for": {
+            "min": "2421086520919343786",
+            "max": "2421086520919343786"
+          },
+          "account_created_on": {
+            "max": "1752224100"
+          },
+          "disputes_lost": {
+            "max": "0"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "presentation": {
+        "type": "agentbank.proof.v1",
+        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
+        "proof": {
+          "pi_a": [
+            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
+            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
+              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            ],
+            [
+              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
+              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            ],
+            ["1", "0"]
+          ],
+          "pi_c": ["1", "1", "1"],
+          "protocol": "groth16",
+          "curve": "bn128"
+        }
+      },
+      "root_info": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "epoch": "7",
+        "snapshot_at": 1760000000,
+        "published_at": 1760000012,
+        "valid_until": 1760007200,
+        "leaf_count": 20,
+        "revoked": false
+      },
+      "now": 1760000100,
+      "expected_reason": "invalid_proof",
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjEiLCIxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+    }
+  ]
+}

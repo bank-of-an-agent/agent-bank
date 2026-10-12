@@ -10,3 +10,5 @@ docs/design.md
 docs/openapi.json
 apps/docs/api/*.md
 !apps/docs/api/index.md
+packages/proofs/artifacts
+packages/proofs/test/vectors

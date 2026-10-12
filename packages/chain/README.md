@@ -5,8 +5,9 @@ implementations:
 
 - `SimulatedChain` (`@agentbank/chain/simulated`): an in-memory chain that applies the same
   validation rules as production (owner signature, or session key + co-signer within the session
-  scope; the policy hook; USDC with EIP-3009/EIP-2612/ERC-1271; escrow, streams, vaults and
-  executors), with blocks, finality tags and injectable reorgs. It runs the whole stack in tests
+  scope; the policy hook; USDC with EIP-3009/EIP-2612/ERC-1271; escrow, streams, vaults,
+  executors and the private-proofs `AgentAttestationRegistry`), with blocks, finality tags and
+  injectable reorgs. It runs the whole stack in tests
   and the local sandbox without a network.
 - `EvmChainGateway`: Base Sepolia or Anvil through viem and an ERC-4337 bundler (Pimlico or a
   local Alto). Safe v1.4.1 accounts with the Safe7579 adapter, Rhinestone Smart Sessions V1 with a
@@ -35,6 +36,11 @@ const op = await gateway.prepareOperation({
 Helpers build every call Agent Bank makes (transfers, escrow, streams, vaults, session install
 and revoke, the policy hook, top-up executor, spend-key permit and float sweep, owner rotation)
 and decode operations back into calls, which is how the co-signer checks what it signs.
+
+The attester key publishes and revokes private-proof roots with `publishAttestationRoot` and
+`revokeAttestationRoots` (sent from the attester itself, never through `relayCall`), and anyone reads
+them with `getAttestationRoot`. On the simulated chain the attester defaults to the public
+`SIMULATED_ATTESTER_KEY` (`simulatedAttesterAccount(1337)`), which every other chain refuses.
 
 ## Tests
 

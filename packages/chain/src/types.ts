@@ -239,6 +239,10 @@ export const CHAIN_EVENT_NAMES = [
   // Smart Sessions
   "SessionCreated",
   "SessionRemoved",
+  // AgentAttestationRegistry (private proofs; no funds, no parties)
+  "RootPublished",
+  "RootRevoked",
+  "AttesterChanged",
   // EntryPoint v0.7
   "UserOperationEvent",
   "UserOperationRevertReason",
@@ -349,6 +353,64 @@ export interface ChainContracts {
   policyHook?: Address;
   topUpExecutor?: Address;
   sweepExecutor?: Address;
+  /** `AgentAttestationRegistry`: private-proof roots published by the attester key (holds no funds). */
+  attestationRegistry?: Address;
+  /** `AgentClaimsVerifier`: on-chain verification of private proofs against the registry's roots. */
+  claimsVerifier?: Address;
+}
+
+/**
+ * Publish an attested-facts root (`AgentAttestationRegistry.publishRoot`). The registry enforces:
+ * non-zero root below the BN254 field order, never published before, `epoch > latestEpoch`,
+ * `snapshotAt <= now`, `now < validUntil <= now + 7 days`, `leafCount > 0`, sender is the attester.
+ */
+export interface PublishAttestationRootInput {
+  /** The tree root, a BN254 field element as 32 bytes. */
+  root: Hex;
+  /** Strictly increasing snapshot number (uint64). */
+  epoch: bigint;
+  /** Unix seconds the attested facts were read (uint64). */
+  snapshotAt: bigint;
+  /** Unix seconds after which proofs against the root are refused (uint64). */
+  validUntil: bigint;
+  /** Number of leaves (uint32): the anonymity set of proofs against this root. */
+  leafCount: number;
+  /**
+   * The registry's attester key: `msg.sender` and gas payer. Unlike a keeper it is the authority the
+   * registry checks, so it is never the relayer. Testnet key from the secret manager; the public
+   * `SIMULATED_ATTESTER_KEY` only works on the simulated chain.
+   */
+  attester: LocalAccount;
+}
+
+/** Revoke published roots (`AgentAttestationRegistry.revokeRoots`); already-revoked roots are skipped. */
+export interface RevokeAttestationRootsInput {
+  /** Roots to revoke; every one must have been published. */
+  roots: Hex[];
+  /** The registry's attester key (`msg.sender` and gas payer); see {@link PublishAttestationRootInput.attester}. */
+  attester: LocalAccount;
+}
+
+/** What the registry records about a published root (`rootInfo` plus `isValidRoot`). */
+export interface AttestationRootInfo {
+  epoch: bigint;
+  /** Unix seconds the attested facts were read. */
+  snapshotAt: bigint;
+  /** Block timestamp of publication. */
+  publishedAt: bigint;
+  /** Unix seconds; the root is valid while the block timestamp is at most this. */
+  validUntil: bigint;
+  leafCount: number;
+  /** Revoked early by the attester or the owner. */
+  revoked: boolean;
+  /** `isValidRoot` at the latest block: published, not revoked and `block.timestamp <= validUntil`. */
+  valid: boolean;
+}
+
+/** Outcome of a mined transaction. */
+export interface TransactionReceiptInfo {
+  status: "success" | "reverted";
+  blockNumber: bigint;
 }
 
 /** The chain boundary every service uses (see docs/architecture.md, "ChainGateway"). */
@@ -381,6 +443,19 @@ export interface ChainGateway {
   settleAuthorization(input: SettleAuthorizationInput): Promise<{ txHash: Hex }>;
   /** Send a permissionless keeper call (see {@link RelayCallInput}). */
   relayCall(input: RelayCallInput): Promise<{ txHash: Hex }>;
+  /**
+   * Publish an attestation root from the attester key (simulated first; reverts throw
+   * `invalid_state` with the registry's error, e.g. `EpochNotIncreasing(4, 4)`). Returns once the
+   * transaction is sent, without waiting for inclusion: follow it with {@link getTransactionReceipt}.
+   * Throws {@link ContractNotConfiguredError} when the chain has no registry.
+   */
+  publishAttestationRoot(input: PublishAttestationRootInput): Promise<{ txHash: Hex }>;
+  /** Revoke attestation roots from the attester key (same sending rules as {@link publishAttestationRoot}). */
+  revokeAttestationRoots(input: RevokeAttestationRootsInput): Promise<{ txHash: Hex }>;
+  /** The registry's record of a root at the latest block, or `null` if it was never published. */
+  getAttestationRoot(root: Hex): Promise<AttestationRootInfo | null>;
+  /** Receipt of any transaction (relayed, attester or bundle), or `null` while it is not mined. */
+  getTransactionReceipt(hash: Hex): Promise<TransactionReceiptInfo | null>;
   /** EIP-3009 `authorizationState`: true once the nonce was used or canceled. */
   authorizationState(token: Address, authorizer: Address, nonce: Hex): Promise<boolean>;
   /** EIP-2612 `nonces(owner)`: the nonce the owner's next `permit` must sign. */

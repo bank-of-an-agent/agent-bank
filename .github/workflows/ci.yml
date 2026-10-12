@@ -52,8 +52,8 @@ jobs:
         # Two packages at a time keeps the CPU-heavy property, red-team and gate suites from
         # starving each other on the 4-vCPU runner; timeouts are generous for the same reason.
         run: pnpm exec turbo run test --concurrency=2 -- --testTimeout=300000 --hookTimeout=300000
-      - name: Coverage gates (ledger and policy >= 90%)
-        run: pnpm --filter @agentbank/ledger --filter @agentbank/policy test:coverage
+      - name: Coverage gates (ledger, policy and proofs >= 90%)
+        run: pnpm --filter @agentbank/ledger --filter @agentbank/policy --filter @agentbank/proofs test:coverage
       - name: Build
         run: pnpm build
 

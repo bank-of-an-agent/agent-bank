@@ -4,6 +4,8 @@
  * JSON artifacts in this directory, which `scripts/sync-abis.sh` refreshes from `../contracts/abis`.
  */
 export * from "./account";
+export * from "./agentAttestationRegistry";
+export * from "./agentClaimsVerifier";
 export * from "./entryPoint";
 export * from "./erc20";
 export * from "./escrow";

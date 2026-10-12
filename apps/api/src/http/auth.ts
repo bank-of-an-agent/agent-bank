@@ -146,6 +146,12 @@ export const ROUTE_PERMISSIONS: Partial<Record<OperationId, Permission>> = {
   getSweepRule: "read",
   attachSpendKey: "agents:write",
   sandboxFaucet: "agents:write",
+  getProofSettings: "read",
+  updateProofSettings: "agents:write",
+  getProofIdentity: "read",
+  listProofReservations: "read",
+  getProofReservation: "read",
+  releaseProofReservation: "agents:write",
 };
 
 const ROLE_SCOPES: Record<MemberRole, readonly ApiKeyScope[]> = {

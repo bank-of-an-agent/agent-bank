@@ -1,15 +1,20 @@
 import { AgentBankError, assertTestnet, chainById, CHAINS, type ChainInfo } from "@agentbank/core";
 import {
   BaseError,
+  ContractFunctionRevertedError,
   createPublicClient,
   createWalletClient,
+  decodeFunctionData,
   defineChain,
   encodeFunctionData,
   getAddress,
+  getContractError,
   http,
   isAddressEqual,
   pad,
   size,
+  TransactionReceiptNotFoundError,
+  type Abi,
   type Address,
   type Chain,
   type Hex,
@@ -24,12 +29,27 @@ import {
 } from "viem/account-abstraction";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { accountFactoryArgs, predictAccountAddress, wrapSetupSafe } from "../account";
-import { entryPointAbi, erc20Abi, smartSessionsAbi } from "../abis";
+import {
+  agentAttestationRegistryAbi,
+  entryPointAbi,
+  erc20Abi,
+  ownableErrorsAbi,
+  smartSessionsAbi,
+} from "../abis";
+import {
+  ContractNotConfiguredError,
+  formatContractError,
+  parseAttestationRoot,
+  publishAttestationRootCall,
+  revokeAttestationRootsCall,
+  toAttestationRootInfo,
+} from "../attestations";
 import {
   anvilForkContracts,
   baseSepoliaContracts,
   DEFAULT_OWNER_OP_TTL_SECONDS,
   DEFAULT_SESSION_OP_TTL_SECONDS,
+  isSimulatedAttester,
 } from "../constants";
 import { decodeCalls } from "../decode";
 import { encodeExecute, validatorNonceKey } from "../erc7579";
@@ -47,8 +67,10 @@ import { stubOwnerSignature, stubSessionSignature } from "../signing";
 import {
   CHAIN_EVENT_NAMES,
   type AccountDeployment,
+  type AttestationRootInfo,
   type BlockRef,
   type BlockTag,
+  type Call,
   type ChainContracts,
   type ChainEventName,
   type ChainGateway,
@@ -59,9 +81,12 @@ import {
   type PreparedOperation,
   type PrepareOperationInput,
   type PrepareOwnerOperationInput,
+  type PublishAttestationRootInput,
   type RelayCallInput,
+  type RevokeAttestationRootsInput,
   type SettleAuthorizationInput,
   type SubmitOperationInput,
+  type TransactionReceiptInfo,
 } from "../types";
 import { assertRelayableCall } from "../relay";
 import { checkPreparedOperation, decodePreparedOperation, hashUserOperation, nowSeconds } from "../userop";
@@ -183,6 +208,31 @@ function revertError(error: unknown): AgentBankError {
   const reason =
     error instanceof BaseError ? error.shortMessage : error instanceof Error ? error.message : String(error);
   return new AgentBankError("invalid_state", `Transaction would revert: ${reason}`, { revertReason: reason });
+}
+
+/** The registry's functions and the errors a call can revert with (the interface's and `Ownable`'s). */
+const REGISTRY_CALL_ABI: Abi = [...agentAttestationRegistryAbi, ...ownableErrorsAbi];
+
+/**
+ * A simulation failure of `data` (a call of a function in `abi`) as `invalid_state`, with the
+ * contract's custom error decoded from `abi` when possible (`Transaction would revert:
+ * EpochNotIncreasing(4, 4)`, the simulator's wording).
+ */
+function contractRevertError(error: unknown, abi: Abi, data: Hex): AgentBankError {
+  if (error instanceof BaseError) {
+    const { functionName, args } = decodeFunctionData({ abi, data });
+    const reverted = getContractError(error, { abi, args, functionName }).walk(
+      (e) => e instanceof ContractFunctionRevertedError,
+    ) as ContractFunctionRevertedError | null;
+    const decoded = reverted?.data;
+    if (decoded) {
+      const reason = formatContractError(decoded.errorName, decoded.args ?? []);
+      return new AgentBankError("invalid_state", `Transaction would revert: ${reason}`, {
+        revertReason: reason,
+      });
+    }
+  }
+  return revertError(error);
 }
 
 function withBuffer(value: bigint, percent: number): bigint {
@@ -788,6 +838,102 @@ export class EvmChainGateway implements ChainGateway {
     return {
       txHash: await this.relay(this.relayerFor(input.relayer), getAddress(input.call.to), input.call.data),
     };
+  }
+
+  private attestationRegistry(): Address {
+    const address = this.contracts.attestationRegistry;
+    if (!address) throw new ContractNotConfiguredError("attestationRegistry", this.chainId);
+    return getAddress(address);
+  }
+
+  /**
+   * Simulate a registry call from the attester (reverts throw with the decoded error), then sign
+   * and send it from the attester key. Returns the hash without waiting for inclusion.
+   */
+  private async sendAsAttester(attester: LocalAccount, call: Call): Promise<Hex> {
+    if (isSimulatedAttester(attester.address)) {
+      throw new AgentBankError(
+        "invalid_request",
+        "The simulated attester key is public and only signs on the simulated chain",
+      );
+    }
+    try {
+      await this.publicClient.call({ account: attester.address, to: call.to, data: call.data });
+    } catch (error) {
+      throw contractRevertError(error, REGISTRY_CALL_ABI, call.data);
+    }
+    const wallet = createWalletClient({
+      account: attester,
+      chain: this.chain,
+      transport: this.config.transport ?? http(this.config.rpcUrl),
+    });
+    try {
+      return await wallet.sendTransaction({
+        to: call.to,
+        data: call.data,
+        account: attester,
+        chain: this.chain,
+      });
+    } catch (error) {
+      throw new AgentBankError(
+        "chain_error",
+        `Attester transaction failed: ${error instanceof BaseError ? error.shortMessage : String(error)}`,
+      );
+    }
+  }
+
+  async publishAttestationRoot(input: PublishAttestationRootInput): Promise<{ txHash: Hex }> {
+    await this.ready();
+    const { root, epoch, snapshotAt, validUntil, leafCount } = input;
+    const call = publishAttestationRootCall({
+      registry: this.attestationRegistry(),
+      root,
+      epoch,
+      snapshotAt,
+      validUntil,
+      leafCount,
+    });
+    return { txHash: await this.sendAsAttester(input.attester, call) };
+  }
+
+  async revokeAttestationRoots(input: RevokeAttestationRootsInput): Promise<{ txHash: Hex }> {
+    await this.ready();
+    const call = revokeAttestationRootsCall({ registry: this.attestationRegistry(), roots: input.roots });
+    return { txHash: await this.sendAsAttester(input.attester, call) };
+  }
+
+  async getAttestationRoot(root: Hex): Promise<AttestationRootInfo | null> {
+    await this.ready();
+    const address = this.attestationRegistry();
+    const r = parseAttestationRoot(root);
+    const info = await this.publicClient.readContract({
+      address,
+      abi: agentAttestationRegistryAbi,
+      functionName: "rootInfo",
+      args: [r],
+    });
+    if (info.epoch === 0n) return null;
+    const valid = await this.publicClient.readContract({
+      address,
+      abi: agentAttestationRegistryAbi,
+      functionName: "isValidRoot",
+      args: [r],
+    });
+    return toAttestationRootInfo(info, valid);
+  }
+
+  async getTransactionReceipt(hash: Hex): Promise<TransactionReceiptInfo | null> {
+    await this.ready();
+    try {
+      const receipt = await this.publicClient.getTransactionReceipt({ hash });
+      return { status: receipt.status, blockNumber: receipt.blockNumber };
+    } catch (error) {
+      if (error instanceof TransactionReceiptNotFoundError) return null;
+      throw new AgentBankError(
+        "chain_error",
+        `eth_getTransactionReceipt failed: ${error instanceof BaseError ? error.shortMessage : String(error)}`,
+      );
+    }
   }
 
   async erc20Nonces(token: Address, owner: Address): Promise<bigint> {

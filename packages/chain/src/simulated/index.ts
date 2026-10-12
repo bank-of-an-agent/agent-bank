@@ -4,6 +4,7 @@
  */
 export {
   SimulatedChain,
+  SIMULATED_ADMIN,
   SIMULATED_FAUCET,
   SIMULATED_PAYMASTER,
   SIMULATED_RELAYER,
@@ -12,9 +13,15 @@ export {
   type SimulatedChainOptions,
 } from "./chain";
 export type { SimAccountRecord } from "./accounts";
+export { SimAttestationRegistry, type SimRootInfo } from "./attestationRegistry";
 export type { SimEscrowRecord, ValidationStatus } from "./escrow";
 export type { SimSession } from "./smartSessions";
 export type { SimStreamRecord } from "./streams";
 export type { SimTopUpRule } from "./topup";
 export type { SimVaultRecord } from "./vaults";
-export { SIMULATED_CONTRACTS } from "../constants";
+export {
+  SIMULATED_ATTESTER,
+  SIMULATED_ATTESTER_KEY,
+  SIMULATED_CONTRACTS,
+  simulatedAttesterAccount,
+} from "../constants";

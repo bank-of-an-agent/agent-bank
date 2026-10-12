@@ -9,6 +9,7 @@ import { ledgerHandlers } from "./ledger";
 import { metaHandlers } from "./meta";
 import { orgHandlers } from "./orgs";
 import { paymentHandlers } from "./payments";
+import { proofHandlers } from "./proofs";
 import { sandboxHandlers } from "./sandbox";
 import { savingsHandlers } from "./savings";
 import { sessionHandlers } from "./sessions";
@@ -34,4 +35,5 @@ export const handlers: Handlers = {
   ...billingHandlers,
   ...metaHandlers,
   ...sandboxHandlers,
+  ...proofHandlers,
 };

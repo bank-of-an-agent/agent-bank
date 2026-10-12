@@ -17,3 +17,5 @@ consequences. Superseded records stay, marked as such.
 | [0010](0010-rolling-policy-windows.md)     | Policy limits use rolling windows                                                                  | Accepted |
 | [0011](0011-indexer-on-chain-gateway.md)   | The indexer polls through `ChainGateway` instead of Ponder                                         | Accepted |
 | [0012](0012-approval-attestation.md)       | v1 co-signer trusts API-attested approvals (known limitation)                                      | Accepted |
+| [0013](0013-guardian-recovery.md)          | Guardian recovery uses Candide's audited `SocialRecoveryModule` (72-hour variant)                  | Accepted |
+| [0014](0014-private-proofs.md)             | Private proofs: an attested-facts Merkle tree anchored on Base, proven with Groth16                | Accepted |

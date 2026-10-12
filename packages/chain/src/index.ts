@@ -23,6 +23,7 @@ export * from "./spendKey";
 export * from "./setup";
 export * from "./owners";
 export * from "./relay";
+export * from "./attestations";
 export * from "./logs";
 export * from "./erc7579";
 export {

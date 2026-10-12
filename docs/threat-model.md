@@ -15,13 +15,16 @@ and no Agent Bank failure (outage, insider, shutdown) may stop an owner from exi
 | Spend keys           | Agent runtime                                                   | The float (ADR 0001)                                   |
 | Ledger and audit log | PostgreSQL, S3 Object Lock export                               | Loss of meaning and evidence; chain is still the truth |
 | Policies, mandates   | Co-signer store (authoritative), API (display)                  | Loosened limits                                        |
+| Attester key         | KMS (testnet: secret manager), API account                      | False attestations; no funds at risk                   |
+| Proof secrets        | Agent runtime (client-side)                                     | Someone else proves the agent's facts                  |
+| Proving keys         | `contracts/circuits` (testnet single-party setup)               | Forged proofs (testnet only until a public ceremony)   |
 
 ## Actors
 
 Prompt-injected or malicious agent; external attacker with a stolen session or spend key;
 phished principal admin; malicious x402 seller; compromised API host; compromised co-signer
 host or KMS credentials; malicious insider; sanctioned counterparties; chain reorgs; Agent Bank
-going out of business.
+going out of business; a curious or colluding proof verifier.
 
 ## Trust boundaries
 
@@ -31,6 +34,8 @@ going out of business.
 3. Off-chain ↔ on-chain (session scope and hook enforce limits even if every off-chain system
    is compromised).
 4. Principal ↔ Agent Bank (owner key never leaves the principal; owner operations; exit tool).
+5. Agent ↔ proof verifier (zero-knowledge presentations; the verifier learns statements, not
+   identities; see [private proofs](private-proofs.md)).
 
 ## Threats and controls
 
@@ -53,6 +58,13 @@ going out of business.
 | T15 | Secrets in logs                                              | Structured logging with redaction of keys, signatures, API keys                                                                            | Log review in CI (grep for key patterns)                                        | API logger tests                                                                          |
 | T16 | Reorg double-credits a deposit                               | Large deposits post only at finality; reorgs reverse entries                                                                               | Suspense + alert                                                                | Indexer reorg tests                                                                       |
 | T17 | Mainnet deployment by mistake                                | `assertTestnet`, DB check constraint, deploy-script guard, Terraform validation                                                            | Human gate at Phase 5                                                           | Tests in `core`, `db`, contracts                                                          |
+| T18 | Attester key leaks: false facts attested                     | Separate key that can move nothing; KMS outside testnet; roots public and permanent on Base                                                | Registry owner rotates the attester and revokes roots                           | Registry tests (`contracts`); `docs/runbooks/key-compromise.md`                           |
+| T19 | Forged proof                                                 | Groth16 soundness; circuit range checks on every bound; disclosure mask enforced in-circuit                                                | Public multi-party ceremony and circuit audit before mainnet                    | `contracts/circuits/test` soundness suite; `@agentbank/proofs` tests                      |
+| T20 | Proof replayed to another verifier or later                  | Scope and nonce are public inputs; gates issue HMAC nonces and remember them until expiry; on-chain consumers burn nonces                  | Root validity window                                                            | Gate and `AgentClaimsVerifier` replay tests                                               |
+| T21 | Verifier deanonymizes the agent                              | Nullifiers per scope; coarse attribute values; minimum anonymity set per request                                                           | SDK refuses probing patterns; owner disclosure classes                          | Privacy scenarios in `tests/e2e`                                                          |
+| T22 | Funds pledged to several verifiers                           | Reservations are ledger holds bound to one scope tag; the circuit compares the tag                                                         | Reservations cannot be released early except by the owner, which revokes roots  | e2e reservation scenarios                                                                 |
+| T23 | Narrowed disclosure or frozen agent keeps proving            | Narrowing rebuilds the tree and revokes older valid roots                                                                                  | Short root validity (2 h)                                                       | API proofs tests                                                                          |
+| T24 | Stolen session key enrolls an attacker's proof identity      | Enrollment needs a live agent session; owner controls whether proofs are enabled at all                                                    | Owner disables proofs (immediate, revokes roots); session revocation            | API proofs tests                                                                          |
 
 ## Residual risks (accepted for beta)
 
@@ -60,3 +72,5 @@ going out of business.
 - x402 spend-key float can be spent by a fully compromised agent up to the float (ADR 0001).
 - USDC issuer freezes are outside Agent Bank's control (disclosed in terms).
 - Counsel has not yet confirmed the co-signer model is not money transmission (open decision).
+- Private proofs: verifiers trust Agent Bank as attester, the testnet proving keys come from a
+  single-party ceremony, and payments made after a proof remain linkable on-chain (ADR 0014).

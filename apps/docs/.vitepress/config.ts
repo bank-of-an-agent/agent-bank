@@ -55,6 +55,7 @@ const mainSidebar: DefaultTheme.SidebarItem[] = [
       { text: "Reconciliation", link: "/concepts/reconciliation" },
       { text: "Escrow and streams", link: "/concepts/escrow-and-streams" },
       { text: "Savings and treasury", link: "/concepts/savings" },
+      { text: "Private proofs", link: "/concepts/private-proofs" },
       { text: "Fees and plans", link: "/concepts/fees-and-plans" },
       { text: "Exit tool", link: "/concepts/exit-tool" },
       { text: "Security model", link: "/concepts/security-model" },

@@ -39,6 +39,10 @@ export const WEBHOOK_EVENT_TYPES = [
   "session.revoked",
   "balance.low",
   "statement.ready",
+  "proof_settings.updated",
+  "proof_reservation.created",
+  "proof_reservation.released",
+  "proof_reservation.expired",
 ] as const;
 
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];

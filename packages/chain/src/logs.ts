@@ -1,5 +1,6 @@
 import { decodeEventLog, getAddress, toEventSelector, type AbiEvent, type Address, type Hex } from "viem";
 import {
+  agentAttestationRegistryAbi,
   agentEscrowAbi,
   agentPolicyHookAbi,
   entryPointAbi,
@@ -36,6 +37,9 @@ export const EVENT_SOURCE: Record<ChainEventName, keyof ChainContracts> = {
   SpendRecorded: "policyHook",
   SessionCreated: "smartSessions",
   SessionRemoved: "smartSessions",
+  RootPublished: "attestationRegistry",
+  RootRevoked: "attestationRegistry",
+  AttesterChanged: "attestationRegistry",
   UserOperationEvent: "entryPoint",
   UserOperationRevertReason: "entryPoint",
   AccountDeployed: "entryPoint",
@@ -53,6 +57,7 @@ const ALL_EVENTS: AbiEvent[] = [
   ...eventsOf(topUpExecutorAbi),
   ...eventsOf(agentPolicyHookAbi),
   ...eventsOf(smartSessionsAbi),
+  ...eventsOf(agentAttestationRegistryAbi),
   ...eventsOf(entryPointAbi),
 ];
 
@@ -172,6 +177,11 @@ export const EVENT_PARTIES: Record<ChainEventName, readonly string[]> = {
   SpendRecorded: ["account"],
   SessionCreated: ["account"],
   SessionRemoved: ["smartAccount"],
+  // Registry events concern no account's funds or permissions (the attester and the revoker are
+  // Agent Bank or governance keys), so `involving` never matches them.
+  RootPublished: [],
+  RootRevoked: [],
+  AttesterChanged: [],
   UserOperationEvent: ["sender"],
   UserOperationRevertReason: ["sender"],
   AccountDeployed: ["sender"],

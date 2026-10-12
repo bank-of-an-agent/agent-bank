@@ -24,6 +24,19 @@ session's on-chain scope.
 It only pays gas and submits payer-signed authorizations. Rotate the secret, fund the new key
 with testnet ETH, revoke the old one. No customer funds are at risk.
 
+## Proof attester key
+
+It publishes private-proof roots and can move no funds; the risk is false attestations.
+
+1. **Revoke**: the registry owner (governance multisig) calls `revokeRoots` for every root
+   published during the window of exposure, then `setAttester(newAttester)`.
+2. **Rotate** `PROOFS_ATTESTER_KEY` (KMS key id outside testnet) and fund the new address with a
+   little ETH for root transactions.
+3. **Republish**: the next `proofs-roots` run publishes a fresh root; agents fetch new witnesses
+   automatically when a proof fails with `root_revoked`.
+4. Compare every root published during the window with the roots in `proof_root`; any root the
+   API did not build is evidence of misuse and goes in the incident report.
+
 ## Org API key
 
 Revoke it (`DELETE /v1/api-keys/{id}`), review `last_used_at` and the audit log. API keys cannot

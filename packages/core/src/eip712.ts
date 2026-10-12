@@ -21,6 +21,8 @@ export const OWNER_ACTIONS = [
   "vault.withdraw",
   "owner.rotate",
   "spend_key.set",
+  "proofs.disclose",
+  "proofs.reservation.release",
 ] as const;
 
 export type OwnerAction = (typeof OWNER_ACTIONS)[number];

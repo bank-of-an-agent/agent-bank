@@ -1,5 +1,6 @@
-import { CHAINS, getAsset } from "@agentbank/core";
-import { getAddress, type Address, type Hex } from "viem";
+import { AgentBankError, CHAINS, getAsset } from "@agentbank/core";
+import { getAddress, isAddressEqual, type Address, type Hex, type LocalAccount } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import type { ChainContracts } from "./types";
 
 /**
@@ -105,7 +106,14 @@ export function anvilForkContracts(modules: SessionModuleSet = SESSION_MODULES_V
 /** Agent Bank contract addresses (deployment output of the contracts repository). */
 export type AgentBankContractAddresses = Pick<
   ChainContracts,
-  "escrow" | "streams" | "vaults" | "policyHook" | "topUpExecutor" | "sweepExecutor"
+  | "escrow"
+  | "streams"
+  | "vaults"
+  | "policyHook"
+  | "topUpExecutor"
+  | "sweepExecutor"
+  | "attestationRegistry"
+  | "claimsVerifier"
 >;
 
 /** Return `contracts` with Agent Bank's deployed contract addresses filled in (checksummed). */
@@ -121,6 +129,8 @@ export function withAgentBankContracts(
     "policyHook",
     "topUpExecutor",
     "sweepExecutor",
+    "attestationRegistry",
+    "claimsVerifier",
   ] as const) {
     const value = deployed[key];
     if (value !== undefined) out[key] = getAddress(value);
@@ -133,6 +143,8 @@ export interface AgentBankDeploymentFile {
   chainId: number;
   contracts: Partial<
     Record<
+      | "AgentAttestationRegistry"
+      | "AgentClaimsVerifier"
       | "AgentEscrow"
       | "AgentPolicyHook"
       | "PaymentStreams"
@@ -164,6 +176,8 @@ export function contractsFromDeployment(
   if (c.AgentPolicyHook) deployed.policyHook = getAddress(c.AgentPolicyHook);
   if (c.TopUpExecutor) deployed.topUpExecutor = getAddress(c.TopUpExecutor);
   if (c.SweepExecutor) deployed.sweepExecutor = getAddress(c.SweepExecutor);
+  if (c.AgentAttestationRegistry) deployed.attestationRegistry = getAddress(c.AgentAttestationRegistry);
+  if (c.AgentClaimsVerifier) deployed.claimsVerifier = getAddress(c.AgentClaimsVerifier);
   const out = withAgentBankContracts(base, deployed);
   const usdc = file.dependencies?.USDC;
   if (usdc && (options.useDeploymentUsdc ?? true)) out.usdc = getAddress(usdc);
@@ -179,7 +193,42 @@ export const SIMULATED_CONTRACTS: ChainContracts = {
   vaults: getAddress("0x000000000000000000000000000000000000ab03"),
   policyHook: getAddress("0x000000000000000000000000000000000000ab04"),
   topUpExecutor: getAddress("0x000000000000000000000000000000000000ab05"),
+  attestationRegistry: getAddress("0x000000000000000000000000000000000000ab06"),
+  /** Address only: proofs are verified off-chain; the simulator has no contract here. */
+  claimsVerifier: getAddress("0x000000000000000000000000000000000000ab07"),
 };
+
+/**
+ * Private key of the simulated chain's default attestation-registry attester:
+ * `keccak256("agentbank.simulated.attester")`. **Public**, like Anvil's development keys: it only
+ * signs on the in-memory simulated chain (1337). {@link simulatedAttesterAccount} refuses other
+ * chains and `EvmChainGateway` refuses to send from {@link SIMULATED_ATTESTER}.
+ */
+export const SIMULATED_ATTESTER_KEY: Hex =
+  "0xee60ebc5dbb838b5f3537acbce54e4aafa54a18a57da395b994875a6e3df63c0";
+
+/** Address of {@link SIMULATED_ATTESTER_KEY}: the `SimulatedChain` registry's default attester. */
+export const SIMULATED_ATTESTER: Address = "0xE153F768d39c6Df8c0B7eC92491d6E0bf0fc1C4f";
+
+/**
+ * The account of {@link SIMULATED_ATTESTER_KEY}, for the simulated chain only (like the co-signer's
+ * `LocalSigner`, it refuses to exist anywhere else). Real chains use the attester key from the
+ * secret manager (KMS outside testnet).
+ */
+export function simulatedAttesterAccount(chainId: number): LocalAccount {
+  if (chainId !== CHAINS.simulated.id) {
+    throw new AgentBankError(
+      "unsupported_chain",
+      `The simulated attester key is public and only signs on the simulated chain (${CHAINS.simulated.id}), not ${chainId}`,
+    );
+  }
+  return privateKeyToAccount(SIMULATED_ATTESTER_KEY);
+}
+
+/** Whether `address` is the public {@link SIMULATED_ATTESTER} (never acceptable on a real chain). */
+export function isSimulatedAttester(address: Address): boolean {
+  return isAddressEqual(address, SIMULATED_ATTESTER);
+}
 
 /** Default signing deadlines (seconds) for prepared operations. */
 export const DEFAULT_SESSION_OP_TTL_SECONDS = 10 * 60;
