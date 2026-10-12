@@ -353,6 +353,69 @@
         }
       }
     },
+    "/v1/orgs/me/owner": {
+      "post": {
+        "operationId": "rotateOwner",
+        "summary": "Rotate the org owner key (signed by the current owner)",
+        "description": "Updates the owner key Agent Bank and the co-signer recognise. Change the Safe owner on-chain too (owner operation). Lost keys are recovered on-chain with guardians; see the owner-recovery runbook.",
+        "tags": [
+          "Orgs"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical operation. Retries with the same key return the original result.",
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateOwnerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Org"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/orgs/me/treasury-accounts": {
       "post": {
         "operationId": "createTreasuryAccount",
@@ -6708,6 +6771,25 @@
           "owner_authorization"
         ],
         "description": "Unfreezing is a loosening change: owner signature plus 1-hour delay."
+      },
+      "RotateOwnerRequest": {
+        "type": "object",
+        "properties": {
+          "new_owner_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM address",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "owner_authorization": {
+            "$ref": "#/components/schemas/OwnerAuthorization"
+          }
+        },
+        "required": [
+          "new_owner_address",
+          "owner_authorization"
+        ],
+        "description": "Voluntary rotation signed by the current owner key (action owner.rotate). The on-chain Safe owner must be changed with an owner operation as well."
       },
       "SetTreasuryRequest": {
         "type": "object",

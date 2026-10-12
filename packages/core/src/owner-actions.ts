@@ -80,6 +80,16 @@ export const ownerPayloads = {
     subject: vaultId,
     payload: { amount },
   }),
+  /**
+   * `POST /v1/orgs/me/owner`: voluntary owner-key rotation signed by the **current** owner;
+   * subject = org id; payload = `{ new_owner_address }`. (Guardian recovery after a lost key is an
+   * on-chain Safe recovery followed by the owner-recovery runbook.)
+   */
+  ownerRotate: (orgId: string, newOwnerAddress: string): OwnerActionPayload<"owner.rotate"> => ({
+    action: "owner.rotate",
+    subject: orgId,
+    payload: { new_owner_address: newOwnerAddress },
+  }),
 } as const;
 
 /**

@@ -124,6 +124,14 @@ export const UnfreezeRequest = z
     description: "Unfreezing is a loosening change: owner signature plus 1-hour delay.",
   });
 
+export const RotateOwnerRequest = z
+  .object({ new_owner_address: AddressSchema, owner_authorization: OwnerAuthorizationSchema })
+  .meta({
+    id: "RotateOwnerRequest",
+    description:
+      "Voluntary rotation signed by the current owner key (action owner.rotate). The on-chain Safe owner must be changed with an owner operation as well.",
+  });
+
 export const SetTreasuryRequest = z
   .object({ account_id: idSchema("account"), owner_authorization: OwnerAuthorizationSchema })
   .meta({ id: "SetTreasuryRequest" });

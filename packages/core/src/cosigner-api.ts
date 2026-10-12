@@ -46,6 +46,7 @@ export const CosignerRoutes = {
   getPolicy: { method: "GET", path: "/internal/v1/policies/:agentId" },
   registerMandate: { method: "POST", path: "/internal/v1/mandates" },
   setTreasury: { method: "POST", path: "/internal/v1/treasury" },
+  rotateOwner: { method: "POST", path: "/internal/v1/owner" },
   revokeMandate: { method: "DELETE", path: "/internal/v1/mandates/:id" },
   freeze: { method: "POST", path: "/internal/v1/freeze" },
   unfreeze: { method: "POST", path: "/internal/v1/unfreeze" },
@@ -111,6 +112,15 @@ export const SetTreasuryInternal = z.object({
   owner_address: AddressSchema,
   account_id: z.string(),
   treasury_address: AddressSchema,
+  owner_authorization: OwnerAuthorizationSchema,
+});
+
+/** Voluntary owner rotation authorized by the current owner (`owner.rotate`). */
+export const RotateOwnerInternal = z.object({
+  org_id: z.string(),
+  chain_id: z.number().int(),
+  owner_address: AddressSchema.meta({ description: "Current owner" }),
+  new_owner_address: AddressSchema,
   owner_authorization: OwnerAuthorizationSchema,
 });
 
@@ -258,6 +268,7 @@ export type PolicyStateInternal = z.infer<typeof PolicyStateInternal>;
 export type RegisterMandateInternal = z.infer<typeof RegisterMandateInternal>;
 export type FreezeInternal = z.infer<typeof FreezeInternal>;
 export type SetTreasuryInternal = z.infer<typeof SetTreasuryInternal>;
+export type RotateOwnerInternal = z.infer<typeof RotateOwnerInternal>;
 export type UnfreezeInternal = z.infer<typeof UnfreezeInternal>;
 export type IntentInternal = z.infer<typeof IntentInternal>;
 export type EvaluateInternal = z.infer<typeof EvaluateInternal>;
@@ -279,6 +290,7 @@ export interface CosignerClient {
   getPolicy(agentId: string): Promise<PolicyStateInternal>;
   registerMandate(input: RegisterMandateInternal): Promise<void>;
   setTreasury(input: SetTreasuryInternal): Promise<void>;
+  rotateOwner(input: RotateOwnerInternal): Promise<void>;
   revokeMandate(mandateId: string): Promise<void>;
   freeze(input: FreezeInternal): Promise<void>;
   unfreeze(input: UnfreezeInternal): Promise<{ effective_at: string }>;

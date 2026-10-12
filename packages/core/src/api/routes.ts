@@ -109,6 +109,19 @@ export const routes = {
     body: R.UnfreezeRequest,
     response: R.Org,
   }),
+  rotateOwner: route({
+    operationId: "rotateOwner",
+    method: "POST",
+    path: "/v1/orgs/me/owner",
+    summary: "Rotate the org owner key (signed by the current owner)",
+    description:
+      "Updates the owner key Agent Bank and the co-signer recognise. Change the Safe owner on-chain too (owner operation). Lost keys are recovered on-chain with guardians; see the owner-recovery runbook.",
+    tags: ["Orgs"],
+    auth: ["principal"],
+    idempotent: true,
+    body: R.RotateOwnerRequest,
+    response: R.Org,
+  }),
   createTreasuryAccount: route({
     operationId: "createTreasuryAccount",
     method: "POST",

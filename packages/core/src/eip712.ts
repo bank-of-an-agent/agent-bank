@@ -19,6 +19,7 @@ export const OWNER_ACTIONS = [
   "sweep.set",
   "treasury.set",
   "vault.withdraw",
+  "owner.rotate",
 ] as const;
 
 export type OwnerAction = (typeof OWNER_ACTIONS)[number];
