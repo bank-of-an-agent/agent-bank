@@ -38,7 +38,7 @@ const ZONES = ["UTC", "America/New_York", "Europe/London", "Asia/Kolkata", "Aust
 const AMOUNTS = ["0", "0.000001", "1", "5", "9.99", "10", "25", "50", "100", "200", "1000"];
 const NUM_RUNS = 300;
 /** Property suites do thousands of evaluations; give slow (instrumented) CI runs room. */
-const TIMEOUT_MS = 30_000;
+const TIMEOUT_MS = process.env.CI ? 300_000 : 30_000;
 
 const opt = <T>(arb: fc.Arbitrary<T>): fc.Arbitrary<T | undefined> =>
   fc.option(arb, { nil: undefined, freq: 2 });
