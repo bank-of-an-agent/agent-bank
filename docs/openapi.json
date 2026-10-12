@@ -7835,6 +7835,30 @@
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "example": "0x1111111111111111111111111111111111111111"
+          },
+          "spend_key_permit": {
+            "description": "EIP-2612 permit signed by the spend key granting the agent's smart account an allowance, so the owner can always sweep the x402 float back (ADR 0001). Submitted on-chain in the account setup operation.",
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "description": "Allowance in USDC minor units (usually max uint256)"
+              },
+              "deadline": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "signature": {
+                "type": "string",
+                "pattern": "^0x([a-fA-F0-9]{2})*$"
+              }
+            },
+            "required": [
+              "value",
+              "deadline",
+              "signature"
+            ]
           }
         }
       },

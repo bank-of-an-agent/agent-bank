@@ -1,11 +1,11 @@
 {
   "chainId": 84532,
   "contracts": {
-    "AgentEscrow": "0x7DFb13379961afBd74725562B8Ddd1498A2dEbBe",
+    "AgentEscrow": "0x528C58158b650e6A75c56e0085aA8Ec7Bbd7BC51",
     "AgentPolicyHook": "0x855429f906c1396cfb58d5795F9abC085ba61ab0",
-    "PaymentStreams": "0xfA963d2A62faB54E1aC8005Db8D9B8F3f9919Fd4",
+    "PaymentStreams": "0x8157DB38E5794761Fd9F5AeC236Ef9452db9D934",
     "SweepExecutor": "0x4ebC1F620d9b7636eE2298FDbD57BBbE3c19122A",
-    "TimeLockVaults": "0xdA19F78aa991ec7D236725745F65Ff2bee7d439A",
+    "TimeLockVaults": "0x45dbA50CDFAEEc2d44A69743A8F813905023347F",
     "TopUpExecutor": "0x1D78bA1aF74BcEdee319fF1c19Ad03777aA19b80"
   },
   "create2Factory": "0x4e59b44847b379578588920cA78FbF26c0B4956C",

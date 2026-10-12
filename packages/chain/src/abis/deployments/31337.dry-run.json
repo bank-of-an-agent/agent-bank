@@ -1,18 +1,18 @@
 {
   "chainId": 31337,
   "contracts": {
-    "AgentEscrow": "0xF74C2226109b7720AAE439947263ABcA8D0c134A",
+    "AgentEscrow": "0x2b26662C52f70161145645D89694b11335049621",
     "AgentPolicyHook": "0x855429f906c1396cfb58d5795F9abC085ba61ab0",
-    "PaymentStreams": "0xfA963d2A62faB54E1aC8005Db8D9B8F3f9919Fd4",
+    "PaymentStreams": "0x8157DB38E5794761Fd9F5AeC236Ef9452db9D934",
     "SweepExecutor": "0x4ebC1F620d9b7636eE2298FDbD57BBbE3c19122A",
-    "TimeLockVaults": "0xdA19F78aa991ec7D236725745F65Ff2bee7d439A",
+    "TimeLockVaults": "0x45dbA50CDFAEEc2d44A69743A8F813905023347F",
     "TopUpExecutor": "0x1D78bA1aF74BcEdee319fF1c19Ad03777aA19b80"
   },
   "create2Factory": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
   "dependencies": {
     "ERC8004ValidationRegistry": "0xF26ca0C322d4e1393856FfbF7e392715FD0764cA",
-    "MockTreasuryFund": "0xcca90F5Fc1268fD454c5b461213AD0e94fFEc44e",
-    "USDC": "0x75d8f353b25d068749ba2d259f7436800752e4Ec"
+    "MockTreasuryFund": "0xaC7A93C8Ad3fF4E5B3822bEba5e7b0D005fc929C",
+    "USDC": "0xdaBEf0A6635419265002b6c386Ff6DbB2A0074f1"
   },
   "mode": "dry-run",
   "pauseGuardian": "0x0000000000000000000000000000000000000000",
