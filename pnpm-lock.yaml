@@ -246,6 +246,58 @@ importers:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.29)(tsx@4.23.15)(typescript@6.0.3)
 
+  apps/facilitator:
+    dependencies:
+      '@agentbank/chain':
+        specifier: workspace:*
+        version: link:../../packages/chain
+      '@agentbank/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@agentbank/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
+      '@noble/curves':
+        specifier: 1.9.1
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^2.4.0
+        version: 2.4.0
+      '@rhinestone/module-sdk':
+        specifier: ^0.4.0
+        version: 0.4.0(viem@2.57.4(typescript@6.0.3)(zod@4.6.6))
+      fastify:
+        specifier: ^5.12.5
+        version: 5.12.5
+      permissionless:
+        specifier: ^0.4.1
+        version: 0.4.1(viem@2.57.4(typescript@6.0.3)(zod@4.6.6))
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
+      pino:
+        specifier: ^10.4.0
+        version: 10.4.0
+      viem:
+        specifier: ^2.57.4
+        version: 2.57.4(typescript@6.0.3)(zod@4.6.6)
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.6
+    devDependencies:
+      '@x402/core':
+        specifier: 2.28.0
+        version: 2.28.0
+      '@x402/evm':
+        specifier: 2.28.0
+        version: 2.28.0(typescript@6.0.3)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.29)(tsx@4.23.15)(typescript@6.0.3)
+
   packages/chain:
     dependencies:
       '@agentbank/core':

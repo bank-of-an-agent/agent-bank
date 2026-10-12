@@ -1,0 +1,64 @@
+{
+  "name": "@agentbank/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Agent Bank: money tools (balance, dry-run policy checks, payments, x402 paid fetches, payment requests, escrow, transactions) for AI agents over stdio or streamable HTTP.",
+  "keywords": [
+    "agent-bank",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "x402",
+    "usdc",
+    "payments"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bank-of-an-agent/agent-bank.git",
+    "directory": "packages/mcp"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "agentbank-mcp": "./dist/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --max-warnings=0",
+    "start": "tsx src/cli.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@agentbank/core": "workspace:*",
+    "@agentbank/sdk": "workspace:*",
+    "tsup": "^8.5.1"
+  }
+}
