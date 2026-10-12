@@ -87,11 +87,17 @@ async function setup() {
 }
 
 describe("Any MCP client: Agent Bank money tools", () => {
-  it("lists the eight money tools and flags the ones that move money", async () => {
+  it("lists the ten money tools and flags the ones that move or hold money", async () => {
     const { tools } = await setup();
-    expect(tools).toHaveLength(8);
+    expect(tools).toHaveLength(10);
     const moving = tools.filter(movesMoney).map((t) => t.name);
-    expect(moving.sort()).toEqual(["create_escrow", "fetch_paid_resource", "pay", "release_escrow"]);
+    expect(moving.sort()).toEqual([
+      "create_escrow",
+      "fetch_paid_resource",
+      "pay",
+      "release_escrow",
+      "reserve_funds_for_proof",
+    ]);
   });
 
   it("reads without asking", async () => {

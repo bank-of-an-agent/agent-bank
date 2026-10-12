@@ -27,7 +27,7 @@ afterAll(async () => {
 });
 
 describe("MCP money tools", () => {
-  it("exposes the eight money tools and nothing that loosens limits", async () => {
+  it("exposes the ten money tools and nothing that loosens limits", async () => {
     const { tools } = await mcp.client.listTools();
     const names = tools.map((t) => t.name);
     expect(names).toContain("get_balance");
