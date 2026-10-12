@@ -84,11 +84,20 @@ Migrations live in `packages/db/migrations` and are owned by domain: `0001_ledge
   deployed counterfactually (CREATE2 via the Safe7579 launchpad), so it can receive funds
   before deployment. Each org also has a **treasury** account.
 - **Session keys** are generated client-side by the SDK (secp256k1, default 24 h, max 7 days).
-  On-chain they are Smart Sessions sessions whose session validator is an `OwnableValidator`
-  configured **2-of-2: session key + Agent Bank co-signer**, with policies for the token
-  spending limit (`max_per_day`), per-call value (`max_per_tx` via the hook), allowed
-  recipients/contracts, and expiry (time-frame policy). Off-chain the co-signer stores the same
+  On-chain they are Rhinestone Smart Sessions **V1** sessions (`0x00000000008bDABA…`; the older
+  `0x00000000002B0eCf…` deployment is the pre-V1 beta and cannot install our policies) whose
+  session validator is an `OwnableValidator` configured **2-of-2: session key + Agent Bank
+  co-signer**. Session policies enforce a per-call cap (`max_per_tx`), a lifetime cap
+  (`max_per_day` × UTC days spanned), the allowed contract functions and expiry.
+  **AgentPolicyHook** (installed on every agent account in the same owner operation that
+  deploys it) enforces what session policies cannot: the UTC-day cap across all of a token's
+  outflows in an operation (fees included) and multi-recipient allowlists. Our hook and
+  executors are not attested in the ERC-7484 module registry, so account setup calls
+  `disableModuleRegistry` before installing them. Off-chain the co-signer stores the same
   scope (verified against the owner's EIP-712 authorization).
+- The counterfactual account address commits to the co-signer: salt nonce =
+  `keccak256(abi.encode(cosigner, salt))`. Operations are serialized per account because
+  ERC-4337 nonces are sequential per account and signer path.
 - **Spend key** (ADR 0001): a per-agent EOA holding a small USDC float, used only to sign
   EIP-3009 authorizations for x402. Refilled from the smart account under policy. The on-chain
   loss bound for a fully compromised agent is the float.
