@@ -214,6 +214,9 @@ export const Account = z
     spend_key_address: AddressSchema.nullable().meta({
       description: "Per-agent x402 spend key holding a small float (see ADR 0001)",
     }),
+    spend_key_permit: z
+      .enum(["none", "pending", "executed"])
+      .meta({ description: "Whether the float-recovery permit is on-chain yet" }),
     module_versions: z.record(z.string(), z.string()),
     created_at: TimestampSchema,
   })
@@ -225,22 +228,35 @@ export const CreateAccountRequest = z
     spend_key_address: AddressSchema.optional().meta({
       description: "Address of the agent's x402 spend key, generated client-side by the SDK",
     }),
-    spend_key_permit: z
-      .object({
-        value: z
-          .string()
-          .regex(/^[0-9]+$/)
-          .meta({ description: "Allowance in USDC minor units (usually max uint256)" }),
-        deadline: z.string().regex(/^[0-9]+$/),
-        signature: HexSchema,
-      })
-      .optional()
-      .meta({
-        description:
-          "EIP-2612 permit signed by the spend key granting the agent's smart account an allowance, so the owner can always sweep the x402 float back (ADR 0001). Submitted on-chain in the account setup operation.",
-      }),
   })
   .meta({ id: "CreateAccountRequest" });
+
+export const SpendKeyPermit = z
+  .object({
+    value: z
+      .string()
+      .regex(/^[0-9]+$/)
+      .meta({ description: "Allowance in USDC minor units (usually max uint256)" }),
+    deadline: z.string().regex(/^[0-9]+$/),
+    nonce: z
+      .string()
+      .regex(/^[0-9]+$/)
+      .meta({ description: "USDC nonces(spend key) at signing time" }),
+    signature: HexSchema,
+  })
+  .meta({
+    id: "SpendKeyPermit",
+    description:
+      "EIP-2612 USDC permit signed by the spend key with spender = the agent's smart account, so the owner can always sweep the x402 float back (ADR 0001).",
+  });
+
+export const AttachSpendKeyRequest = z
+  .object({ spend_key_address: AddressSchema, permit: SpendKeyPermit })
+  .meta({
+    id: "AttachSpendKeyRequest",
+    description:
+      "Attach the agent's x402 spend key. The permit is executed on-chain in the account's next owner operation (normally the setup operation that installs the first session).",
+  });
 
 export const CreateTreasuryAccountRequest = z
   .object({ chain: ChainNameSchema.default("base-sepolia") })

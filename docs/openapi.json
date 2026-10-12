@@ -30,6 +30,9 @@
       "name": "Accounts"
     },
     {
+      "name": "x402"
+    },
+    {
       "name": "Sessions"
     },
     {
@@ -43,9 +46,6 @@
     },
     {
       "name": "Payments"
-    },
-    {
-      "name": "x402"
     },
     {
       "name": "Escrow"
@@ -1211,6 +1211,78 @@
         },
         "responses": {
           "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/accounts/{id}/spend-key": {
+      "put": {
+        "operationId": "attachSpendKey",
+        "summary": "Attach the agent's x402 spend key and its float-recovery permit",
+        "tags": [
+          "Accounts",
+          "x402"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical operation. Retries with the same key return the original result.",
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachSpendKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": "Success",
             "content": {
               "application/json": {
@@ -7785,6 +7857,15 @@
             ],
             "description": "Per-agent x402 spend key holding a small float (see ADR 0001)"
           },
+          "spend_key_permit": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "executed"
+            ],
+            "description": "Whether the float-recovery permit is on-chain yet"
+          },
           "module_versions": {
             "type": "object",
             "propertyNames": {
@@ -7813,6 +7894,7 @@
           "deployed",
           "owner_address",
           "spend_key_address",
+          "spend_key_permit",
           "module_versions",
           "created_at"
         ],
@@ -7835,32 +7917,57 @@
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "example": "0x1111111111111111111111111111111111111111"
-          },
-          "spend_key_permit": {
-            "description": "EIP-2612 permit signed by the spend key granting the agent's smart account an allowance, so the owner can always sweep the x402 float back (ADR 0001). Submitted on-chain in the account setup operation.",
-            "type": "object",
-            "properties": {
-              "value": {
-                "type": "string",
-                "pattern": "^[0-9]+$",
-                "description": "Allowance in USDC minor units (usually max uint256)"
-              },
-              "deadline": {
-                "type": "string",
-                "pattern": "^[0-9]+$"
-              },
-              "signature": {
-                "type": "string",
-                "pattern": "^0x([a-fA-F0-9]{2})*$"
-              }
-            },
-            "required": [
-              "value",
-              "deadline",
-              "signature"
-            ]
           }
         }
+      },
+      "SpendKeyPermit": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "Allowance in USDC minor units (usually max uint256)"
+          },
+          "deadline": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "USDC nonces(spend key) at signing time"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x([a-fA-F0-9]{2})*$"
+          }
+        },
+        "required": [
+          "value",
+          "deadline",
+          "nonce",
+          "signature"
+        ],
+        "description": "EIP-2612 USDC permit signed by the spend key with spender = the agent's smart account, so the owner can always sweep the x402 float back (ADR 0001)."
+      },
+      "AttachSpendKeyRequest": {
+        "type": "object",
+        "properties": {
+          "spend_key_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM address",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "permit": {
+            "$ref": "#/components/schemas/SpendKeyPermit"
+          }
+        },
+        "required": [
+          "spend_key_address",
+          "permit"
+        ],
+        "description": "Attach the agent's x402 spend key. The permit is executed on-chain in the account's next owner operation (normally the setup operation that installs the first session)."
       },
       "CreateTreasuryAccountRequest": {
         "type": "object",

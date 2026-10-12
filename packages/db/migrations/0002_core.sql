@@ -90,6 +90,9 @@ CREATE TABLE account (
   deployed          boolean NOT NULL DEFAULT false,
   owner_address     text NOT NULL,
   spend_key_address text,
+  spend_key_permit  jsonb,
+  spend_key_permit_status text NOT NULL DEFAULT 'none'
+                    CHECK (spend_key_permit_status IN ('none', 'pending', 'executed')),
   salt              text NOT NULL,
   module_versions   jsonb NOT NULL DEFAULT '{}',
   created_at        timestamptz NOT NULL DEFAULT now(),

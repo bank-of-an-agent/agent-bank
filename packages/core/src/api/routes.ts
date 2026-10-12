@@ -275,6 +275,18 @@ export const routes = {
     response: R.Account,
     status: 201,
   }),
+  attachSpendKey: route({
+    operationId: "attachSpendKey",
+    method: "PUT",
+    path: "/v1/accounts/{id}/spend-key",
+    summary: "Attach the agent's x402 spend key and its float-recovery permit",
+    tags: ["Accounts", "x402"],
+    auth: ["principal"],
+    idempotent: true,
+    params: Id("account"),
+    body: R.AttachSpendKeyRequest,
+    response: R.Account,
+  }),
   listAccounts: route({
     operationId: "listAccounts",
     method: "GET",
