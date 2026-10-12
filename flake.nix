@@ -15,7 +15,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             nodejs_22
-            pnpm
+            pnpm_10 # matches packageManager in package.json
             postgresql_16
             foundry
             opentofu

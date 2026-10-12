@@ -21,6 +21,29 @@
 - `AUDIT_SCOPE.md` lists in-scope files (1,526 nSLOC), trust assumptions, invariants and how
   each contract upholds "Agent Bank can never move user funds".
 
+## Demo script
+
+```bash
+# In the contracts repository:
+forge test                                   # unit, fuzz and invariant tests
+FOUNDRY_PROFILE=ci forge test                # CI depth: 10,000 fuzz runs, 1,000 × 200 invariant runs
+forge coverage --report summary --no-match-coverage '^(test|script)/'
+# In this repository:
+pnpm --filter @agentbank/e2e test test/escrow-streams.test.ts   # escrow, streams and vaults via the API and ledger
+```
+
+## Decisions taken
+
+- Top-up and sweep run as owner-installed executor modules that anyone (in practice a keeper)
+  may trigger, but they only move funds between the principal's own accounts or to the single
+  allowlisted fund, within configured limits (ADR 0009).
+- Guardian recovery reuses Candide's audited SocialRecoveryModule (72-hour delay) rather than
+  a custom module (ADR 0013).
+- The only bank-adjacent contract role is an inflow-only pause guardian: it can stop new locks,
+  streams, top-ups and deposits, never releases, refunds, settlements or withdrawals.
+- The treasury sweep ships disabled (`FEATURE_TREASURY_SWEEP`) until the counsel memo on broker
+  and adviser status.
+
 ## What a human must do
 
 Book and run two independent audits of `contracts/` and the module configuration (Safe7579,
