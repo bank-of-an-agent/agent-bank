@@ -6,7 +6,9 @@
 pip install agentbank        # or: uv add agentbank
 ```
 
-<!-- verify: PyPI package name once agentbank is published -->
+::: tip Not on PyPI yet
+Until `agentbank` is published, install it from GitHub: `uv add "agentbank @ git+https://github.com/bank-of-an-agent/sdk-python"` (or the same with `pip install`).
+:::
 
 ## Clients
 

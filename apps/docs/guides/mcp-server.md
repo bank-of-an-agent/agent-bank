@@ -38,7 +38,9 @@ The key file is the one the TypeScript SDK's `FileKeyStore` writes, for example 
 
 ## Running it
 
-<!-- verify: npx -y @agentbank/mcp once the package is published -->
+::: tip Not on npm yet
+`@agentbank/mcp` is not published yet. Until it is, build it from the repository (`pnpm --filter @agentbank/mcp build`) and run `node packages/mcp/dist/cli.js` instead of `npx -y @agentbank/mcp`.
+:::
 
 ```bash
 # Published package

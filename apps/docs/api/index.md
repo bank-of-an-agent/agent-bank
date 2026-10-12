@@ -13,7 +13,7 @@ The Agent Bank REST API (v1) is defined once, in the route registry of `@agentba
 | Local sandbox            | `http://localhost:8080` | `http://localhost:8083`         |
 | Hosted sandbox (testnet) | not yet published       | not yet published               |
 
-<!-- verify: hosted sandbox URLs once infra/envs/sandbox is deployed -->
+No hosted sandbox is running yet; run the whole stack locally with `pnpm --filter @agentbank/e2e sandbox` (API on 8080, facilitator on 8083, demo x402 seller on 4021).
 
 In a deployed environment a load balancer routes `/v1/x402/verify`, `/v1/x402/settle` and `/v1/x402/supported` to the facilitator, so one base URL serves both. Agent Bank is **testnet only** until the Phase 5 gate: the API refuses mainnet chain ids with `mainnet_locked`. `GET /v1/meta` tells a client which chain, USDC contract and feature flags a deployment uses.
 

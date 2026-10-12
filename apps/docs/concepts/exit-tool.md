@@ -21,7 +21,9 @@ agentbank-exit exit --account 0xYourSafe --to 0xYourColdWallet --deployments age
 OWNER_PRIVATE_KEY=… agentbank-exit exit --account 0xYourSafe --to 0xYourColdWallet --execute
 ```
 
-<!-- verify: install command for @agentbank/exit (npx / npm) once the package is published -->
+::: tip Install
+The package is not published yet: clone [`bank-of-an-agent/exit-tool`](https://github.com/bank-of-an-agent/exit-tool), run `pnpm install && pnpm build`, and use `node dist/cli.js` as `agentbank-exit`. It needs only Node.js and an RPC URL, never Agent Bank.
+:::
 
 | Command            | Does                                                                                                                                                                         |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

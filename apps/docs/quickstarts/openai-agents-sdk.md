@@ -71,7 +71,9 @@ try {
 }
 ```
 
-<!-- verify: npx -y @agentbank/mcp once the package is published -->
+::: tip Not on npm yet
+`@agentbank/mcp` is not published yet. Until it is, build it from the repository (`pnpm --filter @agentbank/mcp build`) and run `node packages/mcp/dist/cli.js` instead of `npx -y @agentbank/mcp`.
+:::
 
 ## Test
 

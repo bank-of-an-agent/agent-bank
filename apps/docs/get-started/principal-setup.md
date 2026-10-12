@@ -8,7 +8,9 @@ You act as the _principal_. You need an org API key for the API calls and your *
 
 The code is the TypeScript SDK; the Python SDK has the same steps (see the second tab). Install the SDK first: in this repository it is the workspace package `@agentbank/sdk`; outside it, `npm install @agentbank/sdk viem` once the package is published.
 
-<!-- verify: npm package names (@agentbank/sdk, agentbank on PyPI) once published -->
+::: tip Packages
+The SDKs are not published yet. Inside this repository use the workspace package `@agentbank/sdk`; for Python install from GitHub: `uv add "agentbank @ git+https://github.com/bank-of-an-agent/sdk-python"`.
+:::
 
 ## 1. Create the org
 
@@ -106,7 +108,7 @@ account = bank.accounts.create(agent.id, spend_key_address=spend_key.address)
 
 The Python SDK registers the spend key when it creates the account but cannot sign the permit yet, so `spend_key_permit` stays `none` and only the spend key itself can move the float.
 
-<!-- verify: Python SDK support for the spend-key permit (attachSpendKey / PUT /v1/accounts/{id}/spend-key) -->
+Both SDKs sign the spend-key permit and the owner's `spend_key.set` authorization for you: `principal.setupAgentAccount(...)` in TypeScript and `bank.setup_agent_account(...)` in Python do the account, the spend key and the first session in the order the contracts need.
 
 ## 4. Set the policy
 
@@ -238,7 +240,10 @@ The file stores testnet keys in plain text and the store refuses to read it if g
 
 Send test USDC to `account.address`. On Base Sepolia use [Circle's faucet](https://faucet.circle.com). Agents refill their x402 float from the account with a payment to their own spend key (kind `refill`, no fee, still within policy). Set up [auto top-up](/concepts/savings#auto-top-up) to refill the agent itself from the org treasury.
 
-<!-- verify: how test USDC is minted to accounts on the simulated chain in the local sandbox -->
+## Test USDC
+
+- **Local sandbox (simulated chain or Anvil):** `POST /v1/sandbox/faucet` mints test USDC to one of your accounts (`principal.sandbox.faucet({ account_id, amount })` in TypeScript, `bank.sandbox.faucet(...)` in Python, or the "Get test USDC" button in the console). `pnpm --filter @agentbank/e2e sandbox` also starts with a demo agent funded with 1,000 USDC.
+- **Base Sepolia:** use Circle's testnet faucet for USDC on Base Sepolia; the faucet route returns `feature_gated` there.
 
 ## Next
 

@@ -127,7 +127,7 @@ export default defineConfig({
   description:
     "Non-custodial, programmable bank accounts for AI agents: USDC on Base, limits enforced by code, x402, escrow and streams. Pre-release, testnet only.",
   base,
-  srcExclude: ["api/_*.md"],
+  srcExclude: ["api/_*.md", "README.md"],
   cleanUrls: true,
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: `${base}mark.svg` }],

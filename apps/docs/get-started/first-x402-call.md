@@ -16,15 +16,28 @@ The spend key is a plain EOA holding a small float, because x402's `exact` schem
 
 ## 1. Start a paid API
 
-The SDK ships a seller example: a Node HTTP server whose `/weather` costs 0.01 USDC (settled after the handler runs) and `/report` costs 2.00 USDC (above $1.00, so settled before the handler runs).
+The quickest way is the local sandbox, which already runs a demo seller next to the API and the
+facilitator, paying a sandbox account:
 
-<!-- verify: facilitator URL and network for the local sandbox (simulated chain) once the facilitator is final -->
+```bash
+pnpm --filter @agentbank/e2e sandbox
+# Facilitator    http://localhost:8083/v1/x402
+# Demo seller    http://localhost:4021   GET /weather $0.01 · GET /report $2.00
+```
+
+It also prints an agent env block (`AGENTBANK_API_URL`, `AGENTBANK_ACCOUNT_ID`,
+`AGENTBANK_SESSION_ID`, `AGENTBANK_SESSION_KEY`, `AGENTBANK_SPEND_KEY`) for an agent funded with
+1,000 USDC plus a 25 USDC spend-key float, with an open counterparty policy (caps of 500 USDC per
+payment and 2,000 USDC a day, approval above 250 USDC). The sandbox runs on the simulated chain, so
+its x402 network is `eip155:1337`; the SDKs read the network and the USDC contract from
+`GET /v1/meta`.
+
+To run your own seller instead, point the SDK's example at the facilitator:
 
 ```bash
 AGENTBANK_FACILITATOR_URL=http://localhost:8083/v1/x402 \
 SELLER_PAY_TO=0xYourSellerAccountAddress \
 pnpm --filter @agentbank/sdk exec tsx examples/seller-paywall.ts
-# seller listening on http://127.0.0.1:4021 (/weather 0.01 USDC, /report 2.00 USDC)
 ```
 
 The paywall is a few lines with `@agentbank/sdk/x402-server`; see [x402: charge for APIs](/guides/x402-seller).

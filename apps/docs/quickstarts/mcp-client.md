@@ -19,9 +19,7 @@ export AGENTBANK_ACCOUNT_ID=acct_… AGENTBANK_SESSION_ID=ses_… AGENTBANK_KEYS
 pnpm --filter @agentbank/example-mcp-client start 0x2222222222222222222222222222222222222222 1.00
 ```
 
-<!-- verify: npx -y @agentbank/mcp (the default AGENTBANK_MCP_COMMAND) once the package is published -->
-
-By default it runs `npx -y @agentbank/mcp`. Inside this repository, build the server and point the client at it:
+By default it runs `npx -y @agentbank/mcp`, which works once the package is published. Until then (and inside this repository), build the server and point the client at it:
 
 ```bash
 pnpm --filter @agentbank/mcp build

@@ -21,7 +21,7 @@ app.get("/weather", expressPaywall(weather), (_req, res) => res.json({ city: "Li
 app.listen(4021);
 ```
 
-<!-- verify: the hosted facilitator URL once the sandbox is deployed (locally: http://localhost:8083/v1/x402) -->
+Locally, `pnpm --filter @agentbank/e2e sandbox` runs the facilitator at `http://localhost:8083/v1/x402`; no hosted facilitator is running yet.
 
 ## Settle before serve above $1
 

@@ -6,7 +6,9 @@
 npm install @agentbank/sdk viem
 ```
 
-<!-- verify: npm package name and install command once @agentbank/sdk is published -->
+::: tip Not on npm yet
+`@agentbank/sdk` is not published yet. Inside this repository, depend on the workspace package (`"@agentbank/sdk": "workspace:*"`); elsewhere, build it with `pnpm --filter @agentbank/sdk build` and install the packed tarball (`pnpm --filter @agentbank/sdk pack`).
+:::
 
 Inside this repository it is the workspace package `packages/sdk-ts`; its `examples/` folder has runnable scripts for the principal setup, an agent payment, an x402 fetch and a seller paywall.
 

@@ -37,25 +37,29 @@ The [design](docs/design.md) is the source of the requirements; the
 
 ## Quickstart: the whole bank on your laptop
 
-Requirements: Node.js 22, pnpm 10 (`corepack enable`), optionally Docker for PostgreSQL. On NixOS,
+Requirements: Node.js 22 and pnpm 10 (`corepack enable`). No Docker needed. On NixOS,
 `nix develop` provides everything.
 
 ```bash
 pnpm install
-pnpm --filter @agentbank/api dev:local
+pnpm --filter @agentbank/e2e sandbox
 ```
 
-That starts the API on `http://localhost:8080` with an in-memory chain, the real co-signer and
-reconciler in-process, a simulated indexer and an in-memory PostgreSQL (PGlite). In a second
-terminal, run the end-to-end smoke test (sign up, spend key, owner-signed policy and session,
-on-chain setup, faucet deposit, payment, settlement):
+That runs the whole platform in one process against an in-memory simulated chain that applies the
+same rules as Base Sepolia: the API on `http://localhost:8080`, the co-signer, the reconciler and
+indexer, the x402 facilitator on `http://localhost:8083/v1/x402`, and a demo x402 seller on
+`http://localhost:4021`. It prints an org API key and the env block for a funded demo agent, ready
+for the [SDK examples](packages/sdk-ts/examples), the [MCP server](packages/mcp) and the
+[framework quickstarts](examples).
+
+Other entry points:
 
 ```bash
-API_URL=http://localhost:8080 pnpm --filter @agentbank/api smoke:local
+pnpm --filter @agentbank/api dev:local                                  # just the API (+ co-signer, reconciler)
+API_URL=http://localhost:8080 pnpm --filter @agentbank/api smoke:local  # end-to-end smoke test against it
+NEXT_PUBLIC_SANDBOX=true pnpm --filter @agentbank/console dev            # the principal console on :3000
+pnpm --filter @agentbank/docs dev                                        # the documentation site
 ```
-
-Then try the console (`NEXT_PUBLIC_SANDBOX=true pnpm --filter @agentbank/console dev`), the SDK
-[examples](packages/sdk-ts/examples) or a [framework quickstart](examples).
 
 ## What's in the repository
 
