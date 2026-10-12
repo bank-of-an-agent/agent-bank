@@ -18,7 +18,11 @@ rejects any change that weakens them.
    refuses mainnet `account.chain_id`; deploy scripts revert on chain 8453.
 3. **Money is integer minor units** (`bigint` in TypeScript, `bigint` columns in Postgres,
    decimal strings on the wire). ESLint bans floats in the money packages.
-4. **Every write is idempotent** (`Idempotency-Key` header; ledger idempotency keys).
+4. **Every write is idempotent.** State-changing `POST`/`PUT` routes require an
+   `Idempotency-Key` header (the route registry marks them `idempotent`); `DELETE`s are
+   idempotent by nature; dry runs (`/v1/policy/check`) change nothing; the x402 facilitator
+   follows the x402 protocol and settles each authorization at most once. Inside, every ledger
+   call carries a namespaced idempotency key derived from persisted state.
 5. **Fail closed.** If the co-signer, policy store, screening or database is unavailable, the
    payment stops. Errors are `cosigner_unavailable` / `screening_unavailable` (HTTP 503).
 6. **No LLM in the decision path.** Policy evaluation is a pure, deterministic function.

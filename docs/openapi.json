@@ -4908,6 +4908,512 @@
       }
     }
   },
+  "webhooks": {
+    "payment.created": {
+      "post": {
+        "summary": "payment.created event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "payment.requires_approval": {
+      "post": {
+        "summary": "payment.requires_approval event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "payment.submitted": {
+      "post": {
+        "summary": "payment.submitted event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "payment.settled": {
+      "post": {
+        "summary": "payment.settled event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "payment.failed": {
+      "post": {
+        "summary": "payment.failed event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "payment.denied": {
+      "post": {
+        "summary": "payment.denied event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "approval.requested": {
+      "post": {
+        "summary": "approval.requested event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "approval.decided": {
+      "post": {
+        "summary": "approval.decided event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "escrow.locked": {
+      "post": {
+        "summary": "escrow.locked event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "escrow.released": {
+      "post": {
+        "summary": "escrow.released event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "escrow.refunded": {
+      "post": {
+        "summary": "escrow.refunded event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "escrow.disputed": {
+      "post": {
+        "summary": "escrow.disputed event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "stream.created": {
+      "post": {
+        "summary": "stream.created event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "stream.settled": {
+      "post": {
+        "summary": "stream.settled event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "stream.canceled": {
+      "post": {
+        "summary": "stream.canceled event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "deposit.received": {
+      "post": {
+        "summary": "deposit.received event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "reconciliation.mismatch": {
+      "post": {
+        "summary": "reconciliation.mismatch event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "agent.frozen": {
+      "post": {
+        "summary": "agent.frozen event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "agent.unfrozen": {
+      "post": {
+        "summary": "agent.unfrozen event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "org.frozen": {
+      "post": {
+        "summary": "org.frozen event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "policy.updated": {
+      "post": {
+        "summary": "policy.updated event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "session.revoked": {
+      "post": {
+        "summary": "session.revoked event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "balance.low": {
+      "post": {
+        "summary": "balance.low event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    },
+    "statement.ready": {
+      "post": {
+        "summary": "statement.ready event",
+        "description": "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledged"
+          }
+        }
+      }
+    }
+  },
   "components": {
     "schemas": {
       "Money": {
@@ -4965,7 +5471,7 @@
           "issued_at",
           "expires_at"
         ],
-        "description": "EIP-712 OwnerAuthorization signature by the org owner key over the canonical request payload. Required for loosening changes and session installs."
+        "description": "EIP-712 OwnerAuthorization (domain: name \"Agent Bank\", version \"1\", chainId = GET /v1/meta owner_authorization_chain_id) signed by the org owner key. subject = id of the resource the action applies to; payload = this request body without owner_authorization, after schema defaults are applied, hashed as canonical JSON (keccak256). Valid for at most 15 minutes. See ownerPayloads in @agentbank/core for the exact subject and payload of every action."
       },
       "OpenPaymentMandate": {
         "type": "object",

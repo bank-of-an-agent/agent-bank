@@ -1,7 +1,7 @@
 -- 0005_api: tables and columns used only by apps/api that 0002_core does not carry:
 -- console sign-in (passkey sessions, WebAuthn challenges, member invites), the co-signer
--- outbox for tightening changes, fee/savings sweeps batched into outgoing operations,
--- statement notices, extra lookup indexes, and the sandbox fund list.
+-- outbox for tightening changes, auto-save and statement bookkeeping, extra lookup indexes,
+-- and the sandbox fund list.
 --
 -- Conventions as in 0002_core: prefixed text ids, bigint minor units, timestamptz.
 
@@ -34,6 +34,15 @@ CREATE INDEX stream_payer_idx ON stream (payer_account_id);
 CREATE INDEX stream_active_idx ON stream (status) WHERE status = 'active';
 
 CREATE INDEX vault_account_idx ON vault (account_id);
+-- TimeLockVaults early-withdrawal nonce (EIP-712 `EarlyWithdrawal.nonce`) as seen by the API.
+ALTER TABLE vault ADD COLUMN early_nonce bigint NOT NULL DEFAULT 0;
+
+-- Keeper bookkeeping for auto top-up triggers.
+ALTER TABLE auto_topup_rule ADD COLUMN last_triggered_at timestamptz;
+
+-- API follow-up after the reconciler settles a payment (fee_charge, payment request, auto-save).
+ALTER TABLE payment ADD COLUMN post_settled_at timestamptz;
+CREATE INDEX payment_post_settle_idx ON payment (settled_at) WHERE status = 'settled' AND post_settled_at IS NULL;
 CREATE INDEX owner_operation_open_idx ON owner_operation (status) WHERE status IN ('requires_signature', 'submitted');
 CREATE INDEX approval_pending_idx ON approval (expires_at) WHERE status = 'pending';
 CREATE INDEX payment_request_account_idx ON payment_request (account_id);
@@ -96,21 +105,6 @@ CREATE TABLE cosigner_outbox (
   updated_at      timestamptz NOT NULL
 );
 CREATE INDEX cosigner_outbox_due_idx ON cosigner_outbox (next_attempt_at) WHERE status = 'pending';
-
--- Accrued fees and auto-saved funds swept as extra calls in an account's next outgoing
--- operation (ADR 0008). Pending sweeps are excluded from later operations so nothing is
--- swept twice.
-CREATE TABLE pocket_sweep (
-  id         text PRIMARY KEY,
-  account_id text NOT NULL REFERENCES account (id),
-  payment_id text NOT NULL REFERENCES payment (id),
-  pocket     text NOT NULL CHECK (pocket IN ('fees', 'savings')),
-  amount     bigint NOT NULL CHECK (amount > 0),
-  status     text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'posted', 'void')),
-  created_at timestamptz NOT NULL,
-  UNIQUE (payment_id, pocket)
-);
-CREATE INDEX pocket_sweep_pending_idx ON pocket_sweep (account_id) WHERE status = 'pending';
 
 -- Auto-save bookkeeping: last run of each scheduled rule.
 CREATE TABLE auto_save_run (

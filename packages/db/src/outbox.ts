@@ -2,7 +2,8 @@ import type { SqlClient } from "./client";
 
 /**
  * Transactional outbox for webhooks. Call `emitEvent` inside the same
- * transaction as the state change it describes: the `event` row and one
+ * transaction as the state change it describes: the `event` row (whose
+ * payload is the wire `Event` resource, exactly what webhook receivers get) and one
  * `webhook_delivery` row per subscribed, enabled endpoint commit (or roll
  * back) together with that change. The API worker delivers pending rows.
  */
@@ -26,7 +27,14 @@ export async function emitEvent(
     input.id,
     input.orgId,
     input.type,
-    { id: input.id, type: input.type, created_at: input.at.toISOString(), data: input.data },
+    {
+      id: input.id,
+      object: "event",
+      type: input.type,
+      org_id: input.orgId,
+      created_at: input.at.toISOString(),
+      data: input.data,
+    },
     input.at,
   ]);
   const { rows } = await tx.query<{ id: string }>(

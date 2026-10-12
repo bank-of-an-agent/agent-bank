@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Problem } from "./resources";
+import { WEBHOOK_EVENT_TYPES } from "../webhooks";
 import { ROUTE_LIST, type AuthKind, type RouteDef } from "./routes";
 
 /**
@@ -156,6 +157,20 @@ export function buildOpenApiDocument(options: OpenApiOptions = {}): JsonObject {
     servers: (options.serverUrls ?? ["http://localhost:8080"]).map((url) => ({ url })),
     tags: [...new Set(selected.flatMap((r) => r.tags))].map((name) => ({ name })),
     paths,
+    webhooks: Object.fromEntries(
+      WEBHOOK_EVENT_TYPES.map((type) => [
+        type,
+        {
+          post: {
+            summary: `${type} event`,
+            description:
+              "Delivered as JSON with headers AgentBank-Signature (t=<unix>,v1=<hex HMAC-SHA256 of `${t}.${rawBody}`>), AgentBank-Event and AgentBank-Delivery. Retried with backoff for 72 hours until a 2xx response.",
+            requestBody: { required: true, content: { "application/json": { schema: ref("Event") } } },
+            responses: { "200": { description: "Acknowledged" } },
+          },
+        },
+      ]),
+    ),
     components: { schemas, securitySchemes: SECURITY_SCHEMES },
   };
 }

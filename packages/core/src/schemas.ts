@@ -83,7 +83,7 @@ export const OwnerAuthorizationSchema = z
   .meta({
     id: "OwnerAuthorization",
     description:
-      "EIP-712 OwnerAuthorization signature by the org owner key over the canonical request payload. Required for loosening changes and session installs.",
+      'EIP-712 OwnerAuthorization (domain: name "Agent Bank", version "1", chainId = GET /v1/meta owner_authorization_chain_id) signed by the org owner key. subject = id of the resource the action applies to; payload = this request body without owner_authorization, after schema defaults are applied, hashed as canonical JSON (keccak256). Valid for at most 15 minutes. See ownerPayloads in @agentbank/core for the exact subject and payload of every action.',
   });
 
 export type OwnerAuthorization = z.infer<typeof OwnerAuthorizationSchema>;
