@@ -1,0 +1,25 @@
+{
+  "name": "@agentbank/chain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChainGateway for Agent Bank: an in-memory SimulatedChain and an EVM gateway (Safe + ERC-7579 + Smart Sessions, ERC-4337 v0.7) for Base Sepolia and Anvil.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./simulated": "./src/simulated/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "sync-abis": "bash scripts/sync-abis.sh"
+  },
+  "dependencies": {
+    "@agentbank/core": "workspace:*",
+    "@noble/curves": "1.9.1",
+    "@rhinestone/module-sdk": "^0.4.0",
+    "permissionless": "^0.4.1",
+    "viem": "^2.57.4"
+  }
+}

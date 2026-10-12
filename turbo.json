@@ -15,11 +15,36 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": [],
-      "env": ["DATABASE_URL", "RUN_LIVE_TESTS", "BASE_SEPOLIA_RPC_URL"]
+      "env": [
+        "DATABASE_URL",
+        "RUN_LIVE_TESTS",
+        "BASE_SEPOLIA_RPC_URL",
+        "RUN_FORK_TESTS",
+        "ANVIL_RPC_URL",
+        "BUNDLER_URL",
+        "ANVIL_CMD",
+        "ALTO_CMD",
+        "FORGE_CMD",
+        "CONTRACTS_DIR",
+        "SESSION_MODULES"
+      ]
     },
     "test:coverage": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "env": [
+        "DATABASE_URL",
+        "RUN_LIVE_TESTS",
+        "BASE_SEPOLIA_RPC_URL",
+        "RUN_FORK_TESTS",
+        "ANVIL_RPC_URL",
+        "BUNDLER_URL",
+        "ANVIL_CMD",
+        "ALTO_CMD",
+        "FORGE_CMD",
+        "CONTRACTS_DIR",
+        "SESSION_MODULES"
+      ]
     },
     "dev": {
       "cache": false,
