@@ -77,7 +77,7 @@ beforeAll(async () => {
     relayer,
     options: { chain: CHAINS.simulated, asset: usdcAsset },
   });
-  app = buildApp({ facilitator });
+  app = await buildApp({ facilitator });
   const address = await app.listen({ host: "127.0.0.1", port: 0 });
   facilitatorUrl = `${address}/v1/x402`;
   facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl, timeoutMs: 10_000 });

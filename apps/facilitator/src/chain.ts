@@ -1,7 +1,7 @@
 import { anvilForkContracts, EvmChainGateway, type ChainGateway } from "@agentbank/chain";
 import { SimulatedChain } from "@agentbank/chain/simulated";
 import { assertTestnet, getAsset, registerAsset, systemClock, type AssetInfo } from "@agentbank/core";
-import { isAddressEqual, type Address } from "viem";
+import { isAddressEqual, type Address, type LocalAccount } from "viem";
 import type { FacilitatorConfig } from "./config";
 import { erc1271ViaCall, type ContractSignatureVerifier } from "./erc1271";
 import { evmReceipts, simulatedReceipts, type ReceiptSource } from "./receipts";
@@ -15,6 +15,8 @@ export interface ChainRuntime {
   asset: AssetInfo;
   /** Chain id the RPC node reports (EVM gateways only); checked at startup. */
   rpcChainId?: () => Promise<number>;
+  /** Native (gas) balance of the configured relayer, in wei (EVM gateways with a relayer only). */
+  relayerBalance?: () => Promise<bigint>;
   /** The in-memory chain when serving `simulated` (development only). */
   simulated?: SimulatedChain;
 }
@@ -74,5 +76,11 @@ export function createChainRuntime(config: FacilitatorConfig): ChainRuntime {
     contractSignatures: erc1271ViaCall(gateway.publicClient),
     asset: settlementAsset(config.chain.id, gateway.contracts.usdc),
     rpcChainId: () => gateway.publicClient.getChainId(),
+    ...(config.relayer
+      ? {
+          relayerBalance: () =>
+            gateway.publicClient.getBalance({ address: (config.relayer as LocalAccount).address }),
+        }
+      : {}),
   };
 }

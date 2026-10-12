@@ -25,10 +25,15 @@ afterAll(async () => {
   await db.close();
 });
 
-function setup(options: Parameters<typeof createHarness>[1] = {}): { h: Harness; app: FastifyInstance } {
+async function setup(
+  options: Parameters<typeof createHarness>[1] = {},
+): Promise<{ h: Harness; app: FastifyInstance }> {
   const h = createHarness(db, options);
   h.chain.faucet(payer.address, usdc("100"));
-  return { h, app: buildApp({ facilitator: h.facilitator, metrics: h.metrics, bodyLimitBytes: 16 * 1024 }) };
+  return {
+    h,
+    app: await buildApp({ facilitator: h.facilitator, metrics: h.metrics, bodyLimitBytes: 16 * 1024 }),
+  };
 }
 
 describe("routes from the core contract", () => {
@@ -45,7 +50,7 @@ describe("routes from the core contract", () => {
 
 describe("GET /v1/x402/supported", () => {
   it("lists the exact scheme on the served network with settlement hints", async () => {
-    const { h, app } = setup({ options: { maxSettlement: usdc("250") } });
+    const { h, app } = await setup({ options: { maxSettlement: usdc("250") } });
     const res = await app.inject({ method: "GET", url: "/v1/x402/supported" });
     expect(res.statusCode).toBe(200);
     const body = routes.x402Supported.response.parse(res.json());
@@ -73,7 +78,7 @@ describe("GET /v1/x402/supported", () => {
 
 describe("POST /v1/x402/verify and /settle", () => {
   it("verifies and settles a payment over HTTP in the x402 shape", async () => {
-    const { h, app } = setup();
+    const { h, app } = await setup();
     const { body } = await buildPayment(h, { amount: usdc("1.10") });
     const verify = await app.inject({ method: "POST", url: "/v1/x402/verify", payload: body });
     expect(verify.statusCode).toBe(200);
@@ -95,7 +100,7 @@ describe("POST /v1/x402/verify and /settle", () => {
   });
 
   it("answers invalid payments with HTTP 200 and an invalidReason", async () => {
-    const { h, app } = setup();
+    const { h, app } = await setup();
     const { body } = await buildPayment(h, { network: "eip155:8453" });
     const res = await app.inject({ method: "POST", url: "/v1/x402/verify", payload: body });
     expect(res.statusCode).toBe(200);
@@ -106,7 +111,7 @@ describe("POST /v1/x402/verify and /settle", () => {
     ["verify", { isValid: false, invalidReason: "invalid_payload" }],
     ["settle", { success: false, errorReason: "invalid_payload", transaction: "", network: "eip155:1337" }],
   ])("%s: invalid JSON is HTTP 400 in the x402 shape", async (route, expected) => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({
       method: "POST",
       url: `/v1/x402/${route}`,
@@ -118,14 +123,14 @@ describe("POST /v1/x402/verify and /settle", () => {
   });
 
   it("a missing body is HTTP 400 invalid_payload", async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({ method: "POST", url: "/v1/x402/verify" });
     expect(res.statusCode).toBe(400);
     expect(res.json()).toMatchObject({ isValid: false, invalidReason: "invalid_payload" });
   });
 
   it("a non-JSON media type is refused in the x402 shape", async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({
       method: "POST",
       url: "/v1/x402/settle",
@@ -137,7 +142,7 @@ describe("POST /v1/x402/verify and /settle", () => {
   });
 
   it("an oversized body is refused (413)", async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({
       method: "POST",
       url: "/v1/x402/verify",
@@ -149,7 +154,7 @@ describe("POST /v1/x402/verify and /settle", () => {
   });
 
   it("fail-closed answers keep the x402 shape with a 5xx status", async () => {
-    const { h, app } = setup({
+    const { h, app } = await setup({
       gateway: (gateway) =>
         overrideGateway(gateway, { isDeployed: async () => Promise.reject(new Error("rpc down")) }),
     });
@@ -165,7 +170,7 @@ describe("POST /v1/x402/verify and /settle", () => {
 
 describe("operational endpoints", () => {
   it("GET /healthz reports the database and the chain", async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.statusCode).toBe(200);
     const body = routes.health.response.parse(res.json());
@@ -174,7 +179,7 @@ describe("operational endpoints", () => {
   });
 
   it("an unreachable chain is degraded (200); an unreachable database is 503", async () => {
-    const { app } = setup({
+    const { app } = await setup({
       gateway: (gateway) =>
         overrideGateway(gateway, { getBlock: async () => Promise.reject(new Error("rpc down")) }),
     });
@@ -190,14 +195,14 @@ describe("operational endpoints", () => {
       close: async () => undefined,
     };
     const h = createHarness(brokenDb);
-    const app2 = buildApp({ facilitator: h.facilitator });
+    const app2 = await buildApp({ facilitator: h.facilitator });
     const down = await app2.inject({ method: "GET", url: "/healthz" });
     expect(down.statusCode).toBe(503);
     expect(down.json()).toMatchObject({ status: "degraded", checks: { db: "unavailable" } });
   });
 
   it("GET /metrics exposes Prometheus counters", async () => {
-    const { h, app } = setup();
+    const { h, app } = await setup();
     const { body } = await buildPayment(h);
     await app.inject({ method: "POST", url: "/v1/x402/settle", payload: body });
     const res = await app.inject({ method: "GET", url: "/metrics" });
@@ -208,7 +213,7 @@ describe("operational endpoints", () => {
   });
 
   it("unknown routes are RFC 9457 problems", async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({ method: "GET", url: "/v1/x402/verify" });
     expect(res.statusCode).toBe(404);
     expect(res.headers["content-type"]).toMatch(/application\/problem\+json/);

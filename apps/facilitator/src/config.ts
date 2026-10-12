@@ -18,8 +18,11 @@ import type { LogLevel } from "./logger";
  * the secret manager through the environment. The relayer key is turned into a viem account
  * immediately: the configuration object never holds the key, and no error message repeats it.
  * Mainnet is impossible: only testnet chains are accepted (`assertTestnet`), production may
- * only serve Base Sepolia, and `src/index.ts` re-checks the chain id the RPC node reports.
+ * only serve Base Sepolia, and `src/main.ts` re-checks the chain id the RPC node reports.
  */
+
+/** Default relayer gas floor on JSON-RPC chains: 0.001 ETH (thousands of Base Sepolia settlements). */
+export const DEFAULT_RELAYER_MIN_BALANCE_WEI = 1_000_000_000_000_000n;
 
 const bool = z
   .enum(["true", "false", "1", "0", "yes", "no"])
@@ -52,7 +55,12 @@ const EnvSchema = z.object({
   PORT: int(8083, 1, 65_535),
   HOST: z.string().min(1).default("0.0.0.0"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
-  TRUST_PROXY: bool,
+  /**
+   * Which proxies to trust for the client IP (rate limits): `false` (default), `true` (every
+   * hop: the left-most X-Forwarded-For entry, which clients can forge), a hop count (`1` behind
+   * the ALB: the address the load balancer saw) or a comma-separated list of proxy IPs/CIDRs.
+   */
+  TRUST_PROXY: optionalString,
   BODY_LIMIT_BYTES: int(65_536, 1_024, 1_048_576),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
@@ -85,6 +93,19 @@ const EnvSchema = z.object({
   /** Interval of the sweep that resolves unconfirmed settlements (0 disables it). */
   STALE_SETTLEMENT_SWEEP_SECONDS: int(60, 0, 3_600),
 
+  /** Per client IP and minute. Settle is stricter: every settlement costs relayer gas. */
+  RATE_LIMIT_VERIFY_PER_MINUTE: int(300, 1, 1_000_000),
+  RATE_LIMIT_SETTLE_PER_MINUTE: int(60, 1, 1_000_000),
+  /** Settle requests one process handles at once; more get 503 facilitator_busy. */
+  MAX_INFLIGHT_SETTLEMENTS: int(16, 1, 10_000),
+  /** `any` | `registered` (only Agent Bank accounts in x402_payee). Required `registered` when APP_ENV=production. */
+  FACILITATOR_PAYEE_MODE: z.enum(["any", "registered"]).optional(),
+  /** Refuse to settle below this relayer ETH balance (wei; 0 only reports it). Default 0.001 ETH. */
+  RELAYER_MIN_BALANCE_WEI: z
+    .string()
+    .regex(/^[0-9]{1,30}$/, "must be a non-negative integer number of wei")
+    .optional(),
+
   PUBLIC_BASE_URL: optionalUrl,
   METRICS_NAMESPACE: optionalString,
 });
@@ -95,7 +116,8 @@ export interface FacilitatorConfig {
   port: number;
   host: string;
   logLevel: LogLevel;
-  trustProxy: boolean;
+  /** Fastify `trustProxy`: false, true, a hop count or a list of proxy addresses. */
+  trustProxy: boolean | number | string;
   bodyLimitBytes: number;
   databaseUrl: string;
   migrateOnStart: boolean;
@@ -111,6 +133,11 @@ export interface FacilitatorConfig {
   settleBeforeServeAbove: bigint;
   receiptTimeoutMs: number;
   staleSweepSeconds: number;
+  rateLimit: { verifyPerMinute: number; settlePerMinute: number };
+  maxInflightSettlements: number;
+  payeeMode: "any" | "registered";
+  /** Relayer gas floor (wei); unused on the simulator, which has no gas. */
+  relayerMinBalanceWei: bigint;
   publicBaseUrl: string | undefined;
   metricsNamespace: string | undefined;
 }
@@ -121,6 +148,18 @@ export class ConfigError extends Error {
     super(`Invalid facilitator configuration:\n  ${problems.join("\n  ")}`);
     this.name = "ConfigError";
   }
+}
+
+/** `TRUST_PROXY` → Fastify's `trustProxy`; `undefined` when the value is not understood. */
+export function parseTrustProxy(raw: string | undefined): boolean | number | string | undefined {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (value === "" || value === "false" || value === "no" || value === "0") return false;
+  if (value === "true" || value === "yes") return true;
+  if (/^[0-9]{1,2}$/.test(value)) return Number(value);
+  const entries = value.split(",").map((e) => e.trim());
+  if (entries.every((e) => /^[0-9a-f:.]+(\/[0-9]{1,3})?$/.test(e) && /[.:]/.test(e)))
+    return entries.join(",");
+  return undefined;
 }
 
 function chainFromSelector(selector: string): ChainInfo {
@@ -206,6 +245,24 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const badEntries = denylist.filter((a) => !/^0x[0-9a-fA-F]{40}$/.test(a));
   if (badEntries.length > 0) problems.push(`SCREENING_DENYLIST: not addresses: ${badEntries.join(", ")}`);
 
+  // --- abuse protection -------------------------------------------------------------------------
+  const trustProxy = parseTrustProxy(e.TRUST_PROXY);
+  if (trustProxy === undefined) {
+    problems.push(
+      "TRUST_PROXY: must be true, false, a hop count or a comma-separated list of proxy IPs/CIDRs",
+    );
+  }
+  const appEnvRaw = e.APP_ENV ?? (production ? "sandbox" : e.NODE_ENV);
+  let payeeMode = e.FACILITATOR_PAYEE_MODE ?? (appEnvRaw === "production" ? "registered" : "any");
+  if (appEnvRaw === "production" && payeeMode !== "registered") {
+    problems.push("FACILITATOR_PAYEE_MODE: must be registered when APP_ENV=production");
+    payeeMode = "registered";
+  }
+  const relayerMinBalanceWei =
+    e.RELAYER_MIN_BALANCE_WEI !== undefined
+      ? BigInt(e.RELAYER_MIN_BALANCE_WEI)
+      : DEFAULT_RELAYER_MIN_BALANCE_WEI;
+
   // --- amounts ----------------------------------------------------------------------------------
   const maxSettlement = e.MAX_SETTLEMENT !== undefined ? parseAmount(e.MAX_SETTLEMENT, 6) : undefined;
   if (maxSettlement !== undefined && maxSettlement <= 0n)
@@ -216,11 +273,11 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
 
   return {
     env: e.NODE_ENV,
-    appEnv: e.APP_ENV ?? (production ? "sandbox" : e.NODE_ENV),
+    appEnv: appEnvRaw,
     port: e.PORT,
     host: e.HOST,
     logLevel: e.LOG_LEVEL,
-    trustProxy: e.TRUST_PROXY ?? false,
+    trustProxy: trustProxy ?? false,
     bodyLimitBytes: e.BODY_LIMIT_BYTES,
     databaseUrl: e.DATABASE_URL,
     // An in-process database starts empty, so it is always migrated.
@@ -239,6 +296,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     settleBeforeServeAbove,
     receiptTimeoutMs: e.SETTLEMENT_RECEIPT_TIMEOUT_MS,
     staleSweepSeconds: e.STALE_SETTLEMENT_SWEEP_SECONDS,
+    rateLimit: {
+      verifyPerMinute: e.RATE_LIMIT_VERIFY_PER_MINUTE,
+      settlePerMinute: e.RATE_LIMIT_SETTLE_PER_MINUTE,
+    },
+    maxInflightSettlements: e.MAX_INFLIGHT_SETTLEMENTS,
+    payeeMode,
+    relayerMinBalanceWei,
     publicBaseUrl: e.PUBLIC_BASE_URL?.replace(/\/+$/, ""),
     metricsNamespace: e.METRICS_NAMESPACE,
   };

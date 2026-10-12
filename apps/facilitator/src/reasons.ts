@@ -31,6 +31,10 @@ export const REASONS = {
     "The payer has code (a contract wallet or an EIP-7702 delegated EOA) and its ERC-1271 isValidSignature rejects this ECDSA signature",
   amount_exceeds_max_settlement: "The amount exceeds this facilitator's maximum settlement",
 
+  // --- who may be paid ---------------------------------------------------------------------------
+  payee_not_registered:
+    "payTo is not an Agent Bank account registered as an x402 payee (FACILITATOR_PAYEE_MODE=registered)",
+
   // --- state (local single-use table, chain, screening) -----------------------------------------
   authorization_already_used: "This authorization was already submitted for settlement",
   invalid_exact_evm_nonce_already_used: "The authorization nonce is already used or canceled on-chain",
@@ -43,10 +47,15 @@ export const REASONS = {
   settlement_pending: "The settlement transaction was submitted but is not confirmed yet; retry settle",
   invalid_transaction_state: "The settlement transaction reverted",
 
+  // --- load: retry later --------------------------------------------------------------------------
+  rate_limited: "Too many requests from this client; retry after the Retry-After interval",
+  facilitator_busy: "Too many settlements in flight; retry shortly",
+
   // --- infrastructure: fail closed (HTTP 5xx) ---------------------------------------------------
   screening_unavailable: "Wallet screening is unavailable; failing closed",
   chain_unavailable: "The chain RPC is unavailable; failing closed",
-  facilitator_unavailable: "The facilitator database is unavailable; failing closed",
+  facilitator_unavailable:
+    "The facilitator cannot settle right now (database or relayer gas); failing closed",
   unexpected_verify_error: "Unexpected error during verification",
   unexpected_settle_error: "Unexpected error during settlement",
 } as const;
@@ -55,6 +64,8 @@ export type ReasonCode = keyof typeof REASONS;
 
 /** HTTP status for a rejection. Everything not listed is a regular x402 answer (200). */
 const STATUS: Partial<Record<ReasonCode, number>> = {
+  rate_limited: 429,
+  facilitator_busy: 503,
   screening_unavailable: 503,
   facilitator_unavailable: 503,
   chain_unavailable: 502,

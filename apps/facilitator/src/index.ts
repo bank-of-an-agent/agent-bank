@@ -3,9 +3,15 @@
  * EIP-3009 payments for sellers). `src/main.ts` is the server entry point (`dist/index.js`);
  * this module exports the pieces for tests and embedding.
  */
-export { buildApp, type AppOptions } from "./app";
+export { buildApp, DEFAULT_RATE_LIMITS, type AppOptions, type RateLimits } from "./app";
 export { createChainRuntime, settlementAsset, type ChainRuntime } from "./chain";
-export { ConfigError, loadConfig, type FacilitatorConfig } from "./config";
+export {
+  ConfigError,
+  DEFAULT_RELAYER_MIN_BALANCE_WEI,
+  loadConfig,
+  parseTrustProxy,
+  type FacilitatorConfig,
+} from "./config";
 export {
   contractSignatureVerifierFor,
   ERC1271_MAGIC_WORD,
@@ -21,10 +27,12 @@ export {
   type FacilitatorOptions,
   type FacilitatorReply,
   type HealthReport,
+  type PayeeMode,
   type SettleResponse,
   type SupportedResponse,
   type VerifyResponse,
 } from "./facilitator";
+export { RelayerGasGuard, type RelayerGasCheck, type RelayerGasGuardOptions } from "./gas";
 export { createLogger, REDACT_PATHS, type Logger } from "./logger";
 export { Metrics, type MetricsOptions, type SettleOutcome, type VerifyOutcome } from "./metrics";
 export { REASONS, type ReasonCode, type Rejection } from "./reasons";

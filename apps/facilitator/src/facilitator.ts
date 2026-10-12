@@ -13,6 +13,7 @@ import type { ResponseOf } from "@agentbank/core/api";
 import type { SqlClient } from "@agentbank/db";
 import { BaseError, isAddressEqual, size, slice, type Address, type Hex, type LocalAccount } from "viem";
 import { contractSignatureVerifierFor, type ContractSignatureVerifier } from "./erc1271";
+import type { RelayerGasGuard } from "./gas";
 import type { Metrics, SettleOutcome, VerifyOutcome } from "./metrics";
 import { isInfrastructureReason, reject, type Rejection } from "./reasons";
 import type { ReceiptSource } from "./receipts";
@@ -35,10 +36,11 @@ export type VerifyResponse = ResponseOf<"x402Verify">;
 export type SettleResponse = ResponseOf<"x402Settle">;
 export type SupportedResponse = ResponseOf<"x402Supported">;
 
-/** An HTTP answer: status plus a body in the x402 response shape. */
+/** An HTTP answer: status plus a body in the x402 response shape (and extra headers, e.g. Retry-After). */
 export interface FacilitatorReply<T> {
   status: number;
   body: T;
+  headers?: Record<string, string>;
 }
 
 export interface FacilitatorLogger {
@@ -74,7 +76,16 @@ export interface FacilitatorOptions {
    * on-chain is marked failed (it can no longer settle). Default 120.
    */
   expiryGraceSeconds?: number;
+  /**
+   * `any` (sandbox default): any `payTo`. `registered`: only addresses of Agent Bank accounts
+   * registered in `x402_payee` on the served chain (`payee_not_registered` otherwise).
+   */
+  payeeMode?: PayeeMode;
+  /** Settle requests this process handles at once; more are refused (`facilitator_busy`). Default 16. */
+  maxInflightSettlements?: number;
 }
+
+export type PayeeMode = "any" | "registered";
 
 export interface FacilitatorDeps {
   db: SqlClient;
@@ -89,6 +100,8 @@ export interface FacilitatorDeps {
    * `isValidSignature` call on JSON-RPC gateways, `verifySignature` on the simulator).
    */
   contractSignatures?: ContractSignatureVerifier | undefined;
+  /** Refuses settlements while the relayer's gas balance is below the minimum (EVM chains). */
+  relayerGas?: RelayerGasGuard | undefined;
   metrics?: Metrics | undefined;
   logger?: FacilitatorLogger | undefined;
   options: FacilitatorOptions;
@@ -112,6 +125,7 @@ interface SettleResult {
 const DEFAULT_SETTLE_BEFORE_SERVE_ABOVE = 1_000_000n; // $1.00
 const DEFAULT_RECEIPT_TIMEOUT_MS = 20_000;
 const DEFAULT_EXPIRY_GRACE_SECONDS = 120;
+const DEFAULT_MAX_INFLIGHT_SETTLEMENTS = 16;
 /** Longest log range scanned to find how an authorization was used on-chain. */
 const MAX_LOOKBACK_BLOCKS = 5_000n;
 
@@ -192,6 +206,8 @@ export class Facilitator {
   readonly settleBeforeServeAbove: bigint;
   readonly maxSettlement: bigint | undefined;
   readonly relayerAddress: Address | undefined;
+  readonly payeeMode: PayeeMode;
+  readonly maxInflightSettlements: number;
 
   readonly #served: ServedChain;
   readonly #store: AuthorizationStore;
@@ -206,6 +222,8 @@ export class Facilitator {
   readonly #receiptTimeoutMs: number;
   readonly #screeningTimeoutMs: number;
   readonly #expiryGraceSeconds: number;
+  readonly #relayerGas: RelayerGasGuard | undefined;
+  #inflight = 0;
 
   constructor(deps: FacilitatorDeps) {
     const { chain, asset } = deps.options;
@@ -239,6 +257,17 @@ export class Facilitator {
     this.#receiptTimeoutMs = deps.options.receiptTimeoutMs ?? DEFAULT_RECEIPT_TIMEOUT_MS;
     this.#screeningTimeoutMs = deps.options.screeningTimeoutMs ?? 5_000;
     this.#expiryGraceSeconds = deps.options.expiryGraceSeconds ?? DEFAULT_EXPIRY_GRACE_SECONDS;
+    this.payeeMode = deps.options.payeeMode ?? "any";
+    this.maxInflightSettlements = deps.options.maxInflightSettlements ?? DEFAULT_MAX_INFLIGHT_SETTLEMENTS;
+    if (!Number.isInteger(this.maxInflightSettlements) || this.maxInflightSettlements < 1) {
+      throw new RangeError("maxInflightSettlements must be a positive integer");
+    }
+    this.#relayerGas = deps.relayerGas;
+  }
+
+  /** Settle requests in flight in this process. */
+  get inflightSettlements(): number {
+    return this.#inflight;
   }
 
   // ------------------------------------------------------------------------------- supported
@@ -323,6 +352,13 @@ export class Facilitator {
     const payment = parsed.value;
     const terms = checkTerms(payment, this.#terms());
     if (terms) return fail(terms);
+    if (this.payeeMode === "registered") {
+      const payee = await this.#payee(payment);
+      if (!payee.ok) return payee;
+    }
+    // "Valid" means "would settle now": not while the relayer cannot pay for it.
+    const gas = await this.#gas();
+    if (gas) return fail(gas);
     const checked = await this.#checkAuthorization(payment, { checkLog: true });
     return checked.ok ? ok(payment) : checked;
   }
@@ -332,6 +368,31 @@ export class Facilitator {
   /** `POST /settle`: verify again, claim the authorization, relay it and wait for the receipt. */
   async settle(body: unknown): Promise<FacilitatorReply<SettleResponse>> {
     const started = performance.now();
+    if (this.#inflight >= this.maxInflightSettlements) {
+      // Load shedding: every settle holds a relay and a receipt wait; refuse before doing any work.
+      const rejection = reject(
+        "facilitator_busy",
+        `${this.#inflight} settlements are in flight (limit ${this.maxInflightSettlements}); retry shortly`,
+      );
+      this.#metrics?.observeSettle("error", rejection.reason, (performance.now() - started) / 1000);
+      this.#log.warn(
+        { event: "x402.settle", outcome: "busy", inflight: this.#inflight },
+        "x402 settlement refused: busy",
+      );
+      return {
+        ...settleFailureReply(rejection, networkOf(body, this.chain.caip2)),
+        headers: { "retry-after": "1" },
+      };
+    }
+    this.#inflight += 1;
+    try {
+      return await this.#settleObserved(body, started);
+    } finally {
+      this.#inflight -= 1;
+    }
+  }
+
+  async #settleObserved(body: unknown, started: number): Promise<FacilitatorReply<SettleResponse>> {
     let result: SettleResult;
     try {
       result = await this.#settle(body);
@@ -386,13 +447,12 @@ export class Facilitator {
 
     const terms = checkTerms(payment, this.#terms());
     if (terms) return this.#refused(terms, payment.network, payment);
+    const payee = await this.#payee(payment);
+    if (!payee.ok) return this.#refused(payee.rejection, payment.network, payment);
+    const gas = await this.#gas();
+    if (gas) return this.#refused(gas, payment.network, payment);
     const checked = await this.#checkAuthorization(payment, { checkLog: false });
     if (!checked.ok) return this.#refused(checked.rejection, payment.network, payment);
-
-    const payee = await this.#db("find payee", () =>
-      this.#store.findPayeeAccountId(payment.chainId, payment.payTo),
-    );
-    if (!payee.ok) return this.#refused(payee.rejection, payment.network, payment);
 
     // Claim the authorization BEFORE submitting: UNIQUE (chain_id, asset, authorizer, nonce)
     // lets exactly one request (on any replica) proceed to the chain.
@@ -790,6 +850,59 @@ export class Facilitator {
     return ok(signature);
   }
 
+  /**
+   * The Agent Bank account behind `payTo` (read-only `x402_payee` lookup). In `registered` mode a
+   * payTo that is not a registered payee on the served chain is refused.
+   */
+  async #payee(payment: ParsedPayment): Promise<Result<string | null>> {
+    const found = await this.#db("find payee", () =>
+      this.#store.findPayeeAccountId(payment.chainId, payment.payTo),
+    );
+    if (!found.ok) return found;
+    if (this.payeeMode === "registered" && found.value === null) {
+      return fail(
+        reject(
+          "payee_not_registered",
+          `payTo ${payment.payTo} is not an Agent Bank account registered as an x402 payee on ${this.chain.caip2}`,
+          payment.payer,
+        ),
+      );
+    }
+    return found;
+  }
+
+  /** Relayer gas guard: refuse (fail closed) while the relayer cannot pay for a settlement. */
+  async #gas(): Promise<Rejection | undefined> {
+    const guard = this.#relayerGas;
+    if (!guard) return undefined;
+    let check;
+    try {
+      check = await guard.check();
+    } catch (error) {
+      this.#log.warn(
+        { event: "x402.gas", err: safeErrorMessage(error) },
+        "relayer balance unreadable; failing closed",
+      );
+      return reject("chain_unavailable", "The relayer's gas balance could not be read; failing closed");
+    }
+    if (!check.ok) {
+      this.#log.error(
+        {
+          event: "x402.gas",
+          relayer: guard.address,
+          balance_wei: check.balanceWei.toString(),
+          min_balance_wei: guard.minBalanceWei.toString(),
+        },
+        "relayer gas balance below the minimum; refusing settlements",
+      );
+      return reject(
+        "facilitator_unavailable",
+        "The settlement relayer is low on gas; failing closed. Retry later.",
+      );
+    }
+    return undefined;
+  }
+
   async #screen(payment: ParsedPayment): Promise<Rejection | undefined> {
     let results: [ScreeningResult, ScreeningResult];
     try {
@@ -997,7 +1110,23 @@ export class Facilitator {
       chainOk = false;
       checks.chain = "unavailable";
     }
-    return { status: dbOk && chainOk ? "ok" : "degraded", checks, httpStatus: dbOk ? 200 : 503 };
+    let gasOk = true;
+    const guard = this.#relayerGas;
+    if (guard) {
+      checks.relayer = guard.address;
+      checks.relayer_min_balance_wei = guard.minBalanceWei.toString();
+      try {
+        const balance = await within(() => guard.balance());
+        checks.relayer_balance_wei = balance.toString();
+        gasOk = balance >= guard.minBalanceWei;
+        checks.relayer_gas = gasOk ? "ok" : "low";
+      } catch {
+        gasOk = false;
+        checks.relayer_gas = "unavailable";
+      }
+    }
+    // Low gas or an unreachable chain degrade the service (200): restarting fixes neither.
+    return { status: dbOk && chainOk && gasOk ? "ok" : "degraded", checks, httpStatus: dbOk ? 200 : 503 };
   }
 
   // ------------------------------------------------------------------------------- helpers

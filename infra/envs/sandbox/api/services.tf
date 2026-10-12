@@ -109,6 +109,9 @@ module "api" {
       AWS_REGION        = local.region
       PUBLIC_BASE_URL   = "https://${var.api_hostname}"
       METRICS_NAMESPACE = "AgentBank/Api"
+      # Exactly one proxy hop (the ALB): rate limits key on the address the ALB saw, not on a
+      # client-supplied X-Forwarded-For entry.
+      TRUST_PROXY = "1"
     },
     # Absent COSIGNER_URL = no co-signer = every payment is refused (fail closed).
     local.cosigner_enabled ? {
@@ -185,10 +188,13 @@ module "facilitator" {
   task_role_arn  = aws_iam_role.facilitator_task.arn
 
   environment = merge(local.common_environment, {
-    AWS_REGION        = local.region
-    PUBLIC_BASE_URL   = "https://${var.facilitator_hostname}"
-    METRICS_NAMESPACE = "AgentBank/Facilitator"
-    X402_NETWORK      = "base-sepolia"
+    AWS_REGION              = local.region
+    PUBLIC_BASE_URL         = "https://${var.facilitator_hostname}"
+    METRICS_NAMESPACE       = "AgentBank/Facilitator"
+    X402_NETWORK            = "base-sepolia"
+    TRUST_PROXY             = "1"
+    FACILITATOR_PAYEE_MODE  = "registered"
+    RELAYER_MIN_BALANCE_WEI = "1000000000000000"
   })
 
   secrets             = local.service_secret_arns["facilitator"]

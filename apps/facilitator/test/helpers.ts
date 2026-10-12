@@ -21,6 +21,7 @@ import {
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import type { ContractSignatureVerifier } from "../src/erc1271";
 import { Facilitator, type FacilitatorOptions } from "../src/facilitator";
+import type { RelayerGasGuard } from "../src/gas";
 import { Metrics } from "../src/metrics";
 import { simulatedReceipts } from "../src/receipts";
 import { SandboxScreening, type ScreeningProvider } from "../src/screening";
@@ -78,6 +79,8 @@ export interface HarnessOptions {
   options?: Partial<FacilitatorOptions>;
   /** ERC-1271 verifier for payers with code (default: the simulator's). */
   contractSignatures?: ContractSignatureVerifier;
+  /** Relayer gas guard (default: none; the simulator has no gas). */
+  relayerGas?: RelayerGasGuard;
   screening?: ScreeningProvider;
   automine?: boolean;
   /** Wrap the simulator's gateway (fault injection, front-running). */
@@ -102,6 +105,7 @@ export function createHarness(db: SqlClient, overrides: HarnessOptions = {}): Ha
     relayer,
     metrics,
     ...(overrides.contractSignatures ? { contractSignatures: overrides.contractSignatures } : {}),
+    ...(overrides.relayerGas ? { relayerGas: overrides.relayerGas } : {}),
     options: { chain: CHAINS.simulated, asset, receiptTimeoutMs: 2_000, ...overrides.options },
   });
   return {

@@ -7,6 +7,7 @@ import { buildApp } from "./app";
 import { createChainRuntime, type ChainRuntime } from "./chain";
 import { loadConfig, type FacilitatorConfig } from "./config";
 import { Facilitator, safeErrorMessage } from "./facilitator";
+import { RelayerGasGuard } from "./gas";
 import { createLogger, type Logger } from "./logger";
 import { Metrics } from "./metrics";
 import { SandboxScreening } from "./screening";
@@ -62,11 +63,21 @@ async function main(): Promise<void> {
   await checkRpcChain(runtime, config, logger);
 
   const metrics = new Metrics({ emfNamespace: config.metricsNamespace });
+  // Settlements stop (fail closed) while the relayer cannot pay for gas; /healthz reports it.
+  const relayerGas =
+    config.relayer && runtime.relayerBalance
+      ? new RelayerGasGuard({
+          address: config.relayer.address,
+          minBalanceWei: config.relayerMinBalanceWei,
+          balanceOf: runtime.relayerBalance,
+        })
+      : undefined;
   const facilitator = new Facilitator({
     db,
     gateway: runtime.gateway,
     receipts: runtime.receipts,
     contractSignatures: runtime.contractSignatures,
+    relayerGas,
     screening: new SandboxScreening(config.screening.denylist),
     clock: systemClock,
     relayer: config.relayer,
@@ -79,14 +90,17 @@ async function main(): Promise<void> {
       maxSettlement: config.maxSettlement,
       receiptTimeoutMs: config.receiptTimeoutMs,
       screeningTimeoutMs: config.screening.timeoutMs,
+      payeeMode: config.payeeMode,
+      maxInflightSettlements: config.maxInflightSettlements,
     },
   });
-  const app = buildApp({
+  const app = await buildApp({
     facilitator,
     metrics,
     logger,
     bodyLimitBytes: config.bodyLimitBytes,
     trustProxy: config.trustProxy,
+    rateLimits: config.rateLimit,
   });
 
   // Resolve settlements whose receipt was not seen in time (or whose bookkeeping was cut short).
@@ -133,6 +147,10 @@ async function main(): Promise<void> {
       relayer: config.relayer?.address,
       settle_before_serve_above: facilitator.supported().kinds[0]?.extra?.settleBeforeServeAbove,
       max_settlement: config.maxSettlement?.toString(),
+      payee_mode: config.payeeMode,
+      rate_limits: config.rateLimit,
+      max_inflight_settlements: config.maxInflightSettlements,
+      relayer_min_balance_wei: relayerGas ? config.relayerMinBalanceWei.toString() : undefined,
       facilitator_url: config.publicBaseUrl ? `${config.publicBaseUrl}/v1/x402` : undefined,
       app_env: config.appEnv,
     },
