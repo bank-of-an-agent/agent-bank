@@ -30,11 +30,12 @@ const proofsWithoutSideEffects: EsbuildPlugin = {
 };
 
 /**
- * Publishable build: ESM + CJS + declarations for the four entry points.
+ * Publishable build: ESM + CJS + declarations for the five entry points.
  * `@agentbank/core` and `@agentbank/proofs` are private, so they are bundled into the output
  * (code and types); `viem`, `zod`, `snarkjs` and `poseidon-lite` stay external runtime
- * dependencies. Proving (Node only) is a lazily loaded chunk; its circuit files (about 11 MB)
- * are copied to `dist/circuits/`, checked against the circuit manifest.
+ * dependencies. Proving (Node only) is the `prover` entry, which `AgentClient` imports at run time
+ * from next to its own chunk; its circuit files (about 11 MB) are copied to `dist/circuits/`,
+ * checked against the circuit manifest.
  */
 export default defineConfig({
   entry: {
@@ -42,6 +43,8 @@ export default defineConfig({
     node: "src/node.ts",
     "x402-server": "src/x402-server.ts",
     "proof-server": "src/proof-server.ts",
+    // Node only. The main entry loads it from a run-time location bundlers do not follow.
+    prover: "src/prover.ts",
   },
   format: ["esm", "cjs"],
   dts: {

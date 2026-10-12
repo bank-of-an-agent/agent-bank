@@ -8,7 +8,9 @@ import { defineConfig } from "tsup";
  * circuit files the bundled prover needs are copied to `dist/circuits/`.
  */
 export default defineConfig({
-  entry: { index: "src/index.ts", cli: "src/cli.ts" },
+  // `prover` is the SDK's Node prover, which the bundled AgentClient imports at run time from
+  // next to its own chunk (dist/prover.js).
+  entry: { index: "src/index.ts", cli: "src/cli.ts", prover: "../sdk-ts/src/prover.ts" },
   format: ["esm"],
   dts: {
     entry: { index: "src/index.ts" },

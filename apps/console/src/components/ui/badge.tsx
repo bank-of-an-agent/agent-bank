@@ -85,6 +85,9 @@ const STATUS_TONES: Record<string, Tone> = {
   require_owner: "amber",
   // subscriptions
   past_due: "warn",
+  // private-proof roots
+  publishing: "blue",
+  published: "teal",
   // policy versions
   initial: "blue",
   tighten: "teal",

@@ -3,8 +3,10 @@ import { ROUTE_LIST, type RouteDef } from "@agentbank/core/api";
 /**
  * The BFF proxies only routes in the core route registry that a principal
  * (or Agent Bank staff) may call. Agent-only routes (payments created by
- * agents, signatures, x402 pay) and facilitator routes are not reachable
- * through the console, and neither is anything outside `/v1`.
+ * agents, signatures, x402 pay, private-proof enrollment, witnesses and new
+ * reservations) and facilitator routes are not reachable through the console,
+ * and neither is anything outside `/v1`. Public routes (e.g. the proof roots)
+ * are forwarded with whatever session the browser has, or none.
  */
 
 export type CredentialSource = "principal" | "staff" | "none";

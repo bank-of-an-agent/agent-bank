@@ -5,6 +5,7 @@ import { EscrowsStreamsCard } from "@/components/agents/escrows-streams-card";
 import { FreezeAgentButton, UnfreezeAgentButton } from "@/components/agents/freeze-controls";
 import { MandatesCard } from "@/components/agents/mandates-card";
 import { PolicySummaryCard } from "@/components/agents/policy-summary";
+import { PrivateProofsCard } from "@/components/agents/private-proofs-card";
 import { SessionsCard } from "@/components/agents/sessions-card";
 import { PaymentsTable } from "@/components/payments/payments-table";
 import { AutoTopUpSummary } from "@/components/treasury/auto-topup";
@@ -177,6 +178,7 @@ export function AgentDetailPage({ id }: { id: string }) {
         </div>
         <SessionsCard agent={a} accounts={agentAccounts} />
         <MandatesCard agent={a} />
+        <PrivateProofsCard agent={a} accounts={agentAccounts} />
         <AgentPayments agentId={a.id} accounts={agentAccounts} />
         <EscrowsStreamsCard accounts={agentAccounts} />
       </div>

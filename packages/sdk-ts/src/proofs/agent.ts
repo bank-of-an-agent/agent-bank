@@ -47,8 +47,9 @@ export interface ProverInput {
 }
 
 /**
- * Produces a presentation (`@agentbank/proofs/prover`'s `prove` in Node). Supply your own to
- * prove outside Node (e.g. snarkjs in a browser with the circuit files as URLs).
+ * Produces a presentation. In Node the SDK loads `nodeProver` from `@agentbank/sdk/prover` on
+ * its own; in a bundled app pass it (or, outside Node, a prover of your own, e.g. snarkjs in a
+ * browser with the circuit files as URLs) as `proofs.prover`.
  */
 export type Prover = (input: ProverInput) => Promise<ProofPresentation>;
 
@@ -73,7 +74,10 @@ export interface AgentProofOptions {
   acceptScope?: (scope: string, url: URL) => boolean;
   /** Circuit files (default: the ones bundled with the SDK). */
   artifacts?: ProverArtifacts;
-  /** Prove with something else than the bundled Node prover. */
+  /**
+   * The prover. Default: `nodeProver` of `@agentbank/sdk/prover`, loaded at the first proof
+   * from a run-time location bundlers do not follow. Pass it explicitly in a bundled app.
+   */
   prover?: Prover;
 }
 
@@ -142,10 +146,8 @@ async function nodeProver(): ReturnType<typeof loadNodeProver> {
   } catch (error) {
     throw new ProofError(
       "prover_unavailable",
-      "The Node prover could not be loaded; outside Node pass proofs.prover",
-      {
-        cause: error,
-      },
+      'The Node prover could not be loaded. In a bundled app pass proofs.prover (nodeProver from "@agentbank/sdk/prover" on a Node server); outside Node, a prover of your own',
+      { cause: error },
     );
   }
 }

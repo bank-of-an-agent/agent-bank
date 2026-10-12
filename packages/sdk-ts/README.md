@@ -120,6 +120,10 @@ const { header } = await agent.proofs.answer(request); // send as AGENT-PROOF
 `reservation_required`, `scope_mismatch`, …) and answer at most 30 requests per verifier and hour
 (`proofs.maxPresentationsPerScopePerHour`), since many questions with different thresholds would
 narrow the values down. Proving runs in Node (about 1.5 s); the circuit files ship in `dist/circuits/`.
+In Node the client loads the prover (`@agentbank/sdk/prover`) on its own, from a location bundlers
+never follow, so importing `@agentbank/sdk` in a browser or a Next.js app stays free of it. In a
+bundled server app pass it explicitly (`proofs: { prover: nodeProver }` from
+`@agentbank/sdk/prover`); outside Node, pass a prover of your own.
 
 Sellers verify locally, statelessly, against roots anchored on Base:
 

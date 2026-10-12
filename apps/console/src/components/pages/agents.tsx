@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { CreateAgentButton } from "@/components/agents/create-agent";
+import { ProofRootsCard } from "@/components/agents/private-proofs-card";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -154,6 +155,9 @@ export function AgentsPage() {
           )}
         </div>
       </Card>
+      <div className="mt-6">
+        <ProofRootsCard />
+      </div>
     </>
   );
 }

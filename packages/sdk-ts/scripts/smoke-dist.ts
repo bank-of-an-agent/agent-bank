@@ -1,8 +1,10 @@
 /**
  * Smoke test of the built SDK (`pnpm --filter @agentbank/sdk build && pnpm --filter
  * @agentbank/sdk smoke:dist`): an `AgentClient` imported from `dist/` (ESM and CommonJS)
- * proves a request with the circuit files shipped in `dist/circuits/`, and the built
- * `proof-server` verifies both presentations. Only the test witness is built from source.
+ * loads the Node prover (`dist/prover.js` / `.cjs`) on its own and proves with the circuit
+ * files shipped in `dist/circuits/`; then with `nodeProver` from `@agentbank/sdk/prover`
+ * passed explicitly, as a bundled app does. The built `proof-server` verifies every
+ * presentation. Only the test witness is built from source.
  */
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -11,6 +13,7 @@ import { DISCLOSURE_CLASSES, disclosureMask } from "@agentbank/proofs/schema";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type * as Sdk from "../src/index";
 import type * as ProofServer from "../src/proof-server";
+import type * as ProverEntry from "../src/prover";
 
 const dist = new URL("../dist/", import.meta.url);
 // The bundled prover's only other candidate (`@agentbank/proofs`' artifacts/, resolved next to
@@ -21,6 +24,7 @@ if (!existsSync(new URL("circuits/agent_claims.zkey", dist)) || existsSync(new U
 const esm = (await import(new URL("index.js", dist).href)) as typeof Sdk;
 const server = (await import(new URL("proof-server.js", dist).href)) as typeof ProofServer;
 const cjs = createRequire(import.meta.url)(new URL("index.cjs", dist).pathname) as typeof Sdk;
+const proverEntry = (await import(new URL("prover.js", dist).href)) as typeof ProverEntry;
 
 const ACCOUNT = "acct_01JABCDEFGHJKMNPQRSTVWXYZ0";
 const now = Math.floor(Date.now() / 1000);
@@ -66,12 +70,13 @@ const rootInfo = {
   revoked: false,
 };
 
-async function proveWith(sdk: typeof Sdk, label: string): Promise<void> {
+async function proveWith(sdk: typeof Sdk, label: string, prover?: Sdk.Prover): Promise<void> {
   const agent = new sdk.AgentClient({
     baseUrl: "http://agentbank.test",
     accountId: ACCOUNT,
     session: { id: "ses_01JABCDEFGHJKMNPQRSTVWXYZ0", signer: privateKeyToAccount(generatePrivateKey()) },
     proofSecret: secret,
+    ...(prover ? { proofs: { prover } } : {}),
     fetch: async (input) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
       if (url.pathname === `/v1/accounts/${ACCOUNT}/proofs/witness`) return Response.json(witness);
@@ -92,4 +97,5 @@ async function proveWith(sdk: typeof Sdk, label: string): Promise<void> {
 
 await proveWith(esm, "dist/index.js (ESM)");
 await proveWith(cjs, "dist/index.cjs (CommonJS)");
+await proveWith(esm, "dist/index.js with nodeProver from dist/prover.js", proverEntry.nodeProver);
 await server.releaseProverResources();

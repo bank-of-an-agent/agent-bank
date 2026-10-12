@@ -1,7 +1,9 @@
 /** @vitest-environment node */
+import { ROUTE_LIST } from "@agentbank/core/api";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DELETE, GET, POST } from "@/app/api/v1/[...path]/route";
+import { DELETE, GET, POST, PUT } from "@/app/api/v1/[...path]/route";
+import { credentialFor } from "@/lib/server/api-routes";
 import { newPrincipalSession, newStaffSession, seal } from "@/lib/server/session";
 
 const ORIGIN = "http://console.test";
@@ -403,6 +405,139 @@ describe("BFF proxy: allowlist and responses", () => {
     const res = await POST(faucet({ ab_session: passkey }), ctx(["sandbox", "faucet"]));
     expect(res.status).toBe(403);
     expect(((await res.json()) as { code: string }).code).toBe("sandbox_only");
+    expect(upstream).not.toHaveBeenCalled();
+  });
+});
+
+describe("BFF proxy: private proofs", () => {
+  const ACCOUNT = "acct_01J9ZQ3W8K7X5V4T3S2R1Q0P9N";
+  const RESERVATION = "prv_01J9ZQ3W8K7X5V4T3S2R1Q0P9N";
+  const ROOT = `0x${"1a".repeat(32)}`;
+  const write = { origin: ORIGIN, "x-csrf-token": CSRF, "content-type": "application/json" };
+
+  it("allowlists the principal and public proof routes and no agent-only one", () => {
+    const proofs = ROUTE_LIST.filter((def) => def.tags.includes("Proofs"));
+    expect(Object.fromEntries(proofs.map((def) => [def.operationId, credentialFor(def)]))).toEqual({
+      getProofCircuit: "none",
+      listProofRoots: "none",
+      getProofRoot: "none",
+      verifyProof: "none",
+      getProofSettings: "principal",
+      updateProofSettings: "principal",
+      enrollProofIdentity: null,
+      getProofIdentity: "principal",
+      getProofWitness: null,
+      createProofReservation: null,
+      listProofReservations: "principal",
+      getProofReservation: "principal",
+      releaseProofReservation: "principal",
+    });
+  });
+
+  it("forwards settings, identity, reservations and release with the principal credential", async () => {
+    const cookie = await apiKeyCookie("abk_test_proofsproofs01");
+    const settingsPath = ["agents", AGENT, "proofs", "settings"];
+    expect(
+      (
+        await GET(
+          request(`/api/v1/${settingsPath.join("/")}`, { cookies: { ab_session: cookie } }),
+          ctx(settingsPath),
+        )
+      ).status,
+    ).toBe(200);
+    expect(lastCall().url).toBe(`${API}/v1/agents/${AGENT}/proofs/settings`);
+    expect(lastCall().headers.get("authorization")).toBe("Bearer abk_test_proofsproofs01");
+
+    const settingsBody = JSON.stringify({ enabled: true, disclose: ["principal"] });
+    const put = await PUT(
+      request(`/api/v1/${settingsPath.join("/")}`, {
+        method: "PUT",
+        body: settingsBody,
+        headers: { ...write, "idempotency-key": "idem-proofs-0001" },
+        cookies: { ab_session: cookie, ab_csrf: CSRF },
+      }),
+      ctx(settingsPath),
+    );
+    expect(put.status).toBe(200);
+    expect(lastCall().init.method).toBe("PUT");
+    expect(lastCall().init.body).toBe(settingsBody);
+    expect(lastCall().headers.get("idempotency-key")).toBe("idem-proofs-0001");
+
+    const identityPath = ["accounts", ACCOUNT, "proofs", "identity"];
+    await GET(
+      request(`/api/v1/${identityPath.join("/")}`, { cookies: { ab_session: cookie } }),
+      ctx(identityPath),
+    );
+    expect(lastCall().url).toBe(`${API}/v1/accounts/${ACCOUNT}/proofs/identity`);
+
+    const reservationsPath = ["accounts", ACCOUNT, "proofs", "reservations"];
+    await GET(
+      request(`/api/v1/${reservationsPath.join("/")}?status=active&limit=100&scope=x`, {
+        cookies: { ab_session: cookie },
+      }),
+      ctx(reservationsPath),
+    );
+    expect(lastCall().url).toBe(`${API}/v1/accounts/${ACCOUNT}/proofs/reservations?status=active&limit=100`);
+
+    const releasePath = ["proofs", "reservations", RESERVATION, "release"];
+    const release = await POST(
+      request(`/api/v1/${releasePath.join("/")}`, {
+        method: "POST",
+        body: "{}",
+        headers: write,
+        cookies: { ab_session: cookie, ab_csrf: CSRF },
+      }),
+      ctx(releasePath),
+    );
+    expect(release.status).toBe(200);
+    expect(lastCall().url).toBe(`${API}/v1/proofs/reservations/${RESERVATION}/release`);
+    expect(lastCall().headers.get("idempotency-key")).toBeTruthy();
+  });
+
+  it("serves the public roots without a session", async () => {
+    const roots = await GET(request("/api/v1/proofs/roots?limit=10"), ctx(["proofs", "roots"]));
+    expect(roots.status).toBe(200);
+    expect(lastCall().url).toBe(`${API}/v1/proofs/roots?limit=10`);
+    expect(lastCall().headers.get("authorization")).toBeNull();
+    const one = await GET(request(`/api/v1/proofs/roots/${ROOT}`), ctx(["proofs", "roots", ROOT]));
+    expect(one.status).toBe(200);
+    expect(lastCall().url).toBe(`${API}/v1/proofs/roots/${ROOT}`);
+  });
+
+  it("never forwards enrollment, witnesses or new reservations (agent-only)", async () => {
+    const cookie = await apiKeyCookie();
+    const identityPath = ["accounts", ACCOUNT, "proofs", "identity"];
+    const enroll = await PUT(
+      request(`/api/v1/${identityPath.join("/")}`, {
+        method: "PUT",
+        body: JSON.stringify({ identity_commitment: `0x${"0c".repeat(32)}` }),
+        headers: write,
+        cookies: { ab_session: cookie, ab_csrf: CSRF },
+      }),
+      ctx(identityPath),
+    );
+    expect(enroll.status).toBe(405);
+    const witnessPath = ["accounts", ACCOUNT, "proofs", "witness"];
+    const witness = await GET(
+      request(`/api/v1/${witnessPath.join("/")}`, { cookies: { ab_session: cookie } }),
+      ctx(witnessPath),
+    );
+    expect(witness.status).toBe(404);
+    const reservationsPath = ["accounts", ACCOUNT, "proofs", "reservations"];
+    const reserve = await POST(
+      request(`/api/v1/${reservationsPath.join("/")}`, {
+        method: "POST",
+        body: JSON.stringify({
+          amount: { amount: "5.00", asset: "USDC" },
+          scope_tag: "7",
+          expires_at: "2026-10-13T00:00:00Z",
+        }),
+        headers: write,
+        cookies: { ab_session: cookie, ab_csrf: CSRF },
+      }),
+      ctx(reservationsPath),
+    );
+    expect(reserve.status).toBe(405);
     expect(upstream).not.toHaveBeenCalled();
   });
 });

@@ -27,6 +27,11 @@ short-lived session key; Agent Bank's co-signer approves or refuses each one aft
 owner's policy; the limits also hold on-chain, so a prompt-injected agent cannot spend past them.
 Agent Bank can refuse a payment, never make one.
 
+Agents can also prove facts about themselves without revealing who they are: that a verified
+business backs them, that they can pay, that funds are reserved for a counterparty, or that they
+have a clean track record. These [private proofs](docs/private-proofs.md) are zero-knowledge
+proofs over facts Agent Bank attests and anchors on Base.
+
 The [design](docs/design.md) is the source of the requirements; the
 [architecture](docs/architecture.md) maps it onto this code.
 
@@ -79,6 +84,7 @@ pnpm --filter @agentbank/docs dev                                        # the d
 | [`packages/reconciliation`](packages/reconciliation) | Matches chain evidence to the ledger inside the API                                 |
 | [`packages/sdk-ts`](packages/sdk-ts)                 | `@agentbank/sdk`: TypeScript SDK, x402 client and paywall                           |
 | [`packages/mcp`](packages/mcp)                       | `@agentbank/mcp`: money tools for agents over MCP                                   |
+| [`packages/proofs`](packages/proofs)                 | `@agentbank/proofs`: private proofs: tree, prover, verifier, proof gate, CLI        |
 | [`tests/e2e`](tests/e2e)                             | Full-stack scenarios, red-team and exit-drill gate suites                           |
 | [`examples`](examples)                               | Claude Agent SDK, OpenAI Agents SDK, Vercel AI SDK, LangChain, MCP client           |
 | [`infra`](infra)                                     | OpenTofu/Terraform for separate co-signer, API and indexer AWS accounts             |
@@ -99,8 +105,8 @@ pnpm db:up            # PostgreSQL 16 on 127.0.0.1:54329 (docker compose)
 ```
 
 Opt-in suites: `RUN_LIVE_TESTS=1` (read-only Base Sepolia checks) and `RUN_FORK_TESTS=1` (an Anvil
-fork of Base Sepolia with a local bundler) in `packages/chain`. Coverage gates: `packages/ledger`
-and `packages/policy` at ≥ 90%.
+fork of Base Sepolia with a local bundler) in `packages/chain`. Coverage gates: `packages/ledger`,
+`packages/policy` and `packages/proofs` at ≥ 90%.
 
 Ground rules (enforced in review and CI): no code path lets a bank-held key move funds; testnet
 only; money is integer minor units (floats are banned by ESLint in money code); every write is
@@ -115,6 +121,7 @@ Base Sepolia credentials) are marked as needing human sign-off.
 ## Documentation
 
 - [Architecture](docs/architecture.md) and [decision records](docs/adr)
+- [Private proofs design](docs/private-proofs.md)
 - [Threat model](docs/threat-model.md) and [incident runbooks](docs/runbooks)
 - [OpenAPI 3.1](docs/openapi.json) (also rendered by the docs site)
 

@@ -6,17 +6,17 @@ statements and the treasury.
 
 ## Pages
 
-| Page                                  | What it's for                                                                                                                         |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Overview                              | Balances across agents, pending approvals, recent payments, alerts                                                                    |
-| Agents                                | Accounts and pocket balances, sessions, mandates, freeze and unfreeze, payments                                                       |
-| Policy editor                         | Form and JSON views, a live diff labelling each change as tightening or loosening, the owner signature and 1-hour delay for loosening |
-| Approvals                             | Passkey decisions with the 15-minute countdown and the rule hits behind each request                                                  |
-| Payments, Ledger                      | Filterable payments with decisions and ledger lines; monthly statements with CSV                                                      |
-| Owner operations                      | Everything waiting for the owner key, signed in the browser                                                                           |
-| Treasury                              | Treasury account, auto top-up, vaults; the treasury sweep shows as gated on counsel sign-off                                          |
-| Webhooks, API keys, Billing, Settings | Endpoints and events, keys, plan and fees, members, passkeys, owner-key rotation                                                      |
-| Staff revenue                         | Revenue by stream against the design's Beta/Growth/Scale model (staff only)                                                           |
+| Page                                  | What it's for                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Overview                              | Balances across agents, pending approvals, recent payments, alerts                                                                            |
+| Agents                                | Accounts and pocket balances, sessions, mandates, private proofs (disclosure, enrollment, reservations, roots), freeze and unfreeze, payments |
+| Policy editor                         | Form and JSON views, a live diff labelling each change as tightening or loosening, the owner signature and 1-hour delay for loosening         |
+| Approvals                             | Passkey decisions with the 15-minute countdown and the rule hits behind each request                                                          |
+| Payments, Ledger                      | Filterable payments with decisions and ledger lines; monthly statements with CSV                                                              |
+| Owner operations                      | Everything waiting for the owner key, signed in the browser                                                                                   |
+| Treasury                              | Treasury account, auto top-up, vaults; the treasury sweep shows as gated on counsel sign-off                                                  |
+| Webhooks, API keys, Billing, Settings | Endpoints and events, keys, plan and fees, members, passkeys, owner-key rotation                                                              |
+| Staff revenue                         | Revenue by stream against the design's Beta/Growth/Scale model (staff only)                                                                   |
 
 ## How it works
 

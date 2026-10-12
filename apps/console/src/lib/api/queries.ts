@@ -23,6 +23,9 @@ export type Stream = ResponseOf<"getStream">;
 export type Vault = ResponseOf<"getVault">;
 export type AutoTopUpRule = NonNullable<ResponseOf<"getAutoTopUp">>;
 export type SweepRule = NonNullable<ResponseOf<"getSweepRule">>;
+export type ProofSettings = ResponseOf<"getProofSettings">;
+export type ProofRoot = ResponseOf<"getProofRoot">;
+export type ProofReservation = ResponseOf<"getProofReservation">;
 
 const LIST_LIMIT = 200;
 

@@ -29,6 +29,7 @@
     "./node": "./src/node.ts",
     "./x402-server": "./src/x402-server.ts",
     "./proof-server": "./src/proof-server.ts",
+    "./prover": "./src/prover.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -75,6 +76,16 @@
         "require": {
           "types": "./dist/proof-server.d.cts",
           "default": "./dist/proof-server.cjs"
+        }
+      },
+      "./prover": {
+        "import": {
+          "types": "./dist/prover.d.ts",
+          "default": "./dist/prover.js"
+        },
+        "require": {
+          "types": "./dist/prover.d.cts",
+          "default": "./dist/prover.cjs"
         }
       },
       "./package.json": "./package.json"
