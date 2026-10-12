@@ -8,7 +8,9 @@
  * - {@link AgentClient}: an agent's view (session key): `pay`, escrows,
  *   streams, and an x402-aware `fetch`.
  * - {@link PrincipalClient}: a principal's view (API key + owner key):
- *   `grantSession`, policies, mandates and other owner-signed changes.
+ *   `setupAgentAccount` (account → spend key + float-recovery permit →
+ *   first session), `grantSession`, policies, mandates, owner rotation and
+ *   other owner-signed changes.
  * - x402 client helpers ({@link wrapFetch}), webhook verification, key
  *   generation and key stores. Seller middleware lives in
  *   `@agentbank/sdk/x402-server`; the Node file key store in `@agentbank/sdk/node`.
@@ -55,9 +57,21 @@ export {
   PrincipalClient,
   type GrantSessionInput,
   type GrantSessionResult,
+  type OwnerFlowOptions,
   type PrincipalClientOptions,
   type SessionScopeRequest,
+  type SetupAgentAccountInput,
+  type SetupAgentAccountResult,
 } from "./principal";
+
+export {
+  EIP2612_NONCES_ABI,
+  EIP2612_PERMIT_TYPES,
+  signSpendKeyPermit,
+  spendKeyPermitTypedData,
+  type SignSpendKeyPermitInput,
+  type SpendKeyPermitOptions,
+} from "./spend-key";
 
 export {
   DEFAULT_OWNER_AUTHORIZATION_TTL_SECONDS,

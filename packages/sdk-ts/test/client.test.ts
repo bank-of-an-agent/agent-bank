@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   AgentBankClient,
@@ -10,6 +11,7 @@ import {
   NotFoundError,
   PolicyDeniedError,
   RateLimitError,
+  routes,
   ServiceUnavailableError,
   TimeoutError,
   type FetchLike,
@@ -78,6 +80,8 @@ const payment = {
   payment_request_id: null,
   decision: null,
   approval_id: null,
+  escrow_id: null,
+  stream_id: null,
   signing_request: null,
   owner_operation_id: null,
   user_op_hash: null,
@@ -363,6 +367,18 @@ describe("AgentBankClient transport", () => {
     expect(csv).toContain("date,amount");
     expect(calls[0]?.url).toContain("format=csv");
     expect(calls[0]?.headers.accept).toBe("text/csv");
+  });
+
+  it("wraps every operation of the route registry (except staff-only ones) in a method", () => {
+    const source = ["../src/resources.ts", "../src/client.ts"]
+      .map((file) => readFileSync(new URL(file, import.meta.url), "utf8"))
+      .join("\n");
+    const wrapped = new Set([...source.matchAll(/request\("([A-Za-z0-9]+)"/g)].map((m) => m[1]));
+    const missing = Object.values(routes)
+      .filter((route) => !route.auth.every((kind) => kind === "staff"))
+      .map((route) => route.operationId)
+      .filter((operationId) => !wrapped.has(operationId));
+    expect(missing).toEqual([]);
   });
 
   it("rejects bad configuration", () => {

@@ -43,6 +43,10 @@ export type ApiKeyWithSecret = z.output<typeof R.ApiKeyWithSecret>;
 export type CreateApiKeyInput = z.input<typeof R.CreateApiKeyRequest>;
 /** KYC/KYB verification session. */
 export type KybSession = z.output<typeof R.KybSession>;
+/** Body of `POST /v1/orgs/me/owner` (owner-key rotation, signed by the current owner). */
+export type RotateOwnerInput = z.input<typeof R.RotateOwnerRequest>;
+/** Body of `POST /v1/accounts/{id}/owner-swap`. */
+export type PrepareOwnerSwapInput = z.input<typeof R.PrepareOwnerSwapRequest>;
 /** Body of the freeze routes (tightening, immediate). */
 export type FreezeInput = z.input<typeof R.FreezeRequest>;
 /** Body of the unfreeze routes (owner authorization, 1-hour delay). */
@@ -68,6 +72,14 @@ export type CreateAccountInput = z.input<typeof R.CreateAccountRequest>;
 export type CreateTreasuryAccountInput = z.input<typeof R.CreateTreasuryAccountRequest>;
 /** Available, reserved, escrowed, saved and spend-float balances of an account. */
 export type Balances = z.output<typeof R.Balances>;
+/**
+ * EIP-2612 USDC permit signed by the agent's spend key, granting the smart
+ * account an allowance so the owner can always sweep the x402 float back
+ * (ADR 0001). Integers are decimal strings.
+ */
+export type SpendKeyPermit = z.output<typeof R.SpendKeyPermit>;
+/** Body of `PUT /v1/accounts/{id}/spend-key`. */
+export type AttachSpendKeyInput = z.input<typeof R.AttachSpendKeyRequest>;
 
 // ------------------------------------------------------------------ sessions & owner operations
 

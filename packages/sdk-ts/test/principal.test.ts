@@ -264,21 +264,68 @@ describe("canonical owner payloads (core ownerPayloads)", () => {
     const client = principal();
     const agent = await client.unfreezeAgent(AGENT, "false alarm");
     expect(agent.pending_unfreeze_at).not.toBeNull();
-    const rule = await client.setAutoTopUp(AGENT, {
-      refill_to: { amount: "100.00", asset: "USDC" },
-      when_below: { amount: "20.00", asset: "USDC" },
-      max_per_day: { amount: "300.00", asset: "USDC" },
-      // Unknown fields are dropped from both the signed payload and the body.
-      ...({ note: "ignored" } as object),
-    } as Parameters<PrincipalClient["setAutoTopUp"]>[1]);
+    const before = api.requests.length;
+    const rule = await client.setAutoTopUp(
+      AGENT,
+      {
+        refill_to: { amount: "100.00", asset: "USDC" },
+        when_below: { amount: "20.00", asset: "USDC" },
+        max_per_day: { amount: "300.00", asset: "USDC" },
+        // Unknown fields are dropped from both the signed payload and the body.
+        ...({ note: "ignored" } as object),
+      } as Parameters<PrincipalClient["setAutoTopUp"]>[1],
+      { waitForInstall: { intervalMs: 5 } },
+    );
     expect(rule.status).toBe("active");
-    const sent = JSON.parse(api.requests.at(-1)?.body ?? "{}");
+    const put = api.requests.slice(before).find((r) => r.method === "PUT");
+    const sent = JSON.parse(put?.body ?? "{}");
     expect(Object.keys(sent).sort()).toEqual([
       "max_per_day",
       "owner_authorization",
       "refill_to",
       "when_below",
     ]);
+    // The executor install owner operation was signed by the owner key.
+    const op = api.ownerOperations.get(rule.install_operation_id ?? "");
+    expect(op?.purpose).toBe("topup.configure");
+    expect(op?.status).toBe("succeeded");
+  });
+});
+
+describe("owner-key rotation and on-chain session revocation", () => {
+  it("prepares and signs the Safe owner swap, then rotates with owner.rotate", async () => {
+    const client = principal();
+    const next = privateKeyToAccount(generatePrivateKey()).address;
+    const swap = await client.prepareOwnerSwap(ACCT, next, { wait: { intervalMs: 5 } });
+    expect(swap.purpose).toBe("owner.swap");
+    expect(swap.status).toBe("succeeded");
+    const org = await client.rotateOwner(next);
+    expect(org.owner_address).toBe(next);
+    const sent = JSON.parse(api.requests.at(-1)?.body ?? "{}");
+    expect(sent.owner_authorization.signer).toBe(owner.address);
+  });
+
+  it("revokes a session off-chain and signs the on-chain revoke operation", async () => {
+    const client = principal();
+    const { session } = await client.grantSession({
+      accountId: ACCT,
+      publicKey: generateSessionKey().address,
+      scope: { max_per_tx: "1", max_per_day: "1" },
+      install: false,
+    });
+    const revoked = await client.revokeSession(session.id, { waitForInstall: { intervalMs: 5 } });
+    expect(revoked.status).toBe("revoked");
+    const op = api.ownerOperations.get(revoked.revoke_operation_id ?? "");
+    expect(op?.purpose).toBe("session.revoke");
+    expect(op?.status).toBe("succeeded");
+    const offChainOnly = await client.grantSession({
+      accountId: ACCT,
+      publicKey: generateSessionKey().address,
+      scope: { max_per_tx: "1", max_per_day: "1" },
+      install: false,
+    });
+    const quick = await client.revokeSession(offChainOnly.session.id, { onchain: false });
+    expect(api.ownerOperations.get(quick.revoke_operation_id ?? "")?.status).toBe("requires_signature");
   });
 });
 

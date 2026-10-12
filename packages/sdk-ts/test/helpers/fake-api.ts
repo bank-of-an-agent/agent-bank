@@ -2,6 +2,7 @@ import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import type { AgentBankError } from "@agentbank/core";
 import {
   applyBps,
+  CHAINS,
   DomainSchema,
   ERROR_CATALOG,
   formatAmount,
@@ -16,7 +17,16 @@ import {
   type ErrorCode,
 } from "@agentbank/core";
 import * as R from "@agentbank/core/api";
-import { keccak256, recoverMessageAddress, stringToBytes, toHex, type Address, type Hex } from "viem";
+import {
+  getAddress,
+  keccak256,
+  recoverMessageAddress,
+  stringToBytes,
+  toHex,
+  verifyTypedData,
+  type Address,
+  type Hex,
+} from "viem";
 import type { z } from "zod";
 
 /**
@@ -129,6 +139,7 @@ export function makeAccount(overrides: Partial<Account> = {}): Account {
     deployed: false,
     owner_address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
     spend_key_address: null,
+    spend_key_permit: "none",
     module_versions: {},
     created_at: NOW(),
     ...overrides,
@@ -403,6 +414,8 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
       payment_request_id: input.payment_request_id ?? null,
       decision: dec,
       approval_id: status === "requires_approval" ? newId("approval") : null,
+      escrow_id: null,
+      stream_id: null,
       signing_request: status === "requires_signature" ? signingRequest(request.sessionId ?? null) : null,
       owner_operation_id: null,
       user_op_hash: null,
@@ -542,6 +555,8 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
           ? decision("deny", [{ rule: "limits.per_tx", effect: "deny", detail: "too much" }])
           : decision("allow"),
       approval_id: null,
+      escrow_id: null,
+      stream_id: null,
       signing_request: null,
       owner_operation_id: null,
       user_op_hash: null,
@@ -582,6 +597,12 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
   });
 
   const ownerChainId = config.ownerAuthorizationChainId ?? 84532;
+  let usdcAddress = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+  try {
+    usdcAddress = getAsset(ownerChainId, "USDC").address;
+  } catch {
+    // unknown or locked chain: keep the Base Sepolia address
+  }
 
   on("getMeta", () => ({
     object: "meta",
@@ -591,7 +612,7 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
     caip2: `eip155:${ownerChainId}`,
     owner_authorization_chain_id: ownerChainId,
     usdc: {
-      address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      address: usdcAddress,
       decimals: 6,
       eip712_name: "USDC",
       eip712_version: "2",
@@ -633,6 +654,58 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
     }
   }
 
+  on("createAccount", (request) => {
+    const input = body<z.output<typeof R.CreateAccountRequest>>(request);
+    const account = makeAccount({
+      agent_id: params(request).id,
+      chain: input.chain,
+      chain_id: CHAINS[input.chain].id,
+      address: getAddress(keccak256(toHex(`account:${params(request).id}`)).slice(0, 42)),
+      owner_address: ownerAddress,
+      spend_key_address: input.spend_key_address ?? null,
+    });
+    state.accounts.set(account.id, account);
+    return account;
+  });
+
+  on("attachSpendKey", async (request, reply) => {
+    const account = state.accounts.get(params(request).id);
+    if (!account) return sendProblem(reply, "not_found", "No such account");
+    const input = body<z.output<typeof R.AttachSpendKeyRequest>>(request);
+    // Independent EIP-2612 check, as USDC's permit() would do it.
+    const valid = await verifyTypedData({
+      address: input.spend_key_address as Address,
+      domain: {
+        name: "USDC",
+        version: "2",
+        chainId: account.chain_id,
+        verifyingContract: usdcAddress as Address,
+      },
+      types: {
+        Permit: [
+          { name: "owner", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      },
+      primaryType: "Permit",
+      message: {
+        owner: input.spend_key_address as Address,
+        spender: account.address as Address,
+        value: BigInt(input.permit.value),
+        nonce: BigInt(input.permit.nonce),
+        deadline: BigInt(input.permit.deadline),
+      },
+      signature: input.permit.signature as Hex,
+    }).catch(() => false);
+    if (!valid) return sendProblem(reply, "signature_invalid", "Spend key permit does not verify");
+    account.spend_key_address = input.spend_key_address;
+    account.spend_key_permit = "pending";
+    return account;
+  });
+
   on("createSession", async (request, reply) => {
     const input = body<z.output<typeof R.CreateSessionRequest>>(request);
     const { owner_authorization: oa, ...rest } = input;
@@ -649,30 +722,87 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
       revoked_at: null,
       onchain_tx: null,
       install_operation_id: null,
+      revoke_operation_id: null,
       created_at: NOW(),
     };
     state.sessions.set(session.id, session);
     return session;
   });
 
-  on("installSession", (request, reply) => {
-    const session = state.sessions.get(params(request).id);
-    if (!session) return sendProblem(reply, "not_found", "No such session");
+  const ORG_ID = newId("org");
+  const topUpRules = new Map<string, z.output<typeof R.AutoTopUpRule>>();
+
+  function ownerOperation(
+    accountId: string,
+    purpose: OwnerOperation["purpose"],
+    subjectId: string,
+  ): OwnerOperation {
     const op: OwnerOperation = {
       id: newId("ownerOperation"),
       object: "owner_operation",
-      account_id: session.account_id,
-      purpose: "session.install",
-      subject_id: session.id,
+      account_id: accountId,
+      purpose,
+      subject_id: subjectId,
       status: "requires_signature",
       user_op_hash: randomHash(),
-      chain_id: 84532,
+      chain_id: ownerChainId,
       tx_hash: null,
       expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
       created_at: NOW(),
     };
     state.ownerOperations.set(op.id, op);
-    session.install_operation_id = op.id;
+    return op;
+  }
+
+  const org = () => ({
+    id: ORG_ID,
+    object: "org",
+    legal_name: "Example Research Ltd",
+    kind: "company",
+    country: "GB",
+    kyc_status: "approved",
+    tier: "pro",
+    status: "active",
+    frozen_reason: null,
+    pending_unfreeze_at: null,
+    owner_address: ownerAddress,
+    treasury_account_id: null,
+    created_at: NOW(),
+  });
+
+  on("getCurrentOrg", () => org());
+
+  on("rotateOwner", async (request, reply) => {
+    const input = body<z.output<typeof R.RotateOwnerRequest>>(request);
+    const denied = await checkOwner(
+      reply,
+      input.owner_authorization,
+      ownerPayloads.ownerRotate(ORG_ID, input.new_owner_address),
+    );
+    if (denied) return denied;
+    return { ...org(), owner_address: input.new_owner_address };
+  });
+
+  on("prepareOwnerSwap", (request) => {
+    const { id } = params(request);
+    return ownerOperation(id, "owner.swap", id);
+  });
+
+  on("revokeSession", (request, reply) => {
+    const session = state.sessions.get(params(request).id);
+    if (!session) return sendProblem(reply, "not_found", "No such session");
+    session.status = "revoked";
+    session.revoked_at = NOW();
+    session.revoke_operation_id = ownerOperation(session.account_id, "session.revoke", session.id).id;
+    return session;
+  });
+
+  on("getAutoTopUp", (request) => topUpRules.get(params(request).id) ?? null);
+
+  on("installSession", (request, reply) => {
+    const session = state.sessions.get(params(request).id);
+    if (!session) return sendProblem(reply, "not_found", "No such session");
+    session.install_operation_id = ownerOperation(session.account_id, "session.install", session.id).id;
     return session;
   });
 
@@ -692,6 +822,11 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
       if (session) {
         session.status = "active";
         session.onchain_tx = op.tx_hash;
+      }
+      const account = state.accounts.get(op.account_id);
+      if (account?.spend_key_permit === "pending") account.spend_key_permit = "executed";
+      for (const rule of topUpRules.values()) {
+        if (rule.install_operation_id === op.id) rule.status = "active";
       }
     }
     return op;
@@ -764,15 +899,19 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
     const { owner_authorization: oa, ...rule } = input;
     const denied = await checkOwner(reply, oa, ownerPayloads.topUpSet(id, rule));
     if (denied) return denied;
-    return {
+    const treasury = newId("account");
+    const created: z.output<typeof R.AutoTopUpRule> = {
       id: newId("topUpRule"),
       object: "auto_topup_rule",
       agent_id: id,
-      treasury_account_id: newId("account"),
+      treasury_account_id: treasury,
       ...rule,
-      status: "active",
+      status: "pending_install",
+      install_operation_id: ownerOperation(treasury, "topup.configure", id).id,
       created_at: NOW(),
     };
+    topUpRules.set(id, created);
+    return created;
   });
 
   const makeEscrow = (input: z.output<typeof R.CreateEscrowRequest>): Escrow => {

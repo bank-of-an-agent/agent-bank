@@ -32,6 +32,8 @@ export function payment(overrides: Partial<Payment> = {}): Payment {
     payment_request_id: null,
     decision: null,
     approval_id: null,
+    escrow_id: null,
+    stream_id: null,
     signing_request: null,
     owner_operation_id: null,
     user_op_hash: null,

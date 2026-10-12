@@ -7,6 +7,7 @@ import type {
   ApiKey,
   ApiKeyWithSecret,
   Approval,
+  AttachSpendKeyInput,
   AutoTopUpRule,
   Balances,
   ChangePlanInput,
@@ -44,10 +45,12 @@ import type {
   Plan,
   PolicyCheckInput,
   PolicyDecision,
+  PrepareOwnerSwapInput,
   PutAutoTopUpInput,
   PutPolicyInput,
   PutSweepRuleInput,
   RegisterX402PayeeInput,
+  RotateOwnerInput,
   Session,
   SetTreasuryInput,
   Statement,
@@ -132,6 +135,14 @@ export class Orgs extends Resource {
   setTreasury(body: SetTreasuryInput, options?: RequestOptions): Promise<Org> {
     return this.client.request("setTreasury", { ...options, body });
   }
+  /**
+   * Rotate the org owner key (owner authorization `owner.rotate` by the
+   * current owner). Swap the Safe owner on every account first
+   * (`ownerOperations.prepareOwnerSwap`). See `PrincipalClient.rotateOwner`.
+   */
+  rotateOwner(body: RotateOwnerInput, options?: RequestOptions): Promise<Org> {
+    return this.client.request("rotateOwner", { ...options, body });
+  }
 }
 
 /** Org API keys (principal automation credentials). */
@@ -207,6 +218,14 @@ export class Accounts extends Resource {
   balances(id: string, options?: RequestOptions): Promise<Balances> {
     return this.client.request("getBalances", { ...options, params: { id } });
   }
+  /**
+   * Attach the agent's x402 spend key with its float-recovery permit (ADR
+   * 0001); the permit runs on-chain in the account's next owner operation.
+   * See `PrincipalClient.provisionSpendKey`.
+   */
+  attachSpendKey(id: string, body: AttachSpendKeyInput, options?: RequestOptions): Promise<Account> {
+    return this.client.request("attachSpendKey", { ...options, params: { id }, body });
+  }
 }
 
 /** Session keys (scoped, short-lived agent keys). */
@@ -218,6 +237,10 @@ export class Sessions extends Resource {
    */
   create(body: CreateSessionInput, options?: RequestOptions): Promise<Session> {
     return this.client.request("createSession", { ...options, body });
+  }
+  /** List sessions (`GET /v1/sessions`). */
+  list(query: QueryOf<"listSessions"> = {}, options?: RequestOptions): Promise<Page<Session>> {
+    return this.client.request("listSessions", { ...options, query });
   }
   /** Get a session (`GET /v1/sessions/{id}`). */
   retrieve(id: string, options?: RequestOptions): Promise<Session> {
@@ -235,6 +258,10 @@ export class Sessions extends Resource {
 
 /** Owner operations: on-chain operations only the owner key can authorize. */
 export class OwnerOperations extends Resource {
+  /** List owner operations (`GET /v1/owner-operations`). */
+  list(query: QueryOf<"listOwnerOperations"> = {}, options?: RequestOptions): Promise<Page<OwnerOperation>> {
+    return this.client.request("listOwnerOperations", { ...options, query });
+  }
   /** Get an owner operation (`GET /v1/owner-operations/{id}`). */
   retrieve(id: string, options?: RequestOptions): Promise<OwnerOperation> {
     return this.client.request("getOwnerOperation", { ...options, params: { id } });
@@ -247,6 +274,18 @@ export class OwnerOperations extends Resource {
   ): Promise<OwnerOperation> {
     return this.client.request("submitOwnerSignature", { ...options, params: { id }, body });
   }
+  /**
+   * Prepare the owner operation that swaps the Safe owner of one account to
+   * `new_owner_address` (sign it with the **current** owner key). Part of
+   * owner-key rotation.
+   */
+  prepareOwnerSwap(
+    accountId: string,
+    body: PrepareOwnerSwapInput,
+    options?: RequestOptions,
+  ): Promise<OwnerOperation> {
+    return this.client.request("prepareOwnerSwap", { ...options, params: { id: accountId }, body });
+  }
 }
 
 /** AP2 payment mandates. */
@@ -254,6 +293,10 @@ export class Mandates extends Resource {
   /** Grant authority with a signed AP2 open payment mandate (owner authorization `mandate.issue`). */
   create(body: CreateMandateInput, options?: RequestOptions): Promise<Mandate> {
     return this.client.request("createMandate", { ...options, body });
+  }
+  /** List mandates (`GET /v1/mandates`). */
+  list(query: QueryOf<"listMandates"> = {}, options?: RequestOptions): Promise<Page<Mandate>> {
+    return this.client.request("listMandates", { ...options, query });
   }
   /** Get a mandate (`GET /v1/mandates/{id}`). */
   retrieve(id: string, options?: RequestOptions): Promise<Mandate> {
@@ -357,6 +400,10 @@ export class Escrows extends Resource {
   create(body: CreateEscrowInput, options?: RequestOptions): Promise<Escrow> {
     return this.client.request("createEscrow", { ...options, body });
   }
+  /** List escrows (`GET /v1/escrows`). */
+  list(query: QueryOf<"listEscrows"> = {}, options?: RequestOptions): Promise<Page<Escrow>> {
+    return this.client.request("listEscrows", { ...options, query });
+  }
   /** Get an escrow (`GET /v1/escrows/{id}`). */
   retrieve(id: string, options?: RequestOptions): Promise<Escrow> {
     return this.client.request("getEscrow", { ...options, params: { id } });
@@ -384,6 +431,10 @@ export class Streams extends Resource {
   /** Start a pre-funded stream or recurring payment (`POST /v1/streams`). */
   create(body: CreateStreamInput, options?: RequestOptions): Promise<Stream> {
     return this.client.request("createStream", { ...options, body });
+  }
+  /** List streams (`GET /v1/streams`). */
+  list(query: QueryOf<"listStreams"> = {}, options?: RequestOptions): Promise<Page<Stream>> {
+    return this.client.request("listStreams", { ...options, query });
   }
   /** Get a stream (`GET /v1/streams/{id}`). */
   retrieve(id: string, options?: RequestOptions): Promise<Stream> {
@@ -488,6 +539,17 @@ export class Treasury extends Resource {
   /** Eligible tokenized Treasury funds (a neutral list; no recommendation). */
   listFunds(options?: RequestOptions): Promise<{ data: Fund[] }> {
     return this.client.request("listFunds", { ...options });
+  }
+  /** List auto top-up rules (`GET /v1/auto-topup-rules`). */
+  listAutoTopUpRules(
+    query: QueryOf<"listAutoTopUpRules"> = {},
+    options?: RequestOptions,
+  ): Promise<Page<AutoTopUpRule>> {
+    return this.client.request("listAutoTopUpRules", { ...options, query });
+  }
+  /** The account's treasury sweep rule, or `null` (`GET /v1/accounts/{id}/sweep-rule`). */
+  getSweepRule(accountId: string, options?: RequestOptions): Promise<SweepRule | null> {
+    return this.client.request("getSweepRule", { ...options, params: { id: accountId } });
   }
   /** Configure the owner-directed treasury sweep (counsel-gated; owner authorization `sweep.set`). */
   putSweepRule(accountId: string, body: PutSweepRuleInput, options?: RequestOptions): Promise<SweepRule> {

@@ -12,13 +12,17 @@ import { InvalidRequestError } from "./errors";
 import { pollUntil, type WaitOptions } from "./internal/poll";
 import { formatIssues, summarizeIssues } from "./internal/zod";
 import { ownerAuthorize, type OwnerAuthorizeInput } from "./owner";
-import { signOperationHash, type OwnerSigner } from "./signers";
+import { signOperationHash, type OwnerSigner, type SpendSigner } from "./signers";
+import { signSpendKeyPermit, type SpendKeyPermitOptions } from "./spend-key";
 import type {
+  Account,
   Agent,
   AgentPolicy,
   AutoTopUpRule,
+  CreateAccountInput,
   CreateMandateInput,
   Mandate,
+  Meta,
   Money,
   Org,
   OwnerAuthorization,
@@ -26,6 +30,7 @@ import type {
   PolicyDocumentInput,
   Session,
   SessionScope,
+  SpendKeyPermit,
   SweepRule,
   Vault,
 } from "./types";
@@ -78,6 +83,34 @@ export interface GrantSessionInput {
   owner?: OwnerSigner;
 }
 
+/** Input of {@link PrincipalClient.setupAgentAccount}. */
+export interface SetupAgentAccountInput {
+  /** The agent (`agt_…`) to create the smart account for. */
+  agentId: string;
+  /** Chain of the account (default: the API's default, Base Sepolia). */
+  chain?: CreateAccountInput["chain"];
+  /**
+   * The agent's x402 spend key (e.g. `generateSpendKey().account`). When
+   * given, its float-recovery permit is signed and attached before the
+   * first session is installed, so the setup operation executes it.
+   */
+  spendKey?: SpendSigner;
+  /** Permit overrides (`nonce` for a key that is not fresh). */
+  spendKeyPermit?: SpendKeyPermitOptions;
+  /** The first session to grant (and install) once the account is ready. */
+  session?: Omit<GrantSessionInput, "accountId">;
+}
+
+/** Result of {@link PrincipalClient.setupAgentAccount}. */
+export interface SetupAgentAccountResult {
+  /** The account, as returned by the last step (spend key attached if requested). */
+  account: Account;
+  /** The granted session, if one was requested. */
+  session: Session | undefined;
+  /** The signed install (setup) owner operation, if a session was installed. */
+  installOperation: OwnerOperation | undefined;
+}
+
 /** Result of {@link PrincipalClient.grantSession}. */
 export interface GrantSessionResult {
   session: Session;
@@ -109,7 +142,7 @@ const OWNER_OP_DONE: ReadonlySet<OwnerOperation["status"]> = new Set(["succeeded
 export class PrincipalClient extends AgentBankClient {
   readonly #owner: OwnerSigner | undefined;
   readonly #chainIdOverride: number | undefined;
-  #chainId: Promise<number> | undefined;
+  #meta: Promise<Meta> | undefined;
 
   constructor(options: PrincipalClientOptions) {
     super(options);
@@ -127,14 +160,18 @@ export class PrincipalClient extends AgentBankClient {
    */
   async ownerAuthorizationChainId(options: RequestOptions = {}): Promise<number> {
     if (this.#chainIdOverride !== undefined) return this.#chainIdOverride;
-    this.#chainId ??= this.meta(readOptions(options)).then((meta) => {
-      assertTestnet(meta.owner_authorization_chain_id);
-      return meta.owner_authorization_chain_id;
-    });
+    const chainId = (await this.#deployment(options)).owner_authorization_chain_id;
+    assertTestnet(chainId);
+    return chainId;
+  }
+
+  /** `GET /v1/meta`, fetched once and cached; a failed fetch is retried on the next call. */
+  async #deployment(options: RequestOptions = {}): Promise<Meta> {
+    this.#meta ??= this.meta(readOptions(options));
     try {
-      return await this.#chainId;
+      return await this.#meta;
     } catch (error) {
-      this.#chainId = undefined;
+      this.#meta = undefined;
       throw error;
     }
   }
@@ -252,6 +289,144 @@ export class PrincipalClient extends AgentBankClient {
   }
 
   /**
+   * Sign the spend key's float-recovery permit (EIP-2612 on USDC, ADR 0001)
+   * for an existing account: spender = `account.address`, USDC address and
+   * EIP-712 domain from `GET /v1/meta`. Does not send anything.
+   */
+  async spendKeyPermit(
+    account: Account | string,
+    spendKey: SpendSigner,
+    options: SpendKeyPermitOptions & RequestOptions = {},
+  ): Promise<SpendKeyPermit> {
+    const target =
+      typeof account === "string" ? await this.accounts.retrieve(account, readOptions(options)) : account;
+    const meta = await this.#deployment(options);
+    if (target.chain_id !== meta.chain_id) {
+      throw new InvalidRequestError(
+        "invalid_request",
+        `Account ${target.id} is on chain ${target.chain_id}, but this deployment's USDC is on chain ${meta.chain_id}`,
+      );
+    }
+    return signSpendKeyPermit({
+      spendKey,
+      account: target.address,
+      chainId: target.chain_id,
+      usdc: meta.usdc.address,
+      name: meta.usdc.eip712_name,
+      version: meta.usdc.eip712_version,
+      ...(options.nonce !== undefined ? { nonce: options.nonce } : {}),
+      ...(options.value !== undefined ? { value: options.value } : {}),
+      ...(options.deadline !== undefined ? { deadline: options.deadline } : {}),
+    });
+  }
+
+  /**
+   * Attach the agent's x402 spend key to its account (ADR 0001): sign the
+   * float-recovery permit for the account's address and
+   * `PUT /v1/accounts/{id}/spend-key`. The permit is executed on-chain by the
+   * account's next owner operation (normally the install of the first
+   * session), after which `account.spend_key_permit` is `executed`.
+   *
+   * The permit nonce defaults to 0 (a fresh key); pass `nonce` (USDC
+   * `nonces(spendKey)`) for a key that has signed permits before.
+   */
+  async provisionSpendKey(
+    accountId: string,
+    spendKey: SpendSigner,
+    options: SpendKeyPermitOptions & RequestOptions = {},
+  ): Promise<Account> {
+    const account = await this.accounts.retrieve(accountId, readOptions(options));
+    if (account.role !== "agent") {
+      throw new InvalidRequestError("invalid_request", "Spend keys are for agent accounts, not the treasury");
+    }
+    const permit = await this.spendKeyPermit(account, spendKey, options);
+    return this.accounts.attachSpendKey(
+      account.id,
+      { spend_key_address: spendKey.address, permit },
+      writeOptions(options),
+    );
+  }
+
+  /**
+   * Provision an agent's account in the order the contracts require:
+   * create the smart account → (with `spendKey`) sign the float-recovery
+   * permit for its counterfactual address and attach the spend key → (with
+   * `session`) grant and install the first session, whose setup owner
+   * operation also executes the permit on-chain.
+   *
+   * A caller-supplied idempotency key is suffixed per step (`.account`,
+   * `.spend-key`, `.session.*`), so the whole setup can be retried safely.
+   */
+  async setupAgentAccount(
+    input: SetupAgentAccountInput,
+    options: RequestOptions = {},
+  ): Promise<SetupAgentAccountResult> {
+    if (input.session) this.#requireOwner(input.session.owner);
+    let account = await this.accounts.create(
+      input.agentId,
+      input.chain ? { chain: input.chain } : {},
+      writeOptions(options, "account"),
+    );
+    if (input.spendKey) {
+      const permit = await this.spendKeyPermit(account, input.spendKey, {
+        ...input.spendKeyPermit,
+        ...readOptions(options),
+      });
+      account = await this.accounts.attachSpendKey(
+        account.id,
+        { spend_key_address: input.spendKey.address, permit },
+        writeOptions(options, "spend-key"),
+      );
+    }
+    if (!input.session) return { account, session: undefined, installOperation: undefined };
+    const granted = await this.grantSession(
+      { ...input.session, accountId: account.id },
+      writeOptions(options, "session"),
+    );
+    if (input.spendKey && input.session.waitForInstall) {
+      account = await this.accounts.retrieve(account.id, readOptions(options));
+    }
+    return { account, session: granted.session, installOperation: granted.installOperation };
+  }
+
+  /**
+   * Prepare the owner operation that swaps the Safe owner of one account to
+   * `newOwnerAddress` and sign it with the **current** owner key. Do this for
+   * every account before {@link rotateOwner}.
+   */
+  async prepareOwnerSwap(
+    accountId: string,
+    newOwnerAddress: string,
+    options: RequestOptions & { owner?: OwnerSigner; wait?: boolean | WaitOptions } = {},
+  ): Promise<OwnerOperation> {
+    const operation = await this.ownerOperations.prepareOwnerSwap(
+      accountId,
+      { new_owner_address: newOwnerAddress },
+      writeOptions(options, "prepare"),
+    );
+    return this.signOwnerOperation(operation, { ...writeOptions(options, "sign"), ...ownerOptions(options) });
+  }
+
+  /**
+   * Rotate the org's owner key in Agent Bank and the co-signer (owner
+   * authorization `owner.rotate`, signed by the **current** owner key). Swap
+   * the on-chain Safe owner of every account first with
+   * {@link prepareOwnerSwap}. Lost keys are recovered with guardians instead.
+   */
+  async rotateOwner(
+    newOwnerAddress: string,
+    options: RequestOptions & { owner?: OwnerSigner } = {},
+  ): Promise<Org> {
+    const body = canonicalBody("rotateOwner", { new_owner_address: newOwnerAddress });
+    const org = await this.orgs.retrieve(readOptions(options));
+    const owner_authorization = await this.authorize(
+      ownerPayloads.ownerRotate(org.id, body.new_owner_address),
+      options.owner,
+    );
+    return this.orgs.rotateOwner({ ...body, owner_authorization }, writeOptions(options));
+  }
+
+  /**
    * Replace an agent's policy. The document is normalized with the policy
    * schema (defaults made explicit) and, when an owner key is configured,
    * signed as `policy.loosen`: tightening applies immediately, loosening
@@ -325,48 +500,127 @@ export class PrincipalClient extends AgentBankClient {
     return this.orgs.setTreasury({ ...body, owner_authorization }, writeOptions(options));
   }
 
-  /** Refill an agent from the treasury on rules (owner authorization `topup.set`). */
+  /**
+   * Refill an agent from the treasury on rules (owner authorization
+   * `topup.set`), and sign the owner operation that installs the top-up
+   * executor when the API returns one (`pending_install`).
+   */
   async setAutoTopUp(
     agentId: string,
     rule: { refill_to: Money; when_below: Money; max_per_day: Money },
-    options: RequestOptions & { owner?: OwnerSigner } = {},
+    options: OwnerFlowOptions = {},
   ): Promise<AutoTopUpRule> {
     const body = canonicalBody("putAutoTopUp", rule);
     const owner_authorization = await this.authorize(ownerPayloads.topUpSet(agentId, body), options.owner);
-    return this.treasury.putAutoTopUp(agentId, { ...body, owner_authorization }, writeOptions(options));
+    const result = await this.treasury.putAutoTopUp(
+      agentId,
+      { ...body, owner_authorization },
+      writeOptions(options, "rule"),
+    );
+    if (result.status !== "pending_install" || !result.install_operation_id) return result;
+    await this.#signFollowUp(result.install_operation_id, options);
+    return options.waitForInstall
+      ? ((await this.treasury.getAutoTopUp(agentId, readOptions(options))) ?? result)
+      : result;
   }
 
-  /** Configure the treasury sweep for an account (owner authorization `sweep.set`; counsel-gated feature). */
+  /**
+   * Configure the treasury sweep for an account (owner authorization
+   * `sweep.set`; counsel-gated feature), signing the executor install
+   * operation when the API returns one.
+   */
   async setSweepRule(
     accountId: string,
     rule: { fund_id: string; threshold: Money; max_share_bps: number; floor?: Money },
-    options: RequestOptions & { owner?: OwnerSigner } = {},
+    options: OwnerFlowOptions = {},
   ): Promise<SweepRule> {
     const body = canonicalBody("putSweepRule", rule);
     const owner_authorization = await this.authorize(ownerPayloads.sweepSet(accountId, body), options.owner);
-    return this.treasury.putSweepRule(accountId, { ...body, owner_authorization }, writeOptions(options));
+    const result = await this.treasury.putSweepRule(
+      accountId,
+      { ...body, owner_authorization },
+      writeOptions(options, "rule"),
+    );
+    if (result.status !== "pending_install" || !result.install_operation_id) return result;
+    await this.#signFollowUp(result.install_operation_id, options);
+    return options.waitForInstall
+      ? ((await this.treasury.getSweepRule(accountId, readOptions(options))) ?? result)
+      : result;
   }
 
   /**
    * Withdraw from a vault to its account. Before the unlock date this needs
-   * the owner (`vault.withdraw`); pass `authorize: false` for unlocked goal vaults.
+   * the owner (`vault.withdraw`), and a locked vault's early withdrawal is an
+   * owner operation that is signed right away; pass `authorize: false` for
+   * unlocked goal vaults.
    */
   async withdrawVault(
     vaultId: string,
     amount: Money,
-    options: RequestOptions & { authorize?: boolean; owner?: OwnerSigner } = {},
+    options: OwnerFlowOptions & { authorize?: boolean } = {},
   ): Promise<Vault> {
     const body = canonicalBody("withdrawVault", { amount });
     const authorize = options.authorize ?? (options.owner ?? this.#owner) !== undefined;
     const owner_authorization = authorize
       ? await this.authorize(ownerPayloads.vaultWithdraw(vaultId, body.amount), options.owner)
       : undefined;
-    return this.vaults.withdraw(
+    const vault = await this.vaults.withdraw(
       vaultId,
       { ...body, ...(owner_authorization ? { owner_authorization } : {}) },
-      writeOptions(options),
+      writeOptions(options, "withdraw"),
     );
+    if (!vault.pending_operation_id || !authorize) return vault;
+    await this.#signFollowUp(vault.pending_operation_id, options);
+    return options.waitForInstall ? this.vaults.retrieve(vaultId, readOptions(options)) : vault;
   }
+
+  /**
+   * Revoke a session: off-chain at once (the co-signer refuses it), and, when
+   * the API prepares one, sign the on-chain revoke owner operation (the hard
+   * backstop). Pass `onchain: false` to skip the on-chain step.
+   */
+  async revokeSession(
+    sessionId: string,
+    options: OwnerFlowOptions & { onchain?: boolean } = {},
+  ): Promise<Session> {
+    const session = await this.sessions.revoke(sessionId, readOptions(options));
+    if (options.onchain === false || !session.revoke_operation_id) return session;
+    await this.#signFollowUp(session.revoke_operation_id, options);
+    return options.waitForInstall ? this.sessions.retrieve(sessionId, readOptions(options)) : session;
+  }
+
+  /** Sign the owner operation a helper's request produced (install, withdrawal, revocation). */
+  async #signFollowUp(operationId: string, options: OwnerFlowOptions): Promise<OwnerOperation> {
+    const wait = options.waitForInstall;
+    return this.signOwnerOperation(operationId, {
+      ...writeOptions(options, "sign"),
+      ...(options.owner ? { owner: options.owner } : {}),
+      ...(wait ? { wait } : {}),
+    });
+  }
+}
+
+/**
+ * Options of the owner-signed helpers that may produce an owner operation
+ * (installing an executor, withdrawing early, revoking on-chain): the
+ * operation is signed with the owner key right away.
+ */
+export interface OwnerFlowOptions extends RequestOptions {
+  /** Override the client's owner signer. */
+  owner?: OwnerSigner;
+  /** Also wait until the resulting owner operation has succeeded (default `false`). */
+  waitForInstall?: boolean | WaitOptions;
+}
+
+/** The owner-related options of a helper's options bag. */
+function ownerOptions(options: { owner?: OwnerSigner; wait?: boolean | WaitOptions }): {
+  owner?: OwnerSigner;
+  wait?: boolean | WaitOptions;
+} {
+  return {
+    ...(options.owner ? { owner: options.owner } : {}),
+    ...(options.wait ? { wait: options.wait } : {}),
+  };
 }
 
 /** Transport options for a read inside a helper (no idempotency key). */
@@ -395,6 +649,7 @@ function writeOptions(options: RequestOptions, step?: string): RequestOptions {
 
 /** Operations whose body carries an `owner_authorization`. */
 type OwnerAuthorizedOperation =
+  | "rotateOwner"
   | "createSession"
   | "putPolicy"
   | "createMandate"

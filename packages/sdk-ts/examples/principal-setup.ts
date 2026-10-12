@@ -1,7 +1,8 @@
 /**
- * Principal setup: sign up an org, create an agent with a smart account,
- * give it a spending policy and a session key, and write the agent's keys to
- * a 0600 key file. Testnet only (Base Sepolia / local API).
+ * Principal setup: sign up an org, create an agent with a spending policy,
+ * provision its smart account with an x402 spend key (plus float-recovery
+ * permit) and a session key, and write the agent's keys to a 0600 key file.
+ * Testnet only (Base Sepolia / local API).
  *
  *   AGENTBANK_API_URL=http://localhost:8080 \
  *   AGENTBANK_OWNER_KEY=0x…   # optional: your testnet owner key (a new one is generated otherwise)
@@ -37,19 +38,11 @@ console.log(`org ${org.id} (KYB ${org.kyc_status})`);
 
 const principal = new PrincipalClient({ baseUrl, apiKey: api_key.secret, owner });
 
-// 2. An agent with its own smart account; the x402 spend key is generated client-side.
+// 2. An agent with spending rules: caps, an x402 allowlist and an approval threshold.
 const agent = await principal.agents.create({
   name: "research-bot",
   description: "Buys datasets and API calls",
 });
-const spendKey = generateSpendKey();
-const account = await principal.accounts.create(agent.id, {
-  chain: "base-sepolia",
-  spend_key_address: spendKey.address,
-});
-console.log(`agent ${agent.id}, account ${account.id} at ${account.address} (fund it with test USDC)`);
-
-// 3. Spending rules: caps, an x402 allowlist and an approval threshold.
 await principal.setPolicy(agent.id, {
   limits: { per_tx: "25.00", per_day: "200.00", per_month: "2000.00" },
   counterparties: {
@@ -60,18 +53,25 @@ await principal.setPolicy(agent.id, {
   approvals: [{ above: "100.00", approvers: 1 }],
 });
 
-// 4. A 24-hour session key, scoped on-chain, installed with the owner's signature.
+// 3. Its smart account, x402 spend key and first session, in the order the contracts need:
+//    create the account → the spend key signs the float-recovery permit for the account's
+//    address (ADR 0001) → attach it → grant a 24-hour session whose on-chain install
+//    (signed by the owner) also executes the permit.
+const spendKey = generateSpendKey();
 const sessionKey = generateSessionKey();
-const { session, installOperation } = await principal.grantSession({
-  accountId: account.id,
-  publicKey: sessionKey.address,
-  scope: { max_per_tx: "25.00", max_per_day: "200.00" },
+const { account, session, installOperation } = await principal.setupAgentAccount({
+  agentId: agent.id,
+  chain: "base-sepolia",
+  spendKey: spendKey.account,
+  session: { publicKey: sessionKey.address, scope: { max_per_tx: "25.00", max_per_day: "200.00" } },
 });
+if (!session) throw new Error("expected a session");
+console.log(`agent ${agent.id}, account ${account.id} at ${account.address} (fund it with test USDC)`);
 console.log(
-  `session ${session.id} (${session.status}); install operation ${installOperation?.status ?? "n/a"}`,
+  `spend key ${account.spend_key_address} (permit ${account.spend_key_permit}); session ${session.id} (${session.status}); install ${installOperation?.status ?? "n/a"}`,
 );
 
-// 5. Hand the keys to the agent runtime through a 0600 key file (never logs or env dumps).
+// 4. Hand the keys to the agent runtime through a 0600 key file (never logs or env dumps).
 const store = new FileKeyStore({ path: keystorePath });
 await store.set(`session:${session.id}`, sessionKey.privateKey);
 await store.set("spend", spendKey.privateKey);
