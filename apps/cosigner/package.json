@@ -1,0 +1,40 @@
+{
+  "name": "@agentbank/cosigner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Bank policy engine and co-signer: re-derives every operation from the raw user operation, evaluates its own copy of the policy against its own spend history, and adds (or refuses) the second signature with a non-exportable KMS key.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentbank/chain": "workspace:*",
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@agentbank/policy": "workspace:*",
+    "@aws-sdk/client-kms": "^3.1149.0",
+    "@electric-sql/pglite": "^0.5.8",
+    "@noble/hashes": "^2.4.0",
+    "fastify": "^5.12.5",
+    "permissionless": "^0.4.1",
+    "pg": "^8.23.1",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@noble/curves": "1.9.1",
+    "tsup": "^8.5.1"
+  }
+}
