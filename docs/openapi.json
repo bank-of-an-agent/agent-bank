@@ -4552,6 +4552,7 @@
       "post": {
         "operationId": "withdrawVault",
         "summary": "Withdraw from a vault to its account (owner only before unlock)",
+        "description": "Goal vaults and unlocked locked vaults withdraw at once. Early withdrawal from a locked vault is a challenge–response: the first call fails with `owner_signature_required` and a `typed_data` extension holding the TimeLockVaults EIP-712 `EarlyWithdrawal` message; the owner signs it and retries with `owner_authorization` (`expires_at` = the deadline). The vault then carries a `pending_operation_id` for the owner to sign.",
         "tags": [
           "Savings"
         ],
