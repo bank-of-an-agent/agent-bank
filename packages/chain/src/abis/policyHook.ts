@@ -115,6 +115,26 @@ export const agentPolicyHookAbi = [
     outputs: [{ name: "", type: "uint256" }],
   },
   {
+    type: "function",
+    name: "contractKind",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "target", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "isRecipientAllowed",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "recipient", type: "address" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
     type: "event",
     name: "SpendRecorded",
     inputs: [

@@ -25,6 +25,7 @@ import {
 import { decodeCalls } from "../decode";
 import { encodeExecute, validatorNonceKey } from "../erc7579";
 import { userOperationToJson, type UserOperationV07 } from "../json";
+import { assertRelayableCall } from "../relay";
 import { stubOwnerSignature, stubSessionSignature } from "../signing";
 import { logInvolves, normalizeLog, sortLogs, type RawLog } from "../logs";
 import type {
@@ -361,9 +362,11 @@ export class SimulatedChain {
     if (t === this.topUp.address.toLowerCase()) return this.topUp.handle(ctx, from, data);
     if (t === this.smartSessions.address.toLowerCase()) return this.smartSessions.handle(ctx, from, data);
     if (t === this.hook.address.toLowerCase()) return this.hook.handle(ctx, from, data);
+    if (t === this.contracts.ownableValidator.toLowerCase())
+      return this.accounts.ownableValidatorCall(ctx, from, data);
     if (this.accounts.get(to)) {
       if (isAddressEqual(from, to)) return this.accounts.selfCall(ctx, to, data);
-      return revert("simulator: calls into an account are only simulated as self-calls and executor calls");
+      return this.accounts.execTransaction(ctx, from, to, data);
     }
     return revert(`simulator: no contract at ${getAddress(to)}`);
   }
@@ -686,7 +689,8 @@ export class SimulatedChain {
 
   /**
    * Send a raw transaction from `from` without a signature (tests: external transfers, keeper calls,
-   * the owner's native Safe path is not modelled). Included even if it reverts.
+   * the owner's Safe-native `execTransaction`, which carries its own Safe owner signatures). Included
+   * even if it reverts.
    */
   sendTransaction(input: { from: Address; to: Address; data: Hex }): Hex {
     const intent = {
@@ -971,6 +975,7 @@ export class SimulatedChain {
       stage: "ready",
       safeOwners: [getAddress(deployment.owner)],
       safeThreshold: 1,
+      safeNonce: 0n,
       validators: [getAddress(this.contracts.ownableValidator), getAddress(this.contracts.smartSessions)],
       ownerValidator: { threshold: 1, owners: [getAddress(deployment.owner)] },
       registry: getAddress("0x0000000000000000000000000000000000000000"),
@@ -1198,18 +1203,7 @@ class SimulatedGateway implements ChainGateway {
   }
 
   async relayCall(input: RelayCallInput): Promise<{ txHash: Hex }> {
-    const allowed = [
-      this.contracts.escrow,
-      this.contracts.streams,
-      this.contracts.vaults,
-      this.contracts.topUpExecutor,
-      this.contracts.sweepExecutor,
-    ];
-    if (!allowed.some((a) => a !== undefined && isAddressEqual(a, input.call.to))) {
-      throw new AgentBankError("invalid_request", "relayCall only targets Agent Bank contracts");
-    }
-    if ((input.call.value ?? 0n) !== 0n)
-      throw new AgentBankError("invalid_request", "relayCall never sends native value");
+    assertRelayableCall(input.call, this.contracts);
     const from = input.relayer?.address ?? SIMULATED_RELAYER;
     return { txHash: this.chain._relay(getAddress(from), getAddress(input.call.to), input.call.data) };
   }
@@ -1217,6 +1211,11 @@ class SimulatedGateway implements ChainGateway {
   async authorizationState(token: Address, authorizer: Address, nonce: Hex): Promise<boolean> {
     if (!isAddressEqual(token, this.contracts.usdc)) return false;
     return this.chain.usdc.authorizationState(authorizer, nonce);
+  }
+
+  async erc20Nonces(token: Address, owner: Address): Promise<bigint> {
+    if (!isAddressEqual(token, this.contracts.usdc)) return 0n;
+    return this.chain.usdc.nonces(owner);
   }
 
   async verifySignature(input: { address: Address; hash: Hex; signature: Hex }): Promise<boolean> {

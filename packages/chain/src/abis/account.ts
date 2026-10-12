@@ -218,6 +218,24 @@ export const safeAbi = [
   },
   {
     type: "function",
+    name: "swapOwner",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "prevOwner", type: "address" },
+      { name: "oldOwner", type: "address" },
+      { name: "newOwner", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "isOwner",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "isModuleEnabled",
     stateMutability: "view",
     inputs: [{ name: "module", type: "address" }],
@@ -259,7 +277,49 @@ export const safeAbi = [
     ],
     outputs: [{ name: "success", type: "bool" }],
   },
+  {
+    type: "event",
+    name: "AddedOwner",
+    inputs: [{ name: "owner", type: "address", indexed: true }],
+  },
+  {
+    type: "event",
+    name: "RemovedOwner",
+    inputs: [{ name: "owner", type: "address", indexed: true }],
+  },
+  {
+    type: "event",
+    name: "ExecutionSuccess",
+    inputs: [
+      { name: "txHash", type: "bytes32", indexed: true },
+      { name: "payment", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ExecutionFailure",
+    inputs: [
+      { name: "txHash", type: "bytes32", indexed: true },
+      { name: "payment", type: "uint256", indexed: false },
+    ],
+  },
 ] as const;
+
+/** EIP-712 types of a Safe transaction (`execTransaction`), domain `{ chainId, verifyingContract: safe }`. */
+export const SAFE_TX_TYPES = {
+  SafeTx: [
+    { name: "to", type: "address" },
+    { name: "value", type: "uint256" },
+    { name: "data", type: "bytes" },
+    { name: "operation", type: "uint8" },
+    { name: "safeTxGas", type: "uint256" },
+    { name: "baseGas", type: "uint256" },
+    { name: "gasPrice", type: "uint256" },
+    { name: "gasToken", type: "address" },
+    { name: "refundReceiver", type: "address" },
+    { name: "nonce", type: "uint256" },
+  ],
+} as const;
 
 /** ERC-7579 module type ids. */
 export const MODULE_TYPE = { validator: 1n, executor: 2n, fallback: 3n, hook: 4n } as const;

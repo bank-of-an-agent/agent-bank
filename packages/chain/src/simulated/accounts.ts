@@ -1,17 +1,27 @@
 import {
   decodeAbiParameters,
   decodeFunctionData,
+  encodeFunctionResult,
   getAddress,
   hashTypedData,
   size,
   slice,
+  toHex,
   zeroAddress,
   type Address,
   type Hex,
 } from "viem";
 import { accountInitData } from "../account";
-import { MODULE_TYPE, ownableValidatorConfigParams, safe7579Abi } from "../abis";
+import {
+  MODULE_TYPE,
+  ownableValidatorAbi,
+  ownableValidatorConfigParams,
+  SAFE_TX_TYPES,
+  safe7579Abi,
+  safeAbi,
+} from "../abis";
 import { MODULE_REGISTRY, RHINESTONE_ATTESTER } from "../constants";
+import { SENTINEL_OWNERS } from "../owners";
 import {
   CALLTYPE_BATCH,
   CALLTYPE_SINGLE,
@@ -24,8 +34,15 @@ import { ecrecover, ethSignedMessageHash, splitSignature } from "./ecdsa";
 import { JMap } from "./journal";
 import type { SimPolicyHook } from "./policyHook";
 import { checkSignatures } from "./smartSessions";
-import { check, key, revert, SimRevert, type ExecContext } from "./vm";
+import { check, emitLog, eventOf, key, revert, SimRevert, type ExecContext } from "./vm";
 import type { World } from "./world";
+
+/** OwnableValidator `MAX_OWNERS`. */
+const MAX_VALIDATOR_OWNERS = 32;
+
+function same(a: Address, b: Address): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
 
 /** A simulated Safe7579 account. */
 export interface SimAccountRecord {
@@ -33,11 +50,14 @@ export interface SimAccountRecord {
   deployment: AccountDeployment;
   /** `launchpad`: proxy created and validators initialised, `setupSafe` not executed yet. */
   stage: "launchpad" | "ready";
+  /** Safe owners in `getOwners()` order (Safe-native `execTransaction` and Safe ERC-1271 signatures). */
   safeOwners: Address[];
   safeThreshold: number;
+  /** Safe transaction nonce (`execTransaction`). */
+  safeNonce: bigint;
   /** Installed ERC-7579 validators. */
   validators: Address[];
-  /** OwnableValidator storage for this account (owner path). */
+  /** OwnableValidator storage for this account (owner path); owners in `getOwners(account)` order. */
   ownerValidator: { threshold: number; owners: Address[] };
   /** ERC-7484 registry consulted for module installs (zero address = none). */
   registry: Address;
@@ -96,7 +116,8 @@ export class SimAccounts {
     for (const v of init.validators) {
       if (getAddress(v.module) === getAddress(this.contracts.ownableValidator)) {
         const [threshold, owners] = decodeAbiParameters(ownableValidatorConfigParams, v.initData);
-        ownerValidator = { threshold: Number(threshold), owners: owners.map((o) => getAddress(o)) };
+        // `onInstall` pushes the (sorted) owners in order and SentinelList inserts at the head.
+        ownerValidator = { threshold: Number(threshold), owners: owners.map((o) => getAddress(o)).reverse() };
       }
     }
     const record: SimAccountRecord = {
@@ -105,6 +126,7 @@ export class SimAccounts {
       stage: "launchpad",
       safeOwners: [],
       safeThreshold: 0,
+      safeNonce: 0n,
       validators: init.validators.map((v) => getAddress(v.module)),
       ownerValidator,
       registry: zeroAddress,
@@ -226,7 +248,10 @@ export class SimAccounts {
     return false;
   }
 
-  /** Calls from the account to itself (`execute` targeting the account): module management. */
+  /**
+   * Calls from the account to itself (`execute` or `execTransaction` targeting the account): module
+   * management and the Safe's `swapOwner`.
+   */
   selfCall(ctx: ExecContext, account: Address, data: Hex): Hex {
     const record = this.get(account);
     if (!record || record.stage !== "ready") revert("account not ready");
@@ -234,7 +259,18 @@ export class SimAccounts {
     try {
       decoded = decodeFunctionData({ abi: safe7579Abi, data });
     } catch {
-      revert("simulator: unsupported account self-call");
+      let safeCall;
+      try {
+        safeCall = decodeFunctionData({ abi: safeAbi, data });
+      } catch {
+        revert("simulator: unsupported account self-call");
+      }
+      if (safeCall.functionName !== "swapOwner") {
+        revert(`simulator: Safe function ${safeCall.functionName} is not supported as a self-call`);
+      }
+      const [prevOwner, oldOwner, newOwner] = safeCall.args;
+      this.swapOwner(ctx, record, prevOwner, oldOwner, newOwner);
+      return "0x";
     }
     const a = decoded.args as readonly unknown[];
     switch (decoded.functionName) {
@@ -249,6 +285,211 @@ export class SimAccounts {
         return "0x";
       default:
         return revert(`simulator: account function ${decoded.functionName} is not supported as a self-call`);
+    }
+  }
+
+  /** Safe `swapOwner(prevOwner, oldOwner, newOwner)` (`authorized`: self-calls only). */
+  private swapOwner(
+    ctx: ExecContext,
+    record: SimAccountRecord,
+    prevOwner: Address,
+    oldOwner: Address,
+    newOwner: Address,
+  ): void {
+    const owners = record.safeOwners;
+    if (same(newOwner, zeroAddress) || same(newOwner, SENTINEL_OWNERS) || same(newOwner, record.address))
+      revert("GS203");
+    if (owners.some((o) => same(o, newOwner))) revert("GS204");
+    if (same(oldOwner, zeroAddress) || same(oldOwner, SENTINEL_OWNERS)) revert("GS203");
+    const index = owners.findIndex((o) => same(o, oldOwner));
+    const expectedPrev = index <= 0 ? SENTINEL_OWNERS : (owners[index - 1] as Address);
+    if (index < 0 || !same(prevOwner, expectedPrev)) revert("GS205");
+    const next = [...owners];
+    next[index] = getAddress(newOwner);
+    this.save({ ...record, safeOwners: next });
+    emitLog(ctx, record.address, eventOf(safeAbi, "RemovedOwner"), { owner: getAddress(oldOwner) });
+    emitLog(ctx, record.address, eventOf(safeAbi, "AddedOwner"), { owner: getAddress(newOwner) });
+  }
+
+  /**
+   * The OwnableValidator module, called with `msg.sender = from` (the account): owner management
+   * (`addOwner` inserts at the head of the account's SentinelList, `removeOwner(prev, owner)` needs
+   * `prev → owner` and reverts with `CannotRemoveOwner()` while `ownerCount == threshold`,
+   * `setThreshold`) and its views.
+   */
+  ownableValidatorCall(ctx: ExecContext, from: Address, data: Hex): Hex {
+    let decoded;
+    try {
+      decoded = decodeFunctionData({ abi: ownableValidatorAbi, data });
+    } catch {
+      revert("simulator: unsupported OwnableValidator call");
+    }
+    const validator = getAddress(this.contracts.ownableValidator);
+    const stateOf = (account: Address) =>
+      this.get(account)?.ownerValidator ?? { threshold: 0, owners: [] as Address[] };
+    const account = getAddress(from);
+    const record = this.get(account);
+    const state = stateOf(account);
+    switch (decoded.functionName) {
+      case "addOwner": {
+        const owner = getAddress(decoded.args[0]);
+        if (!record || state.threshold === 0) revert(`NotInitialized(${account})`);
+        if (owner === zeroAddress) revert(`InvalidOwner(${owner})`);
+        if (state.owners.length >= MAX_VALIDATOR_OWNERS) revert("MaxOwnersReached()");
+        if (same(owner, SENTINEL_OWNERS)) revert(`LinkedList_InvalidEntry(${owner})`);
+        if (state.owners.some((o) => same(o, owner))) revert(`LinkedList_EntryAlreadyInList(${owner})`);
+        this.save({ ...record, ownerValidator: { ...state, owners: [owner, ...state.owners] } });
+        emitLog(ctx, validator, eventOf(ownableValidatorAbi, "OwnerAdded"), { account, owner });
+        return "0x";
+      }
+      case "removeOwner": {
+        const prevOwner = getAddress(decoded.args[0]);
+        const owner = getAddress(decoded.args[1]);
+        if (state.owners.length === state.threshold) revert("CannotRemoveOwner()");
+        if (owner === zeroAddress || same(owner, SENTINEL_OWNERS))
+          revert(`LinkedList_InvalidEntry(${prevOwner})`);
+        const index = state.owners.findIndex((o) => same(o, owner));
+        const expectedPrev = index === 0 ? SENTINEL_OWNERS : (state.owners[index - 1] as Address);
+        if (index < 0 || !same(prevOwner, expectedPrev)) revert(`LinkedList_InvalidEntry(${owner})`);
+        this.save({
+          ...(record as SimAccountRecord),
+          ownerValidator: { ...state, owners: state.owners.filter((_, i) => i !== index) },
+        });
+        emitLog(ctx, validator, eventOf(ownableValidatorAbi, "OwnerRemoved"), { account, owner });
+        return "0x";
+      }
+      case "setThreshold": {
+        const threshold = decoded.args[0];
+        if (!record || state.threshold === 0) revert(`NotInitialized(${account})`);
+        if (threshold === 0n || BigInt(state.owners.length) < threshold) revert("InvalidThreshold()");
+        this.save({ ...record, ownerValidator: { ...state, threshold: Number(threshold) } });
+        emitLog(ctx, validator, eventOf(ownableValidatorAbi, "ThresholdSet"), { account, threshold });
+        return "0x";
+      }
+      case "getOwners":
+        return encodeFunctionResult({
+          abi: ownableValidatorAbi,
+          functionName: "getOwners",
+          result: stateOf(getAddress(decoded.args[0])).owners,
+        });
+      case "threshold":
+        return encodeFunctionResult({
+          abi: ownableValidatorAbi,
+          functionName: "threshold",
+          result: BigInt(stateOf(getAddress(decoded.args[0])).threshold),
+        });
+      case "ownerCount":
+        return encodeFunctionResult({
+          abi: ownableValidatorAbi,
+          functionName: "ownerCount",
+          result: BigInt(stateOf(getAddress(decoded.args[0])).owners.length),
+        });
+      default:
+        return revert(`simulator: OwnableValidator.${decoded.functionName} is not simulated`);
+    }
+  }
+
+  /**
+   * Safe `execTransaction` sent to the account by `sender`: the owner's native path. Checks Safe owner
+   * signatures over the `SafeTx` hash (v 27/28 raw, v > 30 EIP-191, v = 1 for the sender itself),
+   * bumps the Safe nonce and runs the call WITHOUT the ERC-7579 hook. Only `CALL` operations without
+   * gas refunds are simulated; a failed inner call reverts with `GS013` when `safeTxGas` is 0.
+   */
+  execTransaction(ctx: ExecContext, sender: Address, account: Address, data: Hex): Hex {
+    const record = this.get(account);
+    if (!record || record.stage !== "ready") revert("account not ready");
+    let decoded;
+    try {
+      decoded = decodeFunctionData({ abi: safeAbi, data });
+    } catch {
+      revert("simulator: unsupported call into an account");
+    }
+    if (decoded.functionName !== "execTransaction") {
+      revert(`simulator: external calls into an account are simulated for execTransaction only`);
+    }
+    const [
+      to,
+      value,
+      callData,
+      operation,
+      safeTxGas,
+      baseGas,
+      gasPrice,
+      gasToken,
+      refundReceiver,
+      signatures,
+    ] = decoded.args;
+    if (operation !== 0) revert("simulator: Safe delegatecall transactions are not simulated");
+    if (gasPrice !== 0n) revert("simulator: Safe gas refunds are not simulated");
+    const nonce = record.safeNonce;
+    const txHash = hashTypedData({
+      domain: { chainId: this.world.chainId, verifyingContract: record.address },
+      types: SAFE_TX_TYPES,
+      primaryType: "SafeTx",
+      message: {
+        to,
+        value,
+        data: callData,
+        operation,
+        safeTxGas,
+        baseGas,
+        gasPrice,
+        gasToken,
+        refundReceiver,
+        nonce,
+      },
+    });
+    this.save({ ...record, safeNonce: nonce + 1n });
+    this.requireSafeSignatures(record, txHash, signatures, sender);
+    const mark = ctx.journal.mark();
+    let success = true;
+    try {
+      this.world.call(ctx, record.address, getAddress(to), value, callData);
+    } catch (error) {
+      if (!(error instanceof SimRevert)) throw error;
+      ctx.journal.revertTo(mark);
+      success = false;
+    }
+    if (!success && safeTxGas === 0n) revert("GS013");
+    emitLog(ctx, record.address, eventOf(safeAbi, success ? "ExecutionSuccess" : "ExecutionFailure"), {
+      txHash,
+      payment: 0n,
+    });
+    return encodeFunctionResult({ abi: safeAbi, functionName: "execTransaction", result: success });
+  }
+
+  /** Safe `checkNSignatures` for EOA owners, reverting with the Safe's error codes. */
+  private requireSafeSignatures(
+    record: SimAccountRecord,
+    dataHash: Hex,
+    signatures: Hex,
+    sender: Address,
+  ): void {
+    const threshold = record.safeThreshold;
+    if (threshold === 0) revert("GS001");
+    if (size(signatures) < threshold * 65) revert("GS020");
+    let last = 0n;
+    for (let i = 0; i < threshold; i++) {
+      const parts = splitSignature(slice(signatures, i * 65, i * 65 + 65)) as {
+        r: bigint;
+        s: bigint;
+        v: number;
+      };
+      let owner: Address | null;
+      if (parts.v === 0) {
+        return revert("simulator: Safe contract signatures (v = 0) are not simulated");
+      } else if (parts.v === 1) {
+        // Approved hash: only the transaction sender's own approval is simulated (no approveHash).
+        owner = getAddress(toHex(parts.r & ((1n << 160n) - 1n), { size: 20 }));
+        if (!same(owner, sender)) revert("GS025");
+      } else if (parts.v > 30) {
+        owner = ecrecover(ethSignedMessageHash(dataHash), parts.v - 4, parts.r, parts.s);
+      } else {
+        owner = ecrecover(dataHash, parts.v, parts.r, parts.s);
+      }
+      const n = owner ? BigInt(owner) : 0n;
+      if (n <= last || !record.safeOwners.some((o) => same(o, owner as Address))) revert("GS026");
+      last = n;
     }
   }
 

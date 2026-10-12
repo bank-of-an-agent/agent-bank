@@ -3,8 +3,9 @@
  *
  * - {@link ChainGateway} and its JSON-safe types (`types.ts`);
  * - `EvmChainGateway` for Base Sepolia and Anvil (`evm/gateway.ts`);
- * - pure builders for account calls, sessions, the policy hook, the x402 spend key and account
- *   setup (`calls.ts`, `sessions.ts`, `spendKey.ts`, `setup.ts`);
+ * - pure builders for account calls, sessions, the policy hook, the x402 spend key, account
+ *   setup and owner key rotation (`calls.ts`, `sessions.ts`, `spendKey.ts`, `setup.ts`,
+ *   `owners.ts`), and the keeper relay allowlist (`relay.ts`);
  * - the decoder verifiers use (`decode.ts`) and the signing helpers (`signing.ts`);
  * - contract ABIs and addresses (`abis`, `constants.ts`).
  *
@@ -20,6 +21,8 @@ export * from "./decode";
 export * from "./signing";
 export * from "./spendKey";
 export * from "./setup";
+export * from "./owners";
+export * from "./relay";
 export * from "./logs";
 export * from "./erc7579";
 export {

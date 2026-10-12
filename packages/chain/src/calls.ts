@@ -21,6 +21,7 @@ import {
 import {
   buildSmartSession,
   encodePolicyHookConfig,
+  withOwnerModules,
   type PolicyHookConfig,
   type SessionGrant,
 } from "./sessions";
@@ -365,6 +366,9 @@ function globalHookData(data: Hex): Hex {
  * Install `AgentPolicyHook` as the account's global hook with `config` (owner operation). Set
  * `replace` when a hook is already installed: the hook's configuration can only change through
  * reinstalling it (or the owner's native Safe path), which also restarts its UTC-day window.
+ * The installed configuration always allowlists the owner's modules as `Generic` (see
+ * `withOwnerModules`): without them, owner operations could no longer manage sessions or rotate the
+ * owner key.
  */
 export function policyHookInstallCalls(input: {
   account: Address;
@@ -390,7 +394,11 @@ export function policyHookInstallCalls(input: {
     data: encodeFunctionData({
       abi: safe7579Abi,
       functionName: "installModule",
-      args: [MODULE_TYPE.hook, hook, globalHookData(encodePolicyHookConfig(input.config))],
+      args: [
+        MODULE_TYPE.hook,
+        hook,
+        globalHookData(encodePolicyHookConfig(withOwnerModules(input.config, input.contracts))),
+      ],
     }),
   });
   return calls;

@@ -32,6 +32,9 @@ export interface AccountSetupInput {
  * The calls of an agent account's first owner operation, in order:
  * `setRegistry(0)` (Agent Bank's modules are not registry-attested), install `AgentPolicyHook` with
  * `hookConfig`, enable the first session, and optionally submit the spend key's USDC permit.
+ * The installed hook configuration always allowlists Smart Sessions and the OwnableValidator as
+ * `Generic` (`policyHookInstallCalls` applies `withOwnerModules`), so later owner operations can
+ * manage sessions and rotate the owner key.
  *
  * Use it for an account without a hook (normally the deploying operation): the batch executes before
  * the hook exists, so the permit is not subject to the hook (which refuses `permit` on the hooked

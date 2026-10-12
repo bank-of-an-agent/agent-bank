@@ -133,6 +133,37 @@ export const ownableValidatorAbi = [
   },
   {
     type: "function",
+    name: "addOwner",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "removeOwner",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "prevOwner", type: "address" },
+      { name: "owner", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setThreshold",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "_threshold", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "ownerCount",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "getOwners",
     stateMutability: "view",
     inputs: [{ name: "account", type: "address" }],
@@ -144,6 +175,30 @@ export const ownableValidatorAbi = [
     stateMutability: "view",
     inputs: [{ name: "account", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "event",
+    name: "OwnerAdded",
+    inputs: [
+      { name: "account", type: "address", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "OwnerRemoved",
+    inputs: [
+      { name: "account", type: "address", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "ThresholdSet",
+    inputs: [
+      { name: "account", type: "address", indexed: true },
+      { name: "threshold", type: "uint256", indexed: false },
+    ],
   },
 ] as const;
 

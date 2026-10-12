@@ -31,9 +31,14 @@ import {
   SIMULATED_CONTRACTS as C,
   sortAddresses,
   utcDaysSpanned,
+  withOwnerModules,
+  OWNER_MODULE_CONTRACTS,
   type OnchainSessionScope,
   type SessionGrant,
 } from "../src";
+
+/** Smart Sessions' fallback action target (`FALLBACK_TARGET_FLAG = address(1)`). */
+const FALLBACK_TARGET_FLAG = "0x0000000000000000000000000000000000000001";
 import { cosigner, payee, revenue, sessionKey, USDC } from "./helpers";
 
 const T0 = 1_791_720_000; // 2026-10-11T12:00:00Z
@@ -229,7 +234,7 @@ describe("session compilation", () => {
 });
 
 describe("policy hook configuration", () => {
-  it("allowlists Smart Sessions, maps contract kinds and adds extra recipients", () => {
+  it("allowlists the owner modules, maps contract kinds and adds extra recipients", () => {
     const config = policyHookConfig(
       grant({ allowedRecipients: [payee], allowedContracts: [C.streams as Address, C.escrow as Address] })
         .scope,
@@ -243,6 +248,7 @@ describe("policy hook configuration", () => {
     expect(config.recipientAllowlistEnabled).toBe(true);
     expect(config.allowedContracts).toEqual([
       { target: C.smartSessions, kind: "Generic" },
+      { target: C.ownableValidator, kind: "Generic" },
       ...sortAddresses([C.escrow as Address, C.streams as Address]).map((t) => ({
         target: t,
         kind: t === C.escrow ? "AgentEscrow" : "PaymentStreams",
@@ -251,9 +257,63 @@ describe("policy hook configuration", () => {
     const [decoded] = decodeAbiParameters(policyConfigParams, encodePolicyHookConfig(config));
     expect(decoded.allowedContracts.map((c) => c.kind)).toEqual([
       1,
-      ...config.allowedContracts.slice(1).map((c) => (c.kind === "AgentEscrow" ? 2 : 3)),
+      1,
+      ...config.allowedContracts.slice(2).map((c) => (c.kind === "AgentEscrow" ? 2 : 3)),
     ]);
     expect(decoded.allowedRecipients.map((a) => getAddress(a))).toEqual(config.allowedRecipients);
+  });
+
+  it("withOwnerModules adds missing owner modules as Generic and refuses another kind", () => {
+    const base = policyHookConfig(grant().scope, C);
+    expect(withOwnerModules(base, C)).toBe(base);
+    const bare = {
+      ...base,
+      allowedContracts: [{ target: C.escrow as Address, kind: "AgentEscrow" as const }],
+    };
+    expect(withOwnerModules(bare, C).allowedContracts).toEqual([
+      { target: C.smartSessions, kind: "Generic" },
+      { target: C.ownableValidator, kind: "Generic" },
+      { target: C.escrow, kind: "AgentEscrow" },
+    ]);
+    const wrong = {
+      ...base,
+      allowedContracts: [{ target: C.ownableValidator, kind: "AgentEscrow" as const }],
+    };
+    expect(() => withOwnerModules(wrong, C)).toThrow(/ownableValidator .* must be allowlisted as Generic/);
+  });
+
+  it("sessions can never reach the modules the hook allowlists for owner operations", () => {
+    const ownerModules = OWNER_MODULE_CONTRACTS.map((name) => C[name].toLowerCase());
+    const allContracts = [C.escrow, C.streams, C.vaults] as Address[];
+    for (const overrides of [
+      {},
+      { allowedRecipients: [payee] },
+      { allowedRecipients: [payee, revenue] },
+      { allowedContracts: [C.escrow as Address] },
+      { allowedContracts: allContracts, allowedRecipients: [payee, revenue] },
+    ] satisfies Partial<OnchainSessionScope>[]) {
+      const g = grant(overrides);
+      const session = buildSmartSession(g, C);
+      const targets = session.actions.map((a) => a.actionTarget.toLowerCase());
+      // Every action targets the session token or an allowed Agent Bank contract.
+      const allowedTargets = [g.scope.token, ...g.scope.allowedContracts].map((a) => a.toLowerCase());
+      expect(targets.every((t) => allowedTargets.includes(t))).toBe(true);
+      // Never the owner's modules (OwnableValidator, Smart Sessions), the policy hook or Smart
+      // Sessions' fallback-action flag.
+      for (const forbidden of [
+        ...ownerModules,
+        (C.policyHook as Address).toLowerCase(),
+        FALLBACK_TARGET_FLAG,
+      ]) {
+        expect(targets).not.toContain(forbidden);
+      }
+      // The hook's Generic owner-module entries are therefore unreachable from the session path.
+      const hookTargets = policyHookConfig(g.scope, C).allowedContracts.map((c) => c.target.toLowerCase());
+      expect(ownerModules.every((m) => hookTargets.includes(m))).toBe(true);
+    }
+    expect(() => buildSmartSession(grant({ allowedContracts: [C.ownableValidator] }), C)).toThrow(
+      /not an Agent Bank contract/,
+    );
   });
 
   it("leaves the allowlist off when any recipient is allowed and rejects inverted caps", () => {

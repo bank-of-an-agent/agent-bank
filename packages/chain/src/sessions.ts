@@ -362,11 +362,49 @@ export interface PolicyHookConfig {
 }
 
 /**
+ * Modules owner operations call, which `AgentPolicyHook` must allowlist as `Generic` contracts (it
+ * hooks owner operations too): Smart Sessions (enable/remove sessions) and the OwnableValidator
+ * (owner key rotation). The hook does not interpret calls to Generic targets, and neither module
+ * holds or pulls funds. Like every allowlisted contract, they also pass the hook's recipient and
+ * spender checks, so recipients must still be checked against the session scope (Smart Sessions
+ * pins a single recipient; the co-signer checks the rest).
+ */
+export const OWNER_MODULE_CONTRACTS = [
+  "smartSessions",
+  "ownableValidator",
+] as const satisfies readonly (keyof ChainContracts)[];
+
+/**
+ * `config` with every {@link OWNER_MODULE_CONTRACTS} module allowlisted as `Generic` (missing entries
+ * are added first). Throws `invalid_request` if one is allowlisted with another kind.
+ */
+export function withOwnerModules(config: PolicyHookConfig, contracts: ChainContracts): PolicyHookConfig {
+  const missing: { target: Address; kind: ContractKindName }[] = [];
+  for (const name of OWNER_MODULE_CONTRACTS) {
+    const target = getAddress(contracts[name]);
+    const entry = config.allowedContracts.find((c) => getAddress(c.target) === target);
+    if (!entry) missing.push({ target, kind: "Generic" });
+    else if (entry.kind !== "Generic") {
+      throw new AgentBankError(
+        "invalid_request",
+        `${name} (${target}) must be allowlisted as Generic, not ${entry.kind}`,
+      );
+    }
+  }
+  return missing.length === 0
+    ? config
+    : { ...config, allowedContracts: [...missing, ...config.allowedContracts] };
+}
+
+/**
  * Account-level `AgentPolicyHook` configuration for an agent account, derived from a session scope:
  * the token's per-operation and UTC-day caps, the recipient allowlist (plus `extraRecipients`, e.g.
  * the Agent Bank revenue address for batched fees and the agent's x402 spend key), the allowed Agent
- * Bank contracts with their kinds, and Smart Sessions as a `Generic` contract (so owner operations
- * can keep enabling and removing sessions; sessions themselves can never call it).
+ * Bank contracts with their kinds, and the owner's modules as `Generic` contracts (see
+ * {@link OWNER_MODULE_CONTRACTS}): Smart Sessions, so owner operations can enable and remove
+ * sessions, and the OwnableValidator, so they can rotate the owner key (`ownerRotationCalls`).
+ * Sessions can never call either: Smart Sessions configures no action on them (see
+ * {@link buildSmartSession}) and the co-signer refuses such calls.
  *
  * Caps apply to the sum of a token's outflows in one operation, fees included: compile scopes with
  * fee headroom.
@@ -387,9 +425,9 @@ export function policyHookConfig(
     streams: "PaymentStreams",
     vaults: "TimeLockVaults",
   };
-  const allowedContracts: { target: Address; kind: ContractKindName }[] = [
-    { target: contracts.smartSessions, kind: "Generic" },
-  ];
+  const allowedContracts: { target: Address; kind: ContractKindName }[] = OWNER_MODULE_CONTRACTS.map(
+    (name) => ({ target: getAddress(contracts[name]), kind: "Generic" }),
+  );
   for (const target of sortAddresses(scope.allowedContracts)) {
     const kind = agentBankContractKind(target, contracts);
     if (kind === null) throw new AgentBankError("invalid_request", `${target} is not an Agent Bank contract`);

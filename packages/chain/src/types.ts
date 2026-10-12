@@ -305,8 +305,10 @@ export interface SettleAuthorizationInput {
 /**
  * A permissionless contract call sent from an Agent Bank keeper/relayer wallet: stream `settle`,
  * `TopUpExecutor.topUp`, vault `withdraw` after unlock or with the owner's signature, escrow
- * `refund` after expiry. The keeper only pays gas; the contracts decide where funds go. Gateways
- * accept only calls to the Agent Bank contracts in {@link ChainContracts}, with no native value.
+ * `refund` after expiry, or a USDC `permit` signed by its owner (a spend key's permit attached after
+ * setup). The keeper only pays gas; the contracts and signers decide where funds go. Gateways accept
+ * only calls to the Agent Bank contracts in {@link ChainContracts} and USDC `permit` (either
+ * overload), with no native value.
  */
 export interface RelayCallInput {
   call: Call;
@@ -381,6 +383,8 @@ export interface ChainGateway {
   relayCall(input: RelayCallInput): Promise<{ txHash: Hex }>;
   /** EIP-3009 `authorizationState`: true once the nonce was used or canceled. */
   authorizationState(token: Address, authorizer: Address, nonce: Hex): Promise<boolean>;
+  /** EIP-2612 `nonces(owner)`: the nonce the owner's next `permit` must sign. */
+  erc20Nonces(token: Address, owner: Address): Promise<bigint>;
   /**
    * Verify `signature` over the raw 32-byte `hash` for `address`: ECDSA for EOAs, ERC-1271 for
    * deployed contracts, ERC-6492 for counterfactual ones.

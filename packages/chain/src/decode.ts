@@ -11,10 +11,12 @@ import {
 import {
   agentEscrowAbi,
   erc20Abi,
+  ownableValidatorAbi,
   ownableValidatorConfigParams,
   paymentStreamsAbi,
   policyConfigParams,
   safe7579Abi,
+  safeAbi,
   smartSessionsAbi,
   timeLockVaultsAbi,
   topUpExecutorAbi,
@@ -29,6 +31,11 @@ import type { ChainContracts, DecodedCall, JsonValue } from "./types";
  * selector: Agent Bank contract functions are only recognised at the chain's configured addresses,
  * ERC-20 calls on any target (verifiers must still check `token`). Anything else, and any calldata
  * that does not decode cleanly, is `unknown`, which verifiers must reject.
+ *
+ * `module_config` covers account administration, which only owner operations may contain: module
+ * install/uninstall and `setRegistry` (self-calls, `args.function`), TopUpExecutor rules, and owner
+ * key management (`args.module` `"Safe"`: `swapOwner` self-call; `"OwnableValidator"`: `addOwner`,
+ * `removeOwner`, `setThreshold`).
  */
 
 export interface DecodeContext {
@@ -144,6 +151,49 @@ export function decodeCall(
     const d = tryDecode(safe7579Abi, call.data);
     if (d && ["installModule", "uninstallModule", "setRegistry"].includes(d.functionName)) {
       return { ...base, kind: "module_config", args: describeModuleCall(d, contracts) };
+    }
+    const owner = tryDecode(safeAbi, call.data);
+    if (owner?.functionName === "swapOwner") {
+      return {
+        ...base,
+        kind: "module_config",
+        args: {
+          module: "Safe",
+          function: "swapOwner",
+          prevOwner: getAddress(owner.args[0] as Address),
+          oldOwner: getAddress(owner.args[1] as Address),
+          newOwner: getAddress(owner.args[2] as Address),
+        },
+      };
+    }
+  }
+  if (same(contracts.ownableValidator, to)) {
+    const d = tryDecode(ownableValidatorAbi, call.data);
+    if (d?.functionName === "addOwner") {
+      return {
+        ...base,
+        kind: "module_config",
+        args: { module: "OwnableValidator", function: "addOwner", owner: getAddress(d.args[0] as Address) },
+      };
+    }
+    if (d?.functionName === "removeOwner") {
+      return {
+        ...base,
+        kind: "module_config",
+        args: {
+          module: "OwnableValidator",
+          function: "removeOwner",
+          prevOwner: getAddress(d.args[0] as Address),
+          owner: getAddress(d.args[1] as Address),
+        },
+      };
+    }
+    if (d?.functionName === "setThreshold") {
+      return {
+        ...base,
+        kind: "module_config",
+        args: { module: "OwnableValidator", function: "setThreshold", threshold: str(d.args[0]) },
+      };
     }
   }
   if (same(contracts.topUpExecutor, to)) {

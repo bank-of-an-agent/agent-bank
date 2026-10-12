@@ -63,6 +63,7 @@ import {
   type SettleAuthorizationInput,
   type SubmitOperationInput,
 } from "../types";
+import { assertRelayableCall } from "../relay";
 import { checkPreparedOperation, decodePreparedOperation, hashUserOperation, nowSeconds } from "../userop";
 
 /** Configuration of an {@link EvmChainGateway}. */
@@ -783,16 +784,20 @@ export class EvmChainGateway implements ChainGateway {
 
   async relayCall(input: RelayCallInput): Promise<{ txHash: Hex }> {
     await this.ready();
-    const c = this.contracts;
-    const allowed = [c.escrow, c.streams, c.vaults, c.topUpExecutor, c.sweepExecutor];
-    if (!allowed.some((a) => a !== undefined && isAddressEqual(a, input.call.to))) {
-      throw new AgentBankError("invalid_request", "relayCall only targets Agent Bank contracts");
-    }
-    if ((input.call.value ?? 0n) !== 0n)
-      throw new AgentBankError("invalid_request", "relayCall never sends native value");
+    assertRelayableCall(input.call, this.contracts);
     return {
       txHash: await this.relay(this.relayerFor(input.relayer), getAddress(input.call.to), input.call.data),
     };
+  }
+
+  async erc20Nonces(token: Address, owner: Address): Promise<bigint> {
+    await this.ready();
+    return this.publicClient.readContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: "nonces",
+      args: [owner],
+    });
   }
 
   async authorizationState(token: Address, authorizer: Address, nonce: Hex): Promise<boolean> {
