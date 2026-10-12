@@ -85,7 +85,7 @@ export const x402Handlers: Pick<Handlers, "x402Pay" | "registerX402Payee"> = {
     if (!account.spend_key_address) {
       throw new AgentBankError(
         "invalid_request",
-        "The account has no x402 spend key (set spend_key_address when creating it)",
+        "The account has no x402 spend key: attach one with PUT /v1/accounts/{id}/spend-key (permit + spend_key.set owner authorization)",
       );
     }
     const key = idempotencyKey as string;
