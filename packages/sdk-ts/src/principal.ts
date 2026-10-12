@@ -97,6 +97,8 @@ export interface SetupAgentAccountInput {
   spendKey?: SpendSigner;
   /** Permit overrides (`nonce` for a key that is not fresh). */
   spendKeyPermit?: SpendKeyPermitOptions;
+  /** Override the client's owner signer (signs `spend_key.set` and the session grant). */
+  owner?: OwnerSigner;
   /** The first session to grant (and install) once the account is ready. */
   session?: Omit<GrantSessionInput, "accountId">;
 }
@@ -321,11 +323,13 @@ export class PrincipalClient extends AgentBankClient {
   }
 
   /**
-   * Attach the agent's x402 spend key to its account (ADR 0001): sign the
-   * float-recovery permit for the account's address and
-   * `PUT /v1/accounts/{id}/spend-key`. The permit is executed on-chain by the
-   * account's next owner operation (normally the install of the first
-   * session), after which `account.spend_key_permit` is `executed`.
+   * Attach the agent's x402 spend key to its account (ADR 0001): the spend
+   * key signs the float-recovery permit for the account's address, the owner
+   * key signs the `spend_key.set` authorization (which pins the spend key in
+   * the co-signer; x402 payments and float refills are refused until then),
+   * and both go to `PUT /v1/accounts/{id}/spend-key`. The permit is executed
+   * on-chain by the account's next owner operation (normally the install of
+   * the first session), after which `account.spend_key_permit` is `executed`.
    *
    * The permit nonce defaults to 0 (a fresh key); pass `nonce` (USDC
    * `nonces(spendKey)`) for a key that has signed permits before.
@@ -333,24 +337,42 @@ export class PrincipalClient extends AgentBankClient {
   async provisionSpendKey(
     accountId: string,
     spendKey: SpendSigner,
-    options: SpendKeyPermitOptions & RequestOptions = {},
+    options: SpendKeyPermitOptions & RequestOptions & { owner?: OwnerSigner } = {},
   ): Promise<Account> {
+    this.#requireOwner(options.owner);
     const account = await this.accounts.retrieve(accountId, readOptions(options));
+    return this.#attachSpendKey(account, spendKey, options, writeOptions(options));
+  }
+
+  /** Sign the permit and the `spend_key.set` owner authorization, then attach both. */
+  async #attachSpendKey(
+    account: Account,
+    spendKey: SpendSigner,
+    options: SpendKeyPermitOptions & RequestOptions & { owner?: OwnerSigner },
+    write: RequestOptions,
+  ): Promise<Account> {
     if (account.role !== "agent") {
       throw new InvalidRequestError("invalid_request", "Spend keys are for agent accounts, not the treasury");
     }
-    const permit = await this.spendKeyPermit(account, spendKey, options);
-    return this.accounts.attachSpendKey(
-      account.id,
-      { spend_key_address: spendKey.address, permit },
-      writeOptions(options),
+    const permit = await this.spendKeyPermit(account, spendKey, {
+      ...(options.nonce !== undefined ? { nonce: options.nonce } : {}),
+      ...(options.value !== undefined ? { value: options.value } : {}),
+      ...(options.deadline !== undefined ? { deadline: options.deadline } : {}),
+      ...readOptions(options),
+    });
+    const body = canonicalBody("attachSpendKey", { spend_key_address: spendKey.address, permit });
+    const owner_authorization = await this.authorize(
+      ownerPayloads.spendKeySet(account.id, body.spend_key_address),
+      options.owner,
     );
+    return this.accounts.attachSpendKey(account.id, { ...body, owner_authorization }, write);
   }
 
   /**
    * Provision an agent's account in the order the contracts require:
    * create the smart account → (with `spendKey`) sign the float-recovery
-   * permit for its counterfactual address and attach the spend key → (with
+   * permit for its counterfactual address, have the owner authorize the
+   * spend key (`spend_key.set`) and attach both → (with
    * `session`) grant and install the first session, whose setup owner
    * operation also executes the permit on-chain.
    *
@@ -361,26 +383,25 @@ export class PrincipalClient extends AgentBankClient {
     input: SetupAgentAccountInput,
     options: RequestOptions = {},
   ): Promise<SetupAgentAccountResult> {
-    if (input.session) this.#requireOwner(input.session.owner);
+    if (input.spendKey) this.#requireOwner(input.owner);
+    if (input.session) this.#requireOwner(input.session.owner ?? input.owner);
     let account = await this.accounts.create(
       input.agentId,
       input.chain ? { chain: input.chain } : {},
       writeOptions(options, "account"),
     );
     if (input.spendKey) {
-      const permit = await this.spendKeyPermit(account, input.spendKey, {
-        ...input.spendKeyPermit,
-        ...readOptions(options),
-      });
-      account = await this.accounts.attachSpendKey(
-        account.id,
-        { spend_key_address: input.spendKey.address, permit },
+      account = await this.#attachSpendKey(
+        account,
+        input.spendKey,
+        { ...input.spendKeyPermit, ...readOptions(options), ...(input.owner ? { owner: input.owner } : {}) },
         writeOptions(options, "spend-key"),
       );
     }
     if (!input.session) return { account, session: undefined, installOperation: undefined };
+    const sessionOwner = input.session.owner ?? input.owner;
     const granted = await this.grantSession(
-      { ...input.session, accountId: account.id },
+      { ...input.session, accountId: account.id, ...(sessionOwner ? { owner: sessionOwner } : {}) },
       writeOptions(options, "session"),
     );
     if (input.spendKey && input.session.waitForInstall) {
@@ -390,9 +411,11 @@ export class PrincipalClient extends AgentBankClient {
   }
 
   /**
-   * Prepare the owner operation that swaps the Safe owner of one account to
-   * `newOwnerAddress` and sign it with the **current** owner key. Do this for
-   * every account before {@link rotateOwner}.
+   * Prepare the owner operation that swaps the owner of one account to
+   * `newOwnerAddress` (the Safe owner and the OwnableValidator owner, in one
+   * operation) and sign it with the **current** owner key. When it succeeds
+   * the API updates the account's owner. Do this for every account, then
+   * call {@link rotateOwner}.
    */
   async prepareOwnerSwap(
     accountId: string,
@@ -409,9 +432,10 @@ export class PrincipalClient extends AgentBankClient {
 
   /**
    * Rotate the org's owner key in Agent Bank and the co-signer (owner
-   * authorization `owner.rotate`, signed by the **current** owner key). Swap
-   * the on-chain Safe owner of every account first with
-   * {@link prepareOwnerSwap}. Lost keys are recovered with guardians instead.
+   * authorization `owner.rotate`, signed by the **current** owner key).
+   * Order matters: first swap the owner of every account with
+   * {@link prepareOwnerSwap} (signed with the old key), then call this. Lost
+   * keys are recovered on-chain with guardians instead.
    */
   async rotateOwner(
     newOwnerAddress: string,
@@ -649,6 +673,7 @@ function writeOptions(options: RequestOptions, step?: string): RequestOptions {
 
 /** Operations whose body carries an `owner_authorization`. */
 type OwnerAuthorizedOperation =
+  | "attachSpendKey"
   | "rotateOwner"
   | "createSession"
   | "putPolicy"

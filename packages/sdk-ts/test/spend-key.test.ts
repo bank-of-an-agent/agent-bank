@@ -16,6 +16,7 @@ import {
   generateSessionKey,
   generateSpendKey,
   InvalidRequestError,
+  ownerPayloads,
   PrincipalClient,
   signSpendKeyPermit,
 } from "../src";
@@ -181,23 +182,44 @@ describe("spend-key provisioning (ADR 0001)", () => {
     );
     const sent = JSON.parse(put?.body ?? "{}");
     expect(sent.permit).toMatchObject({ value: maxUint256.toString(), nonce: "0" });
+    expect(sent.owner_authorization.signer).toBe(owner.address);
     expect(put?.headers["idempotency-key"]).toBeDefined();
   });
 
-  it("a permit signed by another key, or for another spender, is rejected", async () => {
+  it("a permit for another spender, or a spend key the owner did not authorize, is rejected", async () => {
     const client = principal();
     const account = await client.accounts.create(AGENT, {});
     const spendKey = generateSpendKey().account;
-    const wrong = await signSpendKeyPermit({
+    const ownerAuthorization = await client.authorize(
+      ownerPayloads.spendKeySet(account.id, spendKey.address),
+    );
+    const wrongSpender = await signSpendKeyPermit({
       spendKey,
       account: SMART_ACCOUNT,
       chainId: account.chain_id,
       usdc: USDC,
     });
-    const error = await client.accounts
-      .attachSpendKey(account.id, { spend_key_address: spendKey.address, permit: wrong })
+    const badPermit = await client.accounts
+      .attachSpendKey(account.id, {
+        spend_key_address: spendKey.address,
+        permit: wrongSpender,
+        owner_authorization: ownerAuthorization,
+      })
       .catch((e: unknown) => e);
-    expect((error as AgentBankError).code).toBe("signature_invalid");
+    expect((badPermit as AgentBankError).code).toBe("signature_invalid");
+
+    const impostor = new PrincipalClient({
+      baseUrl: api.url,
+      apiKey: "abk_test_fake",
+      owner: privateKeyToAccount(generatePrivateKey()),
+    });
+    const notOwner = await impostor.provisionSpendKey(account.id, spendKey).catch((e: unknown) => e);
+    expect((notOwner as AgentBankError).code).toBe("owner_signature_required");
+
+    const ownerless = new PrincipalClient({ baseUrl: api.url, apiKey: "abk_test_fake" });
+    const before = api.requests.length;
+    await expect(ownerless.provisionSpendKey(account.id, spendKey)).rejects.toThrow(/owner key/);
+    expect(api.requests.length).toBe(before);
   });
 
   it("setupAgentAccount creates the account, attaches the spend key, then installs the first session", async () => {

@@ -701,6 +701,12 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
       signature: input.permit.signature as Hex,
     }).catch(() => false);
     if (!valid) return sendProblem(reply, "signature_invalid", "Spend key permit does not verify");
+    const denied = await checkOwner(
+      reply,
+      input.owner_authorization,
+      ownerPayloads.spendKeySet(account.id, input.spend_key_address),
+    );
+    if (denied) return denied;
     account.spend_key_address = input.spend_key_address;
     account.spend_key_permit = "pending";
     return account;

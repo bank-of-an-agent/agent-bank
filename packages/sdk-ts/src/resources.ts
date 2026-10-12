@@ -51,6 +51,8 @@ import type {
   PutSweepRuleInput,
   RegisterX402PayeeInput,
   RotateOwnerInput,
+  SandboxFaucetInput,
+  SandboxFaucetResult,
   Session,
   SetTreasuryInput,
   Statement,
@@ -220,8 +222,9 @@ export class Accounts extends Resource {
   }
   /**
    * Attach the agent's x402 spend key with its float-recovery permit (ADR
-   * 0001); the permit runs on-chain in the account's next owner operation.
-   * See `PrincipalClient.provisionSpendKey`.
+   * 0001) and the owner's `spend_key.set` authorization; the permit runs
+   * on-chain in the account's next owner operation. See
+   * `PrincipalClient.provisionSpendKey`.
    */
   attachSpendKey(id: string, body: AttachSpendKeyInput, options?: RequestOptions): Promise<Account> {
     return this.client.request("attachSpendKey", { ...options, params: { id }, body });
@@ -600,5 +603,17 @@ export class Billing extends Resource {
   /** Fees charged in a period (`YYYY-MM`). */
   fees(query: QueryOf<"getFees">, options?: RequestOptions): Promise<FeeSummary> {
     return this.client.request("getFees", { ...options, query });
+  }
+}
+
+/** Sandbox helpers for local development (simulated chain and Anvil only). */
+export class Sandbox extends Resource {
+  /**
+   * Mint test USDC to an account or address (`POST /v1/sandbox/faucet`).
+   * Returns 403 `feature_gated` on Base Sepolia, where test USDC comes from
+   * Circle's faucet.
+   */
+  faucet(body: SandboxFaucetInput, options?: RequestOptions): Promise<SandboxFaucetResult> {
+    return this.client.request("sandboxFaucet", { ...options, body });
   }
 }

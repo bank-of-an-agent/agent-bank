@@ -35,6 +35,7 @@ import {
   PaymentRequests,
   Payments,
   Policies,
+  Sandbox,
   Sessions,
   Streams,
   Treasury,
@@ -212,6 +213,7 @@ export class AgentBankClient {
   readonly treasury: Treasury;
   readonly webhooks: Webhooks;
   readonly billing: Billing;
+  readonly sandbox: Sandbox;
 
   /** Session credentials used to sign agent requests (if configured). */
   readonly #session: SessionCredentials | undefined;
@@ -282,6 +284,7 @@ export class AgentBankClient {
     this.treasury = new Treasury(this);
     this.webhooks = new Webhooks(this);
     this.billing = new Billing(this);
+    this.sandbox = new Sandbox(this);
   }
 
   /**

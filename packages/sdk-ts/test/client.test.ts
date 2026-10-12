@@ -369,6 +369,38 @@ describe("AgentBankClient transport", () => {
     expect(calls[0]?.headers.accept).toBe("text/csv");
   });
 
+  it("mints sandbox USDC through the faucet (validated client-side, idempotent)", async () => {
+    const { fetch, calls } = mockFetch(() =>
+      json(200, {
+        object: "faucet_transfer",
+        address: "0x1111111111111111111111111111111111111111",
+        amount: { amount: "50.00", asset: "USDC" },
+        tx_hash: null,
+      }),
+    );
+    const client = new AgentBankClient({
+      baseUrl: "http://api.test",
+      apiKey: "k",
+      fetch,
+      validateResponses: true,
+    });
+    const minted = await client.sandbox.faucet({
+      account_id: ACCT,
+      amount: { amount: "50.00", asset: "USDC" },
+    });
+    expect(minted.amount.amount).toBe("50.00");
+    expect(calls[0]?.url).toBe("http://api.test/v1/sandbox/faucet");
+    expect(calls[0]?.headers["idempotency-key"]).toBeDefined();
+    await expect(
+      client.sandbox.faucet({
+        account_id: ACCT,
+        address: "0x1111111111111111111111111111111111111111",
+        amount: { amount: "1.00", asset: "USDC" },
+      }),
+    ).rejects.toThrow(/exactly one/);
+    expect(calls).toHaveLength(1);
+  });
+
   it("wraps every operation of the route registry (except staff-only ones) in a method", () => {
     const source = ["../src/resources.ts", "../src/client.ts"]
       .map((file) => readFileSync(new URL(file, import.meta.url), "utf8"))

@@ -225,6 +225,10 @@ export type ChangePlanInput = z.input<typeof R.ChangePlanRequest>;
 export type FeeSummary = z.output<typeof R.FeeSummary>;
 /** Liveness and dependency checks. */
 export type Health = z.output<typeof R.Health>;
+/** Body of `POST /v1/sandbox/faucet` (exactly one of `account_id` or `address`). */
+export type SandboxFaucetInput = z.input<typeof R.SandboxFaucetRequest>;
+/** Test USDC minted by the sandbox faucet. */
+export type SandboxFaucetResult = z.output<typeof R.SandboxFaucetResponse>;
 /**
  * Deployment facts (`GET /v1/meta`): chain, USDC, contract addresses,
  * feature flags, and `owner_authorization_chain_id`, the EIP-712 domain chain
