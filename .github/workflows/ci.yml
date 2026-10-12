@@ -53,7 +53,7 @@ jobs:
         # starving each other on the 4-vCPU runner; timeouts are generous for the same reason.
         run: pnpm exec turbo run test --concurrency=2 -- --testTimeout=300000 --hookTimeout=300000
       - name: Coverage gates (ledger and policy >= 90%)
-        run: pnpm --filter @agentbank/ledger --filter @agentbank/policy test:coverage -- --testTimeout=300000
+        run: pnpm --filter @agentbank/ledger --filter @agentbank/policy test:coverage
       - name: Build
         run: pnpm build
 

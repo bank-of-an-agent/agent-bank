@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     maxWorkers: 4,
     include: ["test/**/*.test.ts"],
-    testTimeout: 60_000,
+    testTimeout: process.env.CI ? 300_000 : 60_000,
     hookTimeout: 60_000,
     coverage: {
       provider: "v8",
