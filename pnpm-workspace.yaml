@@ -2,6 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
   - "examples/*"
+  - "tests/*"
 
 # Dependencies allowed to run install scripts (pnpm 10+).
 onlyBuiltDependencies:

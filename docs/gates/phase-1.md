@@ -31,9 +31,9 @@ are derived from the journal (the cached projection is verified against it).
 
 ## Open issues
 
-- Post-settlement work in the API (auto-save, payment-request completion, API-side x402 fee) is
-  not undone by reorg reversals; it must only run once the settling block is final (change in
-  progress in `apps/api`, tracked in the Phase 3 report).
+- Post-settlement work in the API (auto-save, payment-request completion, API-side x402 fee) runs
+  only once the settling block is final, and each effect is idempotent, so a reorg cannot leave it
+  applied without the settlement.
 - The scale limit is the single `sys:chain` / `sys:revenue` rows (serialization retries under
   heavy concurrency). Fine for beta; revisit before scale.
 

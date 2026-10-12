@@ -1,0 +1,35 @@
+{
+  "name": "@agentbank/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Full-stack end-to-end and gate-evidence suites: the API, co-signer, reconciler, indexer and x402 facilitator in one process on random ports with real HTTP, driven by the real SDKs and the MCP server (Phase 3 scenarios, Phase 2 red team, Phase 5 exit drill).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "sandbox": "tsx src/sandbox.ts",
+    "gate:phase2": "E2E_GATE=phase2 vitest run test/redteam.test.ts",
+    "gate:phase3": "E2E_CHAIN=base-sepolia vitest run test/base-sepolia.test.ts",
+    "gate:phase5": "E2E_GATE=phase5 vitest run test/exit-drill.test.ts"
+  },
+  "dependencies": {
+    "@agentbank/api": "workspace:*",
+    "@agentbank/chain": "workspace:*",
+    "@agentbank/core": "workspace:*",
+    "@agentbank/cosigner": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@agentbank/facilitator": "workspace:*",
+    "@agentbank/indexer": "workspace:*",
+    "@agentbank/ledger": "workspace:*",
+    "@agentbank/mcp": "workspace:*",
+    "@agentbank/policy": "workspace:*",
+    "@agentbank/reconciliation": "workspace:*",
+    "@agentbank/sdk": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@simplewebauthn/server": "^14.0.3",
+    "fastify": "^5.12.5",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  }
+}
