@@ -193,8 +193,8 @@ export class SimStreams {
 
   cancel(ctx: ExecContext, caller: Address, id: bigint): { payeeAmount: bigint; refundAmount: bigint } {
     const s = this.existing(id);
-    const c = getAddress(caller);
-    if (c !== s.payer && c !== s.payee) revert(`Unauthorized(${caller})`);
+    // Payer only (contracts: "only the payer may cancel").
+    if (getAddress(caller) !== s.payer) revert(`Unauthorized(${caller})`);
     if (s.canceled) revert(`StreamIsCanceled(${id})`);
     const now = BigInt(ctx.timestamp);
     const accruedNow = this.accruedAt(s, now);

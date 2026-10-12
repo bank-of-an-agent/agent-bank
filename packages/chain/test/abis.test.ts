@@ -74,14 +74,8 @@ describe("typed ABIs match the contracts repository's exported ABIs", () => {
   check("AgentPolicyHook", agentPolicyHookAbi);
   check("TopUpExecutor", topUpExecutorAbi);
   check("SweepExecutor", sweepExecutorAbi);
-  // MockUSDC mirrors FiatToken v2.2 on Anvil: our USDC surface must exist there too, except
-  // FiatToken's increaseAllowance/decreaseAllowance, which MockUSDC does not implement.
-  check(
-    "MockUSDC",
-    erc20Abi.filter(
-      (i) => !(i.type === "function" && ["increaseAllowance", "decreaseAllowance"].includes(i.name)),
-    ) as Abi,
-  );
+  // MockUSDC mirrors FiatToken v2.2 on Anvil: our whole USDC surface must exist there too.
+  check("MockUSDC", erc20Abi);
 
   it.skipIf(load("AgentPolicyHook") === null)("PolicyConfig encoding matches applyConfig's parameter", () => {
     const apply = (load("AgentPolicyHook") as Abi).find(

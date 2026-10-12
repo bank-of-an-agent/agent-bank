@@ -96,8 +96,18 @@ export function decodeCall(
           amount: str(a[2]),
           args: { from: getAddress(a[0] as Address) },
         };
+      case "permit":
+        // Owner operations only (spend-key provisioning); sessions can never call it.
+        return {
+          ...base,
+          kind: "erc20_permit",
+          token: to,
+          spender: getAddress(a[1] as Address),
+          amount: str(a[2]),
+          args: { owner: getAddress(a[0] as Address), deadline: str(a[3]) },
+        };
       default:
-        break; // other token functions (permit, transferWithAuthorization, ...) stay unknown
+        break; // other token functions (transferWithAuthorization, ...) stay unknown
     }
   }
 

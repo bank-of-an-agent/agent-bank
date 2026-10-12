@@ -29,6 +29,7 @@ export const CALL_KINDS = [
   "erc20_transfer",
   "erc20_transfer_from",
   "erc20_approve",
+  "erc20_permit",
   "escrow_lock",
   "escrow_release",
   "escrow_refund",

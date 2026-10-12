@@ -228,6 +228,17 @@ export async function increaseTime(seconds: number): Promise<void> {
   await anvilClient.mine({ blocks: 1 });
 }
 
+/** Send a plain transaction from the bundler's utility key (an Anvil development key) and wait for it. */
+export async function sendFromRelayer(to: Address, data: Hex): Promise<"success" | "reverted"> {
+  const wallet = createWalletClient({
+    account: privateKeyToAccount(UTILITY_KEY),
+    chain: foundry,
+    transport: http(ANVIL_RPC_URL),
+  });
+  const hash = await wallet.sendTransaction({ to, data });
+  return (await forkClient.waitForTransactionReceipt({ hash })).status;
+}
+
 /** Give an address ETH for gas. */
 export async function fundEth(address: Address, eth = "1"): Promise<void> {
   await anvilClient.setBalance({ address, value: parseEther(eth) });

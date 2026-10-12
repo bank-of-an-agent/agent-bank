@@ -79,6 +79,28 @@ export const smartSessionsAbi = [
     outputs: [{ name: "", type: "bool" }],
   },
   {
+    type: "function",
+    name: "getERC1271Policies",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "permissionId", type: "bytes32" },
+    ],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    type: "function",
+    name: "isERC7739ContentEnabled",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "permissionId", type: "bytes32" },
+      { name: "appDomainSeparator", type: "bytes32" },
+      { name: "content", type: "string" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
     type: "event",
     name: "SessionCreated",
     inputs: [

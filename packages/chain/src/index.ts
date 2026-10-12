@@ -3,7 +3,8 @@
  *
  * - {@link ChainGateway} and its JSON-safe types (`types.ts`);
  * - `EvmChainGateway` for Base Sepolia and Anvil (`evm/gateway.ts`);
- * - pure builders for account calls, sessions and the policy hook (`calls.ts`, `sessions.ts`);
+ * - pure builders for account calls, sessions, the policy hook, the x402 spend key and account
+ *   setup (`calls.ts`, `sessions.ts`, `spendKey.ts`, `setup.ts`);
  * - the decoder verifiers use (`decode.ts`) and the signing helpers (`signing.ts`);
  * - contract ABIs and addresses (`abis`, `constants.ts`).
  *
@@ -17,6 +18,8 @@ export * from "./sessions";
 export * from "./calls";
 export * from "./decode";
 export * from "./signing";
+export * from "./spendKey";
+export * from "./setup";
 export * from "./logs";
 export * from "./erc7579";
 export {

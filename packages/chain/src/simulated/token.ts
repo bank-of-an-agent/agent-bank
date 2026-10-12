@@ -32,7 +32,7 @@ const HALF_N = 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a
 /**
  * USDC as FiatToken v2.2 behaves for Agent Bank: ERC-20 with FiatToken revert strings, EIP-3009
  * (`transferWithAuthorization` and `receiveWithAuthorization` in both overloads,
- * `cancelAuthorization`, `authorizationState`), EIP-2612 `permit`, `increaseAllowance` /
+ * `cancelAuthorization`, `authorizationState`), EIP-2612 `permit` (both overloads), `increaseAllowance` /
  * `decreaseAllowance`, and ERC-1271 signatures for contract signers. No pause, blacklist or minter
  * roles; {@link SimToken.mint} is the faucet.
  */
@@ -288,7 +288,7 @@ export class SimToken {
           a[1] as Address,
           a[2] as bigint,
           a[3] as bigint,
-          packSignature(a[5] as Hex, a[6] as Hex, Number(a[4])),
+          a.length === 7 ? packSignature(a[5] as Hex, a[6] as Hex, Number(a[4])) : (a[4] as Hex),
         );
         return "0x";
       case "balanceOf":

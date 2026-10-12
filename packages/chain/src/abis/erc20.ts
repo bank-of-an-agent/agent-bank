@@ -118,6 +118,19 @@ export const erc20Abi = [
   },
   {
     type: "function",
+    name: "permit",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "deadline", type: "uint256" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "authorizationState",
     stateMutability: "view",
     inputs: [
