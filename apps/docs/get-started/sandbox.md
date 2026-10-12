@@ -61,6 +61,19 @@ pnpm --filter @agentbank/e2e sandbox
 It prints an org API key and an env block for a demo agent funded with 1,000 USDC, ready for the
 SDKs, the MCP server and the [framework quickstarts](/quickstarts/). Stop it with Ctrl-C.
 
+The demo seller also has three [proof-gated](/concepts/private-proofs) endpoints. The demo agent
+has proofs enabled for every disclosure class and an enrolled secret (`AGENTBANK_PROOF_SECRET` in
+the env block), so `fetchWithPayment` answers them automatically:
+
+| Endpoint       | The agent proves                                                         |
+| -------------- | ------------------------------------------------------------------------ |
+| `GET /premium` | A verified company backs it and it can pay $0.05 a call; then x402 $0.05 |
+| `GET /bid`     | $25 reserved for this seller for at least 10 minutes (reserve first)     |
+| `GET /jobs`    | No lost disputes                                                         |
+
+The sandbox has two enrolled agents, so it accepts an anonymity set of 2 and rebuilds roots every
+minute; real deployments require at least 16 and rebuild hourly.
+
 **Only the API** (with the co-signer, reconciler and a simulated indexer in-process):
 
 ```bash

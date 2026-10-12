@@ -15,4 +15,6 @@ Gates that need people (counsel, auditors, an on-call rotation, vendor accounts)
 
 The security-heavy phases (2 and 4) gate everything after them: nothing reaches mainnet until a red team and two audits have failed to break the limits. Until the Phase 5 gate the code refuses mainnet chain ids everywhere.
 
+**Private proofs** were added after v1 planning as an extension with their own gate: every product proves end to end with real proofs, and nothing false, undisclosed, revoked or replayed is accepted. The gate is met on testnet; mainnet needs a circuit audit and a public trusted-setup ceremony. See [Private proofs](/concepts/private-proofs) and the [gate report](https://github.com/bank-of-an-agent/agent-bank/blob/main/docs/gates/private-proofs.md).
+
 Savings and revenue work slots into the same phases: goal vaults and auto-save in phase 2; the fee engine and subscriptions in phase 3; the `TimeLockVault` contract and the treasury sweep executor (shipped only after a counsel memo) in phase 4; the revenue dashboard in phase 5.
