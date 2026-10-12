@@ -59,7 +59,9 @@ RUN set -eu; \
       echo "error: apps/${APP}/package.json not found" >&2; exit 1; \
     fi; \
     turbo_version="${TURBO_VERSION:-$(node -p "const p=require('./package.json');(p.devDependencies||{}).turbo||(p.dependencies||{}).turbo||'2'")}"; \
-    pnpm dlx "turbo@${turbo_version}" prune "@agentbank/${APP}" --docker
+    pnpm dlx "turbo@${turbo_version}" prune "@agentbank/${APP}" --docker; \
+    # turbo prune copies workspace packages only; packages extend the root TypeScript config.
+    cp tsconfig.base.json out/full/tsconfig.base.json
 
 # -----------------------------------------------------------------------------------------
 # 2. Install (cached on lockfile + manifests only), build, and assemble a production tree.
