@@ -45,6 +45,7 @@ export const CosignerRoutes = {
   putPolicy: { method: "POST", path: "/internal/v1/policies" },
   getPolicy: { method: "GET", path: "/internal/v1/policies/:agentId" },
   registerMandate: { method: "POST", path: "/internal/v1/mandates" },
+  setTreasury: { method: "POST", path: "/internal/v1/treasury" },
   revokeMandate: { method: "DELETE", path: "/internal/v1/mandates/:id" },
   freeze: { method: "POST", path: "/internal/v1/freeze" },
   unfreeze: { method: "POST", path: "/internal/v1/unfreeze" },
@@ -103,6 +104,16 @@ export const RegisterMandateInternal = z.object({
   owner_authorization: OwnerAuthorizationSchema,
 });
 
+/** Register the org treasury (owner-authorized `treasury.set`), so savings sweeps to it can be co-signed. */
+export const SetTreasuryInternal = z.object({
+  org_id: z.string(),
+  chain_id: z.number().int(),
+  owner_address: AddressSchema,
+  account_id: z.string(),
+  treasury_address: AddressSchema,
+  owner_authorization: OwnerAuthorizationSchema,
+});
+
 export const FreezeInternal = z.object({
   scope: z.enum(["org", "agent", "session"]),
   id: z.string(),
@@ -135,7 +146,38 @@ export const EvaluateInternal = z.object({
 
 export const DecisionInternal = PolicyDecisionSchema.extend({ id: z.string() });
 
+/**
+ * What the operation does, so the co-signer can match calls to intent:
+ * - `transfer` (kinds transfer/payout/refill): exactly one USDC transfer.
+ * - `escrow.lock` / `stream.create`: approve immediately followed by lock/create for the same amount.
+ * - `stream.top_up`: approve immediately followed by `topUp(id, amount)`; `amount` = the top-up.
+ * - `escrow.release` / `escrow.refund` / `escrow.dispute` / `stream.cancel`: exactly one call to the
+ *   configured escrow/streams contract and **no outflow** (`intent.amount` = "0"); the contract
+ *   enforces who may call and where funds go.
+ * Any action may additionally carry up to two USDC transfers to the revenue address (fees and
+ * fee sweeps) and one to the org treasury (savings sweep, see `setTreasury`).
+ */
+export const COSIGN_ACTIONS = [
+  "transfer",
+  "escrow.lock",
+  "escrow.release",
+  "escrow.refund",
+  "escrow.dispute",
+  "stream.create",
+  "stream.cancel",
+  "stream.top_up",
+] as const;
+
 export const CosignInternal = z.object({
+  /** Defaults to `transfer` for kinds transfer/payout/refill, `escrow.lock` for escrow, `stream.create` for stream. */
+  action: z.enum(COSIGN_ACTIONS).optional(),
+  /** Escrow or stream id on-chain for post-lock actions. */
+  onchain_id: z
+    .string()
+    .regex(/^[0-9]+$/)
+    .optional(),
+  /** Savings sweep to the org treasury included in this operation (minor units). */
+  savings_sweep: MinorUnitsString.optional(),
   payment_id: z.string(),
   org_id: z.string(),
   agent_id: z.string(),
@@ -215,6 +257,7 @@ export type PolicyVersionInternal = z.infer<typeof PolicyVersionInternal>;
 export type PolicyStateInternal = z.infer<typeof PolicyStateInternal>;
 export type RegisterMandateInternal = z.infer<typeof RegisterMandateInternal>;
 export type FreezeInternal = z.infer<typeof FreezeInternal>;
+export type SetTreasuryInternal = z.infer<typeof SetTreasuryInternal>;
 export type UnfreezeInternal = z.infer<typeof UnfreezeInternal>;
 export type IntentInternal = z.infer<typeof IntentInternal>;
 export type EvaluateInternal = z.infer<typeof EvaluateInternal>;
@@ -235,6 +278,7 @@ export interface CosignerClient {
   putPolicy(input: PutPolicyInternal): Promise<PolicyVersionInternal>;
   getPolicy(agentId: string): Promise<PolicyStateInternal>;
   registerMandate(input: RegisterMandateInternal): Promise<void>;
+  setTreasury(input: SetTreasuryInternal): Promise<void>;
   revokeMandate(mandateId: string): Promise<void>;
   freeze(input: FreezeInternal): Promise<void>;
   unfreeze(input: UnfreezeInternal): Promise<{ effective_at: string }>;
