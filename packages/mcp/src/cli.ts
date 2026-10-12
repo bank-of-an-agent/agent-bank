@@ -32,6 +32,7 @@ Environment:
   AGENTBANK_KEYSTORE            path of a 0600 key file holding session:<ses_id> / spend
   AGENTBANK_SPEND_KEY           x402 spend key (optional; needed to pay for HTTP resources)
   AGENTBANK_MAX_X402_PER_CALL   cap per paid request in USDC (default 1.00)
+  AGENTBANK_X402_NETWORK        x402 network override, CAIP-2 (default: the deployment's, GET /v1/meta)
   AGENTBANK_MCP_HTTP_TOKEN      bearer token for --http (required off loopback)
 `;
 
@@ -58,7 +59,7 @@ async function main(): Promise<void> {
   const config = await loadConfig();
   const agent = createAgentClient(config);
   const create = () => createAgentBankMcpServer(agent, { maxX402PerCall: config.maxX402PerCall });
-  const describe = `account ${config.accountId}, session ${config.sessionId} (key from ${config.sessionKeySource}), x402 ${config.spendKey ? `enabled, max ${config.maxX402PerCall} USDC/call` : "disabled (no spend key)"}`;
+  const describe = `account ${config.accountId}, session ${config.sessionId} (key from ${config.sessionKeySource}), x402 ${config.spendKey ? `enabled on ${config.x402Network ?? "the deployment's network"}, max ${config.maxX402PerCall} USDC/call` : "disabled (no spend key)"}`;
 
   if (values.http) {
     const port = values.port !== undefined ? Number(values.port) : 8090;

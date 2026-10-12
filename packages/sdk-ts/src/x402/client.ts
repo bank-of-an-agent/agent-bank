@@ -133,6 +133,8 @@ export interface X402PaymentContext {
   method: string;
   challenge: X402Challenge;
   requirement: SelectedRequirement;
+  /** The USDC EIP-712 domain name/version the authorization must use, when known. */
+  expectedDomain?: { name: string; version: string };
 }
 
 /** Produces the signed `exact` payload for a selected requirement. */
@@ -152,8 +154,23 @@ export interface X402PaymentEvent {
 
 /** Client-side x402 settings. */
 export interface X402ClientOptions {
-  /** CAIP-2 network to pay on (default `eip155:84532`, Base Sepolia). Mainnets are refused. */
+  /**
+   * CAIP-2 network to pay on. Mainnets are refused. `AgentClient` resolves it
+   * from `GET /v1/meta` when unset; the standalone {@link wrapFetch} and
+   * {@link fetchWithX402} default to `eip155:84532` (Base Sepolia).
+   */
   network?: string;
+  /**
+   * USDC contract on that network: the only asset paid. Defaults to Agent
+   * Bank's asset registry for the chain (`AgentClient`: `meta.usdc.address`).
+   */
+  usdc?: string;
+  /**
+   * USDC's EIP-712 domain name and version (`meta.usdc.eip712_name` /
+   * `eip712_version`). When known, the authorization Agent Bank returns must
+   * use exactly this domain.
+   */
+  usdcDomain?: { name: string; version: string };
   /**
    * Hard cap per request as a decimal USDC string (default `"1.00"`).
    * Defense in depth on top of the server-side policy: a challenge above the
@@ -167,6 +184,13 @@ export interface X402ClientOptions {
 /** Options of {@link wrapFetch}. */
 export interface WrapFetchOptions extends X402ClientOptions {
   payer: X402Payer;
+  /**
+   * Resolve the settings lazily, only once a 402 has to be paid (free
+   * resources then cost no extra round trip). `AgentClient` uses this to read
+   * the deployment's network and USDC from `GET /v1/meta`. When set, the
+   * static `network` / `usdc` / `usdcDomain` / `maxAmountPerRequest` are ignored.
+   */
+  resolveSettings?: () => Promise<ResolvedX402Options>;
 }
 
 /** Result of {@link fetchWithX402}. */
@@ -188,27 +212,54 @@ export interface X402FetchResult {
   settlement?: SettleResponse;
 }
 
-interface ResolvedOptions {
+/** Fully resolved x402 client settings. */
+export interface ResolvedX402Options {
   network: string;
   chainId: number;
   usdc: string;
+  usdcDomain: { name: string; version: string } | undefined;
   maxAmount: bigint;
 }
 
-/** Validate and resolve client options (throws on mainnets and malformed caps). */
-export function resolveX402Options(options: X402ClientOptions = {}): ResolvedOptions {
-  const network = options.network ?? DEFAULT_X402_NETWORK;
-  const chainId = chainIdOfNetwork(network);
-  if (chainId === undefined || !network.startsWith("eip155:")) {
+/**
+ * Validate a CAIP-2 `eip155:<chainId>` network and return its chain id.
+ * Throws `invalid_request` for other formats and `mainnet_locked` for mainnets.
+ */
+export function x402ChainId(network: string): number {
+  const chainId = /^eip155:[0-9]+$/.test(network) ? chainIdOfNetwork(network) : undefined;
+  if (chainId === undefined) {
     throw new InvalidRequestError(
       "invalid_request",
       `x402 network must be CAIP-2 eip155:<chainId>, got "${network}"`,
     );
   }
   assertTestnet(chainId);
-  const usdc = getAsset(chainId, "USDC").address;
-  const cap = (options.maxAmountPerRequest ?? DEFAULT_MAX_AMOUNT_PER_REQUEST).replace(/^\$/, "");
-  return { network, chainId, usdc, maxAmount: parseAmount(cap, USDC_DECIMALS) };
+  return chainId;
+}
+
+/** Parse the per-request cap (decimal USDC, an optional leading `$`) into minor units. */
+export function parseX402Cap(maxAmountPerRequest: string | undefined): bigint {
+  return parseAmount(
+    (maxAmountPerRequest ?? DEFAULT_MAX_AMOUNT_PER_REQUEST).replace(/^\$/, ""),
+    USDC_DECIMALS,
+  );
+}
+
+/** Validate and resolve client options (throws on mainnets, unknown USDC and malformed caps). */
+export function resolveX402Options(options: X402ClientOptions = {}): ResolvedX402Options {
+  const network = options.network ?? DEFAULT_X402_NETWORK;
+  const chainId = x402ChainId(network);
+  let usdc = options.usdc;
+  let usdcDomain = options.usdcDomain;
+  if (usdc === undefined) {
+    const asset = getAsset(chainId, "USDC");
+    usdc = asset.address;
+    usdcDomain ??= { name: asset.eip712.name, version: asset.eip712.version };
+  }
+  if (!/^0x[0-9a-fA-F]{40}$/.test(usdc)) {
+    throw new InvalidRequestError("invalid_request", "x402 usdc must be a 0x-prefixed address");
+  }
+  return { network, chainId, usdc, usdcDomain, maxAmount: parseX402Cap(options.maxAmountPerRequest) };
 }
 
 /** Parse a 402 response into a challenge; `undefined` if it is not an x402 challenge. */
@@ -266,7 +317,10 @@ function sameAddress(a: unknown, b: unknown): boolean {
  * network, Agent Bank's USDC on that network, EIP-3009 transfer method, and
  * a price within the cap.
  */
-export function selectRequirement(challenge: X402Challenge, options: ResolvedOptions): SelectedRequirement {
+export function selectRequirement(
+  challenge: X402Challenge,
+  options: ResolvedX402Options,
+): SelectedRequirement {
   const candidates: SelectedRequirement[] = [];
   for (const entry of challenge.accepts) {
     const candidate = toCandidate(challenge, entry);
@@ -395,7 +449,7 @@ export async function fetchWithX402(
   init: RequestInit | undefined,
   options: WrapFetchOptions,
 ): Promise<X402FetchResult> {
-  const resolved = resolveX402Options(options);
+  const eager = options.resolveSettings ? undefined : resolveX402Options(options);
   const original = new Request(input, init);
   const body = original.body ? new Uint8Array(await original.clone().arrayBuffer()) : undefined;
   const replay = (headers: Headers, url: string = original.url) =>
@@ -416,12 +470,14 @@ export async function fetchWithX402(
   // Pay (and let policy judge) the origin that actually asked for payment: after
   // redirects that is the final URL, not the one the caller started from.
   const paidUrl = first.url || original.url;
+  const resolved = eager ?? (await (options.resolveSettings as () => Promise<ResolvedX402Options>)());
   const requirement = selectRequirement(challenge, resolved);
   const { payload, payment } = await options.payer.pay({
     requestUrl: paidUrl,
     method: original.method,
     challenge,
     requirement,
+    ...(resolved.usdcDomain ? { expectedDomain: resolved.usdcDomain } : {}),
   });
   const header = buildPaymentHeader(challenge, requirement, payload);
   const headers = new Headers(original.headers);
@@ -461,6 +517,6 @@ export async function fetchWithX402(
  * ```
  */
 export function wrapFetch(fetchImpl: FetchLike, options: WrapFetchOptions): FetchLike {
-  resolveX402Options(options);
+  if (!options.resolveSettings) resolveX402Options(options);
   return async (input, init) => (await fetchWithX402(fetchImpl, input, init, options)).response;
 }

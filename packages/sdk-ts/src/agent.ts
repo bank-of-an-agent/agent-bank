@@ -1,4 +1,4 @@
-import { formatAmount, parseAmount } from "@agentbank/core";
+import { formatAmount, getAsset, parseAmount } from "@agentbank/core";
 import {
   AgentBankClient,
   type ClientOptions,
@@ -12,6 +12,7 @@ import { signOperationHash, type SpendSigner } from "./signers";
 import type {
   Balances,
   CreateEscrowInput,
+  Meta,
   CreateStreamInput,
   Escrow,
   EscrowStatus,
@@ -31,9 +32,11 @@ import type {
 import { transferWithAuthorizationTypedData } from "./x402/eip3009";
 import {
   fetchWithX402,
+  parseX402Cap,
   resolveX402Options,
-  wrapFetch,
+  x402ChainId,
   X402Error,
+  type ResolvedX402Options,
   type SelectedRequirement,
   type X402ClientOptions,
   type X402FetchResult,
@@ -253,6 +256,7 @@ export class AgentClient extends AgentBankClient {
   readonly #spendKey: SpendSigner | undefined;
   readonly #x402: AgentX402Options;
   readonly #payer: X402Payer;
+  #x402Resolved: Promise<ResolvedX402Options> | undefined;
 
   constructor(options: AgentClientOptions) {
     super(options);
@@ -263,7 +267,12 @@ export class AgentClient extends AgentBankClient {
     this.#sessionCredentials = options.session;
     this.#spendKey = options.spendKey;
     this.#x402 = options.x402 ?? {};
-    resolveX402Options(this.#x402);
+    // Validate what is explicit now; the network and USDC come from GET /v1/meta when unset.
+    parseX402Cap(this.#x402.maxAmountPerRequest);
+    if (this.#x402.network !== undefined) x402ChainId(this.#x402.network);
+    if (this.#x402.usdc !== undefined && !/^0x[0-9a-fA-F]{40}$/.test(this.#x402.usdc)) {
+      throw new InvalidRequestError("invalid_request", "x402.usdc must be a 0x-prefixed address");
+    }
     this.#payer = createAgentBankPayer({
       client: this,
       accountId: this.accountId,
@@ -531,7 +540,53 @@ export class AgentClient extends AgentBankClient {
    * ```
    */
   wrapFetch(baseFetch: FetchLike = (i, o) => globalThis.fetch(i, o)): FetchLike {
-    return wrapFetch(baseFetch, { ...this.#x402, payer: this.#payer });
+    return async (input, init) => (await this.#paidFetch(baseFetch, input, init, {})).response;
+  }
+
+  /**
+   * The x402 settings this agent pays with: the configured `x402.network` /
+   * `x402.usdc`, or, when unset, the deployment's from `GET /v1/meta`
+   * (`caip2`, `usdc.address`, `usdc.eip712_name` / `eip712_version`), fetched
+   * once and cached. Mainnet networks are refused either way.
+   */
+  async x402Settings(options: RequestOptions = {}): Promise<ResolvedX402Options> {
+    this.#x402Resolved ??= this.#resolveX402(options);
+    try {
+      return await this.#x402Resolved;
+    } catch (error) {
+      this.#x402Resolved = undefined;
+      throw error;
+    }
+  }
+
+  async #resolveX402(options: RequestOptions): Promise<ResolvedX402Options> {
+    const { network, usdc, usdcDomain } = this.#x402;
+    if (network !== undefined) {
+      const chainId = x402ChainId(network);
+      if (usdc !== undefined || findAssetByChain(chainId)) {
+        return resolveX402Options({ ...this.#x402, network });
+      }
+      // An explicit network without a registered USDC: take it from the deployment if it matches.
+      const meta = await this.meta(options);
+      if (meta.caip2 !== network) {
+        throw new InvalidRequestError(
+          "invalid_request",
+          `No USDC address is known for ${network}; set x402.usdc`,
+        );
+      }
+      return resolveX402Options({
+        ...this.#x402,
+        usdc: meta.usdc.address,
+        usdcDomain: usdcDomain ?? metaDomain(meta),
+      });
+    }
+    const meta = await this.meta(options);
+    return resolveX402Options({
+      ...this.#x402,
+      network: meta.caip2,
+      usdc: usdc ?? meta.usdc.address,
+      usdcDomain: usdcDomain ?? metaDomain(meta),
+    });
   }
 
   /**
@@ -556,20 +611,28 @@ export class AgentClient extends AgentBankClient {
     init?: RequestInit,
     overrides: { maxAmountPerRequest?: string } = {},
   ): Promise<X402FetchResult> {
-    let maxAmount = this.#x402.maxAmountPerRequest;
-    if (overrides.maxAmountPerRequest !== undefined) {
-      const configured = resolveX402Options(this.#x402).maxAmount;
-      const requested = resolveX402Options({
-        ...this.#x402,
-        maxAmountPerRequest: overrides.maxAmountPerRequest,
-      }).maxAmount;
-      maxAmount = formatAmount(requested < configured ? requested : configured, USDC_DECIMALS);
-    }
     const fetchImpl: FetchLike = this.#x402.fetch ?? ((i, o) => globalThis.fetch(i, o));
+    return this.#paidFetch(fetchImpl, input, init, overrides);
+  }
+
+  async #paidFetch(
+    fetchImpl: FetchLike,
+    input: string | URL | Request,
+    init: RequestInit | undefined,
+    overrides: { maxAmountPerRequest?: string },
+  ): Promise<X402FetchResult> {
+    const requested =
+      overrides.maxAmountPerRequest !== undefined ? parseX402Cap(overrides.maxAmountPerRequest) : undefined;
     return fetchWithX402(fetchImpl, input, init, {
-      ...this.#x402,
-      ...(maxAmount !== undefined ? { maxAmountPerRequest: maxAmount } : {}),
+      ...(this.#x402.onPayment ? { onPayment: this.#x402.onPayment } : {}),
       payer: this.#payer,
+      // Resolved only when a 402 must be paid; the per-call cap can only lower the configured one.
+      resolveSettings: async () => {
+        const settings = await this.x402Settings();
+        return requested !== undefined && requested < settings.maxAmount
+          ? { ...settings, maxAmount: requested }
+          : settings;
+      },
     });
   }
 
@@ -774,7 +837,13 @@ export function createAgentBankPayer(options: AgentBankPayerOptions): X402Payer 
           payment,
         });
       }
-      assertAuthorizationMatches(response, requirement, signer.address);
+      assertAuthorizationMatches(
+        response,
+        requirement,
+        signer.address,
+        Math.floor(Date.now() / 1000),
+        context.expectedDomain,
+      );
       const signature = await signer.signTypedData(
         transferWithAuthorizationTypedData(response.eip712_domain, response.authorization),
       );
@@ -806,6 +875,7 @@ export function assertAuthorizationMatches(
   requirement: SelectedRequirement,
   spendAddress: string,
   now: number = Math.floor(Date.now() / 1000),
+  expectedDomain?: { name: string; version: string },
 ): void {
   const auth = response.authorization;
   const domain = response.eip712_domain;
@@ -823,6 +893,9 @@ export function assertAuthorizationMatches(
   const { name, version } = requirement.extra;
   if (typeof name === "string" && name !== domain.name) problems.push("EIP-712 name differs");
   if (typeof version === "string" && version !== domain.version) problems.push("EIP-712 version differs");
+  if (expectedDomain && (expectedDomain.name !== domain.name || expectedDomain.version !== domain.version)) {
+    problems.push("EIP-712 domain is not the deployment's USDC domain");
+  }
   const validBefore = BigInt(auth.validBefore);
   if (validBefore <= BigInt(now)) problems.push("authorization already expired");
   if (validBefore > BigInt(now + requirement.maxTimeoutSeconds + 300)) {
@@ -838,4 +911,19 @@ export function assertAuthorizationMatches(
       },
     );
   }
+}
+
+/** Whether Agent Bank's asset registry knows USDC on a chain. */
+function findAssetByChain(chainId: number): boolean {
+  try {
+    getAsset(chainId, "USDC");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The deployment's USDC EIP-712 domain from `GET /v1/meta`. */
+function metaDomain(meta: Meta): { name: string; version: string } {
+  return { name: meta.usdc.eip712_name, version: meta.usdc.eip712_version };
 }

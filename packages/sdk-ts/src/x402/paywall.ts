@@ -58,8 +58,16 @@ export interface PaywallOptions {
   price: string;
   /** CAIP-2 network (default `eip155:84532`, Base Sepolia). Mainnets are refused. */
   network?: string;
-  /** Token address (default: USDC on the network). */
+  /**
+   * Token address (default: Agent Bank's registered USDC on the network).
+   * Required on chains without a registered USDC (e.g. a local Anvil).
+   */
   asset?: string;
+  /**
+   * EIP-712 domain of the token, advertised in `extra` so buyers can sign
+   * EIP-3009 authorizations (default: the registered USDC's, "USDC" / "2").
+   */
+  assetDomain?: { name: string; version: string };
   /** Human-readable description of the resource. */
   description?: string;
   /** MIME type of the resource. */
@@ -282,8 +290,22 @@ export function createPaywall(options: PaywallOptions): Paywall {
   if (!/^0x[0-9a-fA-F]{40}$/.test(options.payTo)) {
     throw new InvalidRequestError("invalid_request", "payTo must be a 0x-prefixed address");
   }
-  const usdc = getAsset(chainId, "USDC");
-  const asset = options.asset ?? usdc.address;
+  let registered: { address: string; eip712: { name: string; version: string } } | undefined;
+  try {
+    registered = getAsset(chainId, "USDC");
+  } catch {
+    registered = undefined;
+  }
+  const asset = options.asset ?? registered?.address;
+  if (!asset || !/^0x[0-9a-fA-F]{40}$/.test(asset)) {
+    throw new InvalidRequestError(
+      "invalid_request",
+      `No USDC is registered for ${network}; pass asset (and assetDomain)`,
+    );
+  }
+  const assetDomain =
+    options.assetDomain ??
+    (registered && sameAddress(asset, registered.address) ? registered.eip712 : undefined);
   const priceMinor = parseAmount(options.price.trim().replace(/^\$/, ""), USDC_DECIMALS);
   if (priceMinor <= 0n) throw new InvalidRequestError("invalid_amount", "price must be greater than zero");
   const maxTimeoutSeconds = options.maxTimeoutSeconds ?? 60;
@@ -306,7 +328,7 @@ export function createPaywall(options: PaywallOptions): Paywall {
     amount: priceMinor.toString(),
     payTo: options.payTo,
     maxTimeoutSeconds,
-    extra: sameAddress(asset, usdc.address) ? { name: usdc.eip712.name, version: usdc.eip712.version } : {},
+    extra: assetDomain ? { name: assetDomain.name, version: assetDomain.version } : {},
   };
 
   const resourceFor = (url: string): ResourceInfo => ({

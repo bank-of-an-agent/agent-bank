@@ -166,7 +166,8 @@ describe("our x402 client against the official @x402/express resource server", (
     expect(error).toBeInstanceOf(X402Error);
     expect((error as X402Error).reason).toBe("amount_exceeds_limit");
     expect((error as X402Error).code).toBe("policy_denied");
-    expect(api.requests.length).toBe(before);
+    // Only the deployment facts were read (GET /v1/meta); x402.pay was never called.
+    expect(api.requests.slice(before).map((r) => r.url)).toEqual(["/v1/meta"]);
   });
 
   it("propagates a policy denial from Agent Bank without signing", async () => {

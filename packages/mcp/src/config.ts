@@ -3,6 +3,7 @@ import {
   isPrivateKey,
   normalizeAmount,
   signerFromPrivateKey,
+  x402ChainId,
   type SpendSigner,
 } from "@agentbank/sdk";
 import { FileKeyStore } from "@agentbank/sdk/node";
@@ -22,6 +23,7 @@ import type { PrivateKeyAccount } from "viem/accounts";
  * | `AGENTBANK_KEYSTORE` | Path of a `FileKeyStore` (0600) holding `session:<ses_id>` (or `session`) and optionally `spend` |
  * | `AGENTBANK_SPEND_KEY` | x402 spend key (0x…); without one, `fetch_paid_resource` cannot pay |
  * | `AGENTBANK_MAX_X402_PER_CALL` | Cap per paid request in USDC (default `1.00`) |
+ * | `AGENTBANK_X402_NETWORK` | Optional CAIP-2 network to pay x402 on (default: the deployment's, from `GET /v1/meta`) |
  * | `AGENTBANK_MCP_HTTP_TOKEN` | Bearer token required by the HTTP transport (required when binding beyond loopback) |
  *
  * @packageDocumentation
@@ -35,6 +37,8 @@ export interface McpConfig {
   sessionKey: PrivateKeyAccount;
   spendKey: SpendSigner | undefined;
   maxX402PerCall: string;
+  /** Explicit x402 network (CAIP-2); `undefined` = the deployment's, from `GET /v1/meta`. */
+  x402Network: string | undefined;
   httpToken: string | undefined;
   /** Where the session key came from (for startup logs; never the key itself). */
   sessionKeySource: "env" | "keystore";
@@ -127,10 +131,33 @@ export async function loadConfig(env: Record<string, string | undefined> = proce
     throw new ConfigError('AGENTBANK_MAX_X402_PER_CALL must be a decimal USDC amount such as "0.50"');
   }
 
+  const x402Network = env.AGENTBANK_X402_NETWORK?.trim() || undefined;
+  if (x402Network !== undefined) {
+    try {
+      x402ChainId(x402Network);
+    } catch (error) {
+      throw new ConfigError(
+        error instanceof AgentBankError && error.code === "mainnet_locked"
+          ? "AGENTBANK_X402_NETWORK is a mainnet; Agent Bank is testnet-only"
+          : 'AGENTBANK_X402_NETWORK must be a CAIP-2 network such as "eip155:84532"',
+      );
+    }
+  }
+
   const httpToken = env.AGENTBANK_MCP_HTTP_TOKEN?.trim() || undefined;
   if (httpToken !== undefined && httpToken.length < 16) {
     throw new ConfigError("AGENTBANK_MCP_HTTP_TOKEN must be at least 16 characters");
   }
 
-  return { apiUrl, accountId, sessionId, sessionKey, spendKey, maxX402PerCall, httpToken, sessionKeySource };
+  return {
+    apiUrl,
+    accountId,
+    sessionId,
+    sessionKey,
+    spendKey,
+    maxX402PerCall,
+    x402Network,
+    httpToken,
+    sessionKeySource,
+  };
 }

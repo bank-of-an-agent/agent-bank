@@ -7,6 +7,8 @@ import { keccak256, toHex, verifyTypedData, type Hex } from "viem";
 import type { FetchLike } from "../../src";
 
 export const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+/** Agent Bank's USDC on the in-memory simulated chain (chain id 1337), from core's asset registry. */
+export const USDC_SIMULATED = "0x5dC0000000000000000000000000000000005DC0";
 
 /**
  * A local x402 facilitator built from the **reference implementation**:
@@ -59,12 +61,13 @@ export function createLocalFacilitator() {
       return { status: "success" };
     },
     async getCode(args: { address: string }): Promise<Hex | undefined> {
-      return args.address.toLowerCase() === USDC_BASE_SEPOLIA.toLowerCase() ? "0x60806040" : "0x";
+      const tokens = [USDC_BASE_SEPOLIA, USDC_SIMULATED].map((a) => a.toLowerCase());
+      return tokens.includes(args.address.toLowerCase()) ? "0x60806040" : "0x";
     },
   };
 
   const facilitator = new x402Facilitator()
-    .register("eip155:84532", new ExactEvmFacilitatorScheme(signer))
+    .register(["eip155:84532", "eip155:1337"], new ExactEvmFacilitatorScheme(signer))
     .registerV1("base-sepolia" as Network, new ExactEvmFacilitatorSchemeV1(signer));
 
   const client: FacilitatorClient = {

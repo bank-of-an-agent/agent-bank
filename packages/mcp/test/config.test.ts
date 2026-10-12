@@ -1,4 +1,6 @@
 import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FileKeyStore } from "@agentbank/sdk/node";
@@ -43,6 +45,67 @@ describe("loadConfig", () => {
     const client = createAgentClient(config);
     expect(client.accountId).toBe(ACCT);
     expect(client.spendKeyAddress).toBe(config.spendKey?.address);
+  });
+
+  it("pays x402 on the deployment's network by default, or on AGENTBANK_X402_NETWORK", async () => {
+    const base = {
+      AGENTBANK_API_URL: "http://127.0.0.1:9",
+      AGENTBANK_ACCOUNT_ID: ACCT,
+      AGENTBANK_SESSION_ID: SES,
+      AGENTBANK_SESSION_KEY: generatePrivateKey(),
+    };
+    expect((await loadConfig(base)).x402Network).toBeUndefined();
+    const pinned = await loadConfig({ ...base, AGENTBANK_X402_NETWORK: "eip155:84532" });
+    expect(pinned.x402Network).toBe("eip155:84532");
+    // An explicit network resolves without asking GET /v1/meta (the API here is unreachable).
+    expect(await createAgentClient(pinned).x402Settings()).toMatchObject({
+      network: "eip155:84532",
+      chainId: 84532,
+    });
+    await expect(loadConfig({ ...base, AGENTBANK_X402_NETWORK: "eip155:8453" })).rejects.toThrow(/mainnet/);
+    await expect(loadConfig({ ...base, AGENTBANK_X402_NETWORK: "base-sepolia" })).rejects.toThrow(/CAIP-2/);
+  });
+
+  it("without an override, fetch_paid_resource's client follows the deployment's network (GET /v1/meta)", async () => {
+    const meta = {
+      object: "meta",
+      api_version: "0.1.0",
+      chain: "simulated",
+      chain_id: 1337,
+      caip2: "eip155:1337",
+      owner_authorization_chain_id: 1337,
+      usdc: {
+        address: "0x5dC0000000000000000000000000000000005DC0",
+        decimals: 6,
+        eip712_name: "USDC",
+        eip712_version: "2",
+      },
+      contracts: {},
+      cosigner_address: null,
+      revenue_address: null,
+      facilitator_url: null,
+      features: {},
+    };
+    const server = createServer((req, res) => {
+      res.writeHead(req.url === "/v1/meta" ? 200 : 404, { "content-type": "application/json" });
+      res.end(JSON.stringify(req.url === "/v1/meta" ? meta : {}));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const config = await loadConfig({
+        AGENTBANK_API_URL: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
+        AGENTBANK_ACCOUNT_ID: ACCT,
+        AGENTBANK_SESSION_ID: SES,
+        AGENTBANK_SESSION_KEY: generatePrivateKey(),
+      });
+      expect(await createAgentClient(config).x402Settings()).toMatchObject({
+        network: "eip155:1337",
+        chainId: 1337,
+        usdc: "0x5dC0000000000000000000000000000000005DC0",
+      });
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 
   it("reads keys from a FileKeyStore", async () => {
