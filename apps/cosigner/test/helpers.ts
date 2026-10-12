@@ -477,6 +477,30 @@ export class World {
     return mandate;
   }
 
+  /** A `registerSpendKey` request with the owner's `spend_key.set` authorization (core `ownerPayloads`). */
+  async spendKeyRequest(address: Address = keys.spendKey.address, signer: PrivateKeyAccount = keys.owner) {
+    return {
+      org_id: this.org,
+      agent_id: this.agent,
+      account_id: this.accountId,
+      account_address: this.account,
+      chain_id: this.chain.chainId,
+      owner_address: keys.owner.address,
+      spend_key_address: address,
+      owner_authorization: await signOwnerAction(
+        signer,
+        this.chain.chainId,
+        ownerPayloads.spendKeySet(this.accountId, address),
+        this.now(),
+      ),
+    };
+  }
+
+  /** Register the account's x402 spend key with the owner's consent. */
+  async registerSpendKey(address: Address = keys.spendKey.address): Promise<void> {
+    await this.client.registerSpendKey(await this.spendKeyRequest(address));
+  }
+
   /** An owner-signed unfreeze request (`agent.unfreeze` / `org.unfreeze`, payload `{reason}`). */
   async unfreezeRequest(
     scope: "org" | "agent" | "session",

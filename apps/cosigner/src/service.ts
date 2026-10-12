@@ -18,6 +18,7 @@ import {
   type PutPolicyInternal,
   type RegisterMandateInternal,
   type RegisterSessionInternal,
+  type RegisterSpendKeyInternal,
   type RotateOwnerInternal,
   type SetTreasuryInternal,
   type SettlementReportInternal,
@@ -129,6 +130,10 @@ export class CosignerService implements CosignerClient {
 
   revokeMandate(mandateId: string): Promise<void> {
     return authority.revokeMandate(this.#ctx, mandateId);
+  }
+
+  registerSpendKey(input: RegisterSpendKeyInternal): Promise<void> {
+    return authority.registerSpendKey(this.#ctx, input);
   }
 
   setTreasury(input: SetTreasuryInternal): Promise<void> {

@@ -3,9 +3,14 @@ import type { Address } from "viem";
 import { describe, expect, it } from "vitest";
 import { ATTACKER, DEFAULT_POLICY, keys, PAYEE, usd, World, type WorldOptions } from "./helpers";
 
-async function withWorld(options: WorldOptions, body: (w: World) => Promise<void>): Promise<void> {
+/** A world whose account's spend key the owner has registered (unless `spendKey: false`). */
+async function withWorld(
+  options: WorldOptions & { spendKey?: boolean },
+  body: (w: World) => Promise<void>,
+): Promise<void> {
   const w = await World.create(options);
   try {
+    if (options.spendKey !== false) await w.registerSpendKey();
     await body(w);
   } finally {
     await w.close();
@@ -71,7 +76,7 @@ describe("x402 authorization (ADR 0001: the spend key signs, the co-signer decid
       );
     }));
 
-  it("is idempotent per payment, refuses a different request under the same id, and pins the spend key", () =>
+  it("is idempotent per payment, refuses a different request under the same id, and names the registered key", () =>
     withWorld({}, async (w) => {
       const request = x402(w, usd(2));
       const first = await w.client.authorizeX402(request);
@@ -95,17 +100,24 @@ describe("x402 authorization (ADR 0001: the spend key signs, the co-signer decid
 });
 
 describe("refills of the spend key", () => {
-  it("are co-signed only toward the account's pinned spend key", () =>
-    withWorld({}, async (w) => {
+  it("are co-signed only toward the spend key the owner registered", () =>
+    withWorld({ spendKey: false }, async (w) => {
       const refill = async (to: Address) => {
         const prepared = await w.prepareOrCraft(w.transferCalls(to, usd(5), 0n));
         return w.client.cosign(w.cosignRequest(prepared, { to, amount: usd(5), fee: 0n, kind: "refill" }));
       };
-      // No spend key known yet: a refill cannot be verified.
-      expect((await refill(keys.spendKey.address)).decision.rule_hits).toContainEqual(
-        expect.objectContaining({ rule: "refill.target", effect: "deny" }),
+      // No spend key registered yet: neither refills nor x402 payments, and an x402 call pins nothing.
+      const early = await refill(keys.spendKey.address);
+      expect(early.signature).toBeNull();
+      expect(early.decision.rule_hits).toContainEqual(
+        expect.objectContaining({ rule: "cosigner.spend_key_unregistered", effect: "deny" }),
       );
-      await w.client.authorizeX402(x402(w, usd(1)));
+      const x402Early = await w.client.authorizeX402(x402(w, usd(1)));
+      expect(x402Early.decision.rule_hits).toContainEqual(
+        expect.objectContaining({ rule: "cosigner.spend_key_unregistered", effect: "deny" }),
+      );
+      expect((await refill(keys.spendKey.address)).decision.outcome).toBe("deny");
+      await w.registerSpendKey();
       const ok = await refill(keys.spendKey.address);
       expect(ok.decision.outcome).toBe("allow");
       const elsewhere = await refill(ATTACKER);

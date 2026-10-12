@@ -133,18 +133,24 @@ export async function getSpendKey(tx: SqlClient, accountId: string): Promise<str
   return rows[0]?.address ?? null;
 }
 
-/** Pin an account's x402 spend key on first sight. Returns the pinned key. */
-export async function bindSpendKey(
-  tx: SqlClient,
-  accountId: string,
-  address: string,
-  at: Date,
-): Promise<string> {
-  await tx.query(
-    "INSERT INTO spend_key_binding (account_id, address, created_at) VALUES ($1, $2, $3) ON CONFLICT (account_id) DO NOTHING",
-    [accountId, lower(address), at],
+/** The account a spend key is registered for, if any. */
+export async function getSpendKeyAccount(tx: SqlClient, address: string): Promise<string | null> {
+  const { rows } = await tx.query<{ account_id: string }>(
+    "SELECT account_id FROM spend_key_binding WHERE address = $1",
+    [lower(address)],
   );
-  return (await getSpendKey(tx, accountId)) ?? lower(address);
+  return rows[0]?.account_id ?? null;
+}
+
+/** Register an account's spend key (owner-authorized; never changed in place). */
+export async function insertSpendKey(
+  tx: SqlClient,
+  input: { accountId: string; address: string; signedBy: string; at: Date },
+): Promise<void> {
+  await tx.query(
+    "INSERT INTO spend_key_binding (account_id, address, signed_by, created_at) VALUES ($1, $2, $3, $4)",
+    [input.accountId, lower(input.address), lower(input.signedBy), input.at],
+  );
 }
 
 // ------------------------------------------------------------------ treasury & owner

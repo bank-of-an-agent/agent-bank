@@ -14,6 +14,7 @@ import {
   type PutPolicyInternal,
   type RegisterMandateInternal,
   type RegisterSessionInternal,
+  type RegisterSpendKeyInternal,
   type RotateOwnerInternal,
   type SetTreasuryInternal,
   type UnfreezeInternal,
@@ -434,6 +435,86 @@ export async function revokeMandate(ctx: ServiceContext, mandateId: string): Pro
       action: "mandate.revoked",
       subject: mandateId,
       payload: { known: existing !== null, agent_id: existing?.agent_id ?? null },
+    });
+  });
+}
+
+// ------------------------------------------------------------------ spend keys
+
+/**
+ * Register an account's x402 spend key (ADR 0001) with the owner's consent:
+ * `spend_key.set` (subject = account id, payload = `{ account_id,
+ * spend_key_address }`), single-use, signed by the org's pinned owner. The
+ * key may not be the account itself, the owner, the co-signer, the revenue
+ * address, the treasury or any known account, nor another account's spend
+ * key. Once registered it never changes here (rotation is a future owner
+ * action): the same key again is a no-op, another key is a conflict.
+ */
+export async function registerSpendKey(ctx: ServiceContext, input: RegisterSpendKeyInternal): Promise<void> {
+  assertIds({ org_id: input.org_id, agent_id: input.agent_id, account_id: input.account_id });
+  assertChain(ctx, input.chain_id);
+  assertNotCosignerKey(ctx, input.owner_address, "The owner key");
+  const key = input.spend_key_address;
+  const refuse = (what: string): never => {
+    throw new AgentBankError("invalid_request", `The spend key must not be ${what}`);
+  };
+  if (sameAddress(key, input.account_address)) refuse("the account itself");
+  if (sameAddress(key, ctx.signer.address)) refuse("the co-signer's key");
+  if (sameAddress(key, ctx.config.revenueAddress)) refuse("the Agent Bank revenue address");
+  if (sameAddress(key, input.owner_address)) refuse("the owner key");
+  const now = ctx.clock.now();
+  await transaction(ctx, async (tx, audit) => {
+    await store.bindOrg(tx, input.org_id, input.owner_address, now);
+    await store.bindAgent(tx, input.agent_id, input.org_id, now);
+    await store.bindAccount(tx, {
+      accountId: input.account_id,
+      agentId: input.agent_id,
+      chainId: input.chain_id,
+      address: input.account_address,
+      at: now,
+    });
+    const treasury = await store.getTreasury(tx, input.org_id);
+    if (treasury && sameAddress(treasury.address, key)) refuse("the org treasury");
+    if (await store.getAccountByAddress(tx, input.chain_id, key)) refuse("an Agent Bank account");
+    const verified = await verifyOwner(
+      ctx,
+      tx,
+      input.org_id,
+      input.owner_address,
+      input.owner_authorization,
+      ownerPayloads.spendKeySet(input.account_id, key),
+      now,
+    );
+    const registered = await store.getSpendKey(tx, input.account_id);
+    if (registered !== null) {
+      if (sameAddress(registered, key)) return; // already registered: an identical retry changes nothing
+      throw new AgentBankError(
+        "conflict",
+        `Account ${input.account_id} already has spend key ${getAddress(registered)}; spend keys are not rotated here`,
+      );
+    }
+    const holder = await store.getSpendKeyAccount(tx, key);
+    if (holder !== null)
+      throw new AgentBankError("conflict", `${getAddress(key)} is already the spend key of another account`);
+    await consumeAuthorization(tx, verified, `spend_key:${input.account_id}`, now);
+    await store.insertSpendKey(tx, {
+      accountId: input.account_id,
+      address: key,
+      signedBy: verified.signer,
+      at: now,
+    });
+    await audit({
+      at: now,
+      actor: `owner:${verified.signer}`,
+      action: "spend_key.registered",
+      subject: input.account_id,
+      payload: {
+        org_id: input.org_id,
+        agent_id: input.agent_id,
+        account_address: getAddress(input.account_address),
+        spend_key_address: getAddress(key),
+        authorization_digest: verified.digest,
+      },
     });
   });
 }

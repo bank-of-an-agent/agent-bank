@@ -9,6 +9,7 @@ import {
   PutPolicyInternal,
   RegisterMandateInternal,
   RegisterSessionInternal,
+  RegisterSpendKeyInternal,
   RotateOwnerInternal,
   SetTreasuryInternal,
   SettlementReportInternal,
@@ -193,6 +194,11 @@ export function buildApp(options: AppOptions): FastifyInstance {
 
   app.post(path(r.registerMandate.path), async (request) => {
     await service.registerMandate(RegisterMandateInternal.parse(request.body));
+    return { ok: true };
+  });
+
+  app.post(path(r.registerSpendKey.path), async (request) => {
+    await service.registerSpendKey(RegisterSpendKeyInternal.parse(request.body));
     return { ok: true };
   });
 

@@ -21,6 +21,7 @@ import {
   type PutPolicyInternal,
   type RegisterMandateInternal,
   type RegisterSessionInternal,
+  type RegisterSpendKeyInternal,
   type RotateOwnerInternal,
   type SetTreasuryInternal,
   type SettlementReportInternal,
@@ -88,6 +89,10 @@ export class InjectCosignerClient implements CosignerClient {
 
   async registerMandate(input: RegisterMandateInternal): Promise<void> {
     await this.#call("POST", CosignerRoutes.registerMandate.path, OkResponse, input);
+  }
+
+  async registerSpendKey(input: RegisterSpendKeyInternal): Promise<void> {
+    await this.#call("POST", CosignerRoutes.registerSpendKey.path, OkResponse, input);
   }
 
   async setTreasury(input: SetTreasuryInternal): Promise<void> {

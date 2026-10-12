@@ -82,6 +82,29 @@ function chainHit(ctx: ServiceContext, chainId: number): RuleHit {
   return hit("cosigner.chain", "deny", `This co-signer serves chain ${ctx.config.chainId}, not ${chainId}`);
 }
 
+/**
+ * The spend key (ADR 0001) is registered by the owner (`spend_key.set`), never
+ * learned from a payment: nothing is authorized for it until then, and only
+ * the registered key may be named.
+ */
+function spendKeyHits(registered: string | null, named: string | null): RuleHit[] {
+  if (registered === null) {
+    return [
+      hit(
+        "cosigner.spend_key_unregistered",
+        "deny",
+        "No spend key is registered for this account; the owner registers it with a spend_key.set authorization",
+      ),
+    ];
+  }
+  if (named !== null && !sameAddress(registered, named)) {
+    return [
+      hit("cosigner.spend_key", "deny", `The account's registered spend key is ${registered}, not ${named}`),
+    ];
+  }
+  return [];
+}
+
 function decisionRow(id: string, base: DecisionBase, decision: FinalDecision): store.DecisionRow {
   return {
     id,
@@ -582,6 +605,10 @@ export async function cosign(ctx: ServiceContext, input: CosignInternal): Promis
         extra,
       });
     } else {
+      if (input.intent.kind === "refill") {
+        // Refills may only top up the registered spend key (the policy engine checks the recipient).
+        extra.push(...spendKeyHits(await store.getSpendKey(tx, input.account_id), null));
+      }
       const parties = await counterparties(ctx, tx, input, spend, extra);
       const evaluated = await ctx.evaluator.decide(tx, {
         now,
@@ -719,18 +746,8 @@ export async function authorizeX402(
       );
       return { decision: toWire(decision, await recordDecision(tx, audit, base, decision, now, {})) };
     }
-    const extra: RuleHit[] = [];
-    // The spend key is pinned on first sight; refills may only ever go to it.
-    const pinned = await store.bindSpendKey(tx, input.account_id, input.spend_key_address, now);
-    if (!sameAddress(pinned, input.spend_key_address)) {
-      extra.push(
-        hit(
-          "cosigner.spend_key",
-          "deny",
-          `The account's registered spend key is ${pinned}, not ${input.spend_key_address}`,
-        ),
-      );
-    }
+    // x402 payments are signed by the account's spend key, which the owner registered (spend_key.set).
+    const extra = spendKeyHits(await store.getSpendKey(tx, input.account_id), input.spend_key_address);
     const amount = BigInt(input.amount);
     const { decision, keys } = await ctx.evaluator.decide(tx, {
       now,

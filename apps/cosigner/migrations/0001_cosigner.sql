@@ -55,11 +55,13 @@ CREATE TABLE treasury (
   set_at     timestamptz NOT NULL
 );
 
--- The x402 spend key of an account (ADR 0001), pinned from the first
--- /x402/authorize; refills may only go to it.
+-- The x402 spend key of an account (ADR 0001), registered with the owner's
+-- `spend_key.set` authorization; x402 payments must name it and refills may
+-- only go to it. A key serves one account and is never changed in place.
 CREATE TABLE spend_key_binding (
   account_id text PRIMARY KEY,
-  address    text NOT NULL CHECK (address ~ '^0x[0-9a-f]{40}$'),
+  address    text NOT NULL UNIQUE CHECK (address ~ '^0x[0-9a-f]{40}$'),
+  signed_by  text NOT NULL,
   created_at timestamptz NOT NULL
 );
 
