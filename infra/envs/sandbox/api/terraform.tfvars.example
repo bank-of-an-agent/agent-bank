@@ -1,0 +1,29 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. No secrets belong in this file.
+
+account_id = "222222222222" # sandbox API account
+region     = "us-east-1"
+
+# Immutable image tag (git SHA); api, facilitator and console images are pushed to the
+# per-service ECR repositories (output ecr_repository_urls). For the very first apply, set
+# every service_capacity.*.min to 0 until images exist.
+image_tag = "0123456789abcdef0123456789abcdef01234567"
+
+# chain_id = 84532   # Base Sepolia only; 8453 (mainnet) is rejected by validation.
+
+api_hostname         = "api.sandbox.example.com"
+facilitator_hostname = "x402.sandbox.example.com"
+console_hostname     = "console.sandbox.example.com"
+alb_certificate_arn  = "arn:aws:acm:us-east-1:222222222222:certificate/00000000-0000-0000-0000-000000000000"
+# route53_zone_id    = "Z0123456789ABCDEFGHIJ"
+
+# Outputs of envs/sandbox/cosigner:
+cosigner_endpoint_service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+audit_log_bucket_arn           = "arn:aws:s3:::agent-bank-sandbox-audit-111111111111"
+audit_log_kms_key_arn          = "arn:aws:kms:us-east-1:111111111111:key/00000000-0000-0000-0000-000000000000"
+
+# Exposes /internal/* to the indexer account via PrivateLink:
+indexer_account_id = "333333333333"
+# Second pass, after envs/sandbox/indexer has created its endpoint (output api_internal_vpc_endpoint_id):
+# accepted_indexer_endpoint_ids = ["vpce-0123456789abcdef0"]
+
+alarm_email_addresses = ["oncall@example.com"]

@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { AddressSchema, AssetCodeSchema, DecimalString, DomainSchema, TimestampSchema } from "./schemas";
+import {
+  AddressSchema,
+  AssetCodeSchema,
+  DecimalString,
+  DomainSchema,
+  Erc8004IdSchema,
+  idSchema,
+  TimestampSchema,
+} from "./schemas";
 
 /**
  * Policy documents: the owner-defined spending rules for one agent.
@@ -14,8 +22,8 @@ export type PaymentKind = (typeof PAYMENT_KINDS)[number];
 const CounterpartyList = z
   .object({
     addresses: z.array(AddressSchema).max(1000).optional(),
-    agent_ids: z.array(z.string().min(1)).max(1000).optional(),
-    erc8004_ids: z.array(z.string().min(1)).max(1000).optional(),
+    agent_ids: z.array(idSchema("agent")).max(1000).optional(),
+    erc8004_ids: z.array(Erc8004IdSchema).max(1000).optional(),
     x402_domains: z.array(DomainSchema).max(1000).optional(),
   })
   .strict();
@@ -23,8 +31,8 @@ const CounterpartyList = z
 export const CounterpartyMatchSchema = z
   .object({
     address: AddressSchema.optional(),
-    agent_id: z.string().optional(),
-    erc8004_id: z.string().optional(),
+    agent_id: idSchema("agent").optional(),
+    erc8004_id: Erc8004IdSchema.optional(),
     x402_domain: DomainSchema.optional(),
   })
   .strict()
@@ -41,14 +49,29 @@ export const CounterpartyCapSchema = z
   })
   .strict();
 
+function isTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Allowed payment window. `start` is inclusive and `end` exclusive, in the
+ * window's IANA time zone; `end` may be "24:00". A window whose start is after
+ * its end runs overnight (e.g. 22:00–06:00). Start equal to end is invalid.
+ */
 export const TimeWindowSchema = z
   .object({
     days: z.array(z.enum(WEEKDAYS)).min(1),
     start: z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, "HH:MM"),
-    end: z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/, "HH:MM"),
-    timezone: z.string().min(1).default("UTC"),
+    end: z.string().regex(/^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$/, "HH:MM or 24:00"),
+    timezone: z.string().min(1).refine(isTimeZone, "must be an IANA time zone").default("UTC"),
   })
-  .strict();
+  .strict()
+  .refine((w) => w.start !== w.end, { message: "start and end must differ" });
 
 export const ApprovalThresholdSchema = z
   .object({ above: DecimalString, approvers: z.number().int().min(1).max(5) })
@@ -65,7 +88,13 @@ export const AutoSaveSchema = z
       .strict()
       .optional(),
     excess_sweep: z.object({ to: VaultTarget }).strict().optional(),
-    round_up: z.object({ to_nearest: DecimalString, to: VaultTarget }).strict().optional(),
+    round_up: z
+      .object({
+        to_nearest: DecimalString.refine((v) => /[1-9]/.test(v), "must be greater than zero"),
+        to: VaultTarget,
+      })
+      .strict()
+      .optional(),
     scheduled: z
       .array(
         z
@@ -100,6 +129,14 @@ export const PolicyDocumentSchema = z
         caps: z.array(CounterpartyCapSchema).max(100).optional(),
       })
       .strict()
+      .refine(
+        (c) =>
+          c.mode !== "open" ||
+          [c.addresses, c.agent_ids, c.erc8004_ids, c.x402_domains].every(
+            (list) => !list || list.length === 0,
+          ),
+        { message: 'top-level counterparty lists have no effect in "open" mode; use "deny" or another mode' },
+      )
       .default({ mode: "open" }),
     velocity: z
       .object({
@@ -109,11 +146,11 @@ export const PolicyDocumentSchema = z
       })
       .strict()
       .optional(),
-    time_windows: z.array(TimeWindowSchema).max(20).optional(),
+    time_windows: z.array(TimeWindowSchema).min(1).max(20).optional(),
     max_balance: DecimalString.optional(),
     approvals: z.array(ApprovalThresholdSchema).max(5).optional(),
     require_owner_above: DecimalString.optional(),
-    allowed_kinds: z.array(z.enum(PAYMENT_KINDS)).optional(),
+    allowed_kinds: z.array(z.enum(PAYMENT_KINDS)).min(1).optional(),
     auto_save: AutoSaveSchema.optional(),
   })
   .strict()
@@ -147,6 +184,9 @@ export const PolicyDecisionSchema = z
     approvers_required: z.number().int().min(0),
     policy_version: z.number().int().min(0),
     evaluated_at: TimestampSchema,
+    retry_at: TimestampSchema.nullable()
+      .optional()
+      .meta({ description: "When a time-based denial (cooling period, time window) lifts" }),
   })
   .meta({ id: "PolicyDecision", description: "Deterministic decision of the policy engine." });
 

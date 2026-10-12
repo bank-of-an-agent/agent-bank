@@ -1,0 +1,24 @@
+{
+  "name": "@agentbank/ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Double-entry ledger for Agent Bank: ledger accounts and pockets, append-only journal entries, holds (post/void/expire), reversals, idempotency and invariant checks, behind one Ledger interface with in-memory and PostgreSQL implementations.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "fast-check": "^4.10.2"
+  }
+}

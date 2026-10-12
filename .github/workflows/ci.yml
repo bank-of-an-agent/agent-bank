@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentbank
+          POSTGRES_PASSWORD: agentbank
+          POSTGRES_DB: agentbank
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agentbank -d agentbank"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgres://agentbank:agentbank@localhost:5432/agentbank
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: OpenAPI is up to date
+        run: pnpm openapi:check
+      - name: Test (PostgreSQL 16)
+        run: pnpm test
+      - name: Coverage gates (ledger and policy >= 90%)
+        run: pnpm --filter @agentbank/ledger --filter @agentbank/policy test:coverage
+      - name: Build
+        run: pnpm build
+
+  images:
+    name: Container images
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, cosigner, indexer, facilitator, console]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          build-args: APP=${{ matrix.app }}
+          push: false
+          tags: agent-bank/${{ matrix.app }}:ci
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}

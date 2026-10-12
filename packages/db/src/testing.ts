@@ -14,7 +14,19 @@ export async function createTestDatabase(extraMigrations: Migration[] = []): Pro
     const admin = new PgClient({ connectionString: url, max: 1 });
     await admin.exec(`CREATE SCHEMA ${schema}`);
     await admin.close();
-    client = new PgClient({ connectionString: url, schema, max: 8 });
+    const pgClient = new PgClient({ connectionString: url, schema, max: 8 });
+    const closePool = pgClient.close.bind(pgClient);
+    // Closing a test database drops its schema so CI and dev servers don't accumulate them.
+    pgClient.close = async () => {
+      await closePool();
+      const dropper = new PgClient({ connectionString: url, max: 1 });
+      try {
+        await dropper.exec(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+      } finally {
+        await dropper.close();
+      }
+    };
+    client = pgClient;
   } else {
     client = await PgliteClient.create();
   }

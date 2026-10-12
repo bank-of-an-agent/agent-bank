@@ -23,7 +23,10 @@ export function loadMigrations(dir: string = MIGRATIONS_DIR): Migration[] {
     .map((name) => ({ name, sql: readFileSync(join(dir, name), "utf8") }));
 }
 
-export async function migrate(client: SqlClient, migrations: Migration[] = loadMigrations()): Promise<string[]> {
+export async function migrate(
+  client: SqlClient,
+  migrations: Migration[] = loadMigrations(),
+): Promise<string[]> {
   await client.exec(
     "CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())",
   );

@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. No secrets belong in this file.
+
+account_id = "333333333333" # sandbox indexer account
+region     = "us-east-1"
+
+# Immutable image tag (git SHA) pushed to this account's ECR repository (output ecr_repository_url).
+# For the very first apply, before any image exists, set indexer_enabled = false.
+image_tag = "0123456789abcdef0123456789abcdef01234567"
+
+# chain_id = 84532   # Base Sepolia only; 8453 (mainnet) is rejected by validation.
+
+# Output internal_api_endpoint_service_name of envs/sandbox/api:
+api_internal_endpoint_service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
+
+indexer_lag_threshold_blocks = 20
+
+alarm_email_addresses = ["oncall@example.com"]

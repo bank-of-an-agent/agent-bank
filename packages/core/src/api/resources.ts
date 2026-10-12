@@ -258,7 +258,7 @@ export const OwnerOperation = z
       .meta({ description: "The session, payment, vault or rule this operation applies to" }),
     status: z.enum(["requires_signature", "submitted", "succeeded", "failed", "expired"]),
     user_op_hash: Bytes32Schema.meta({
-      description: "Sign this hash with the owner key (EIP-191 personal sign)",
+      description: "Sign the raw 32 bytes of this hash with the owner key (EIP-191 personal sign)",
     }),
     chain_id: z.number().int(),
     tx_hash: Bytes32Schema.nullable(),
@@ -377,6 +377,9 @@ export const PaymentIntent = z
     to_agent_id: idSchema("agent").optional(),
     erc8004_id: z.string().optional(),
     x402_domain: DomainSchema.optional(),
+    contract: AddressSchema.optional().meta({
+      description: "Contract the payment interacts with (escrow, streams), for session allowed_contracts",
+    }),
     mandate_id: idSchema("mandate").optional(),
   })
   .meta({ id: "PaymentIntent", description: "What a payment would do, for dry-run policy checks." });
@@ -411,7 +414,7 @@ export const SigningRequest = z
   .object({
     session_id: idSchema("session").nullable(),
     user_op_hash: Bytes32Schema.meta({
-      description: "Sign this hash with the session key (EIP-191 personal sign)",
+      description: "Sign the raw 32 bytes of this hash with the session key (EIP-191 personal sign)",
     }),
     chain_id: z.number().int(),
     expires_at: TimestampSchema,
@@ -675,6 +678,10 @@ export const Escrow = z
     contract_address: AddressSchema,
     onchain_id: z.string().nullable(),
     expires_at: TimestampSchema,
+    pending_action: z
+      .enum(["lock", "release", "refund", "dispute"])
+      .nullable()
+      .meta({ description: "On-chain action waiting for the session signature, if any" }),
     signing_request: SigningRequest.nullable(),
     memo: z.string().nullable(),
     created_at: TimestampSchema,
@@ -742,6 +749,10 @@ export const Stream = z
     status: StreamStatus,
     contract_address: AddressSchema,
     onchain_id: z.string().nullable(),
+    pending_action: z
+      .enum(["create", "cancel", "top_up"])
+      .nullable()
+      .meta({ description: "On-chain action waiting for the session signature, if any" }),
     signing_request: SigningRequest.nullable(),
     created_at: TimestampSchema,
   })
@@ -1058,6 +1069,38 @@ export const RevenueReport = z
     volume_per_org: DecimalString,
   })
   .meta({ id: "RevenueReport", description: "Revenue by stream, gross margin and volume per org." });
+
+// ---------------------------------------------------------------- meta
+
+export const Meta = z
+  .object({
+    object: z.literal("meta"),
+    api_version: z.string(),
+    chain: ChainNameSchema,
+    chain_id: z.number().int(),
+    caip2: z.string(),
+    owner_authorization_chain_id: z
+      .number()
+      .int()
+      .meta({ description: "EIP-712 domain chain id to use for OwnerAuthorization signatures" }),
+    usdc: z.object({
+      address: AddressSchema,
+      decimals: z.number().int(),
+      eip712_name: z.string(),
+      eip712_version: z.string(),
+    }),
+    contracts: z
+      .record(z.string(), AddressSchema)
+      .meta({ description: "Agent Bank contract addresses on this chain" }),
+    cosigner_address: AddressSchema.nullable(),
+    revenue_address: AddressSchema.nullable(),
+    facilitator_url: z.string().nullable(),
+    features: z.record(z.string(), z.boolean()),
+  })
+  .meta({
+    id: "Meta",
+    description: "Deployment facts clients need: chain, USDC, contract addresses, feature flags.",
+  });
 
 // ---------------------------------------------------------------- misc
 

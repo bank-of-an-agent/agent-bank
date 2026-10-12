@@ -1,0 +1,91 @@
+{
+  "description": "Agent Bank cross-language vectors. Keys are public Anvil dev keys; never use them for real funds.",
+  "keys": {
+    "session_private_key": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
+    "session_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "owner_private_key": "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",
+    "owner_address": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+  },
+  "http_signature_post": {
+    "request": {
+      "method": "POST",
+      "url": "https://api.example.test/v1/payments",
+      "headers": {
+        "content-type": "application/json",
+        "idempotency-key": "idem-0001-0002"
+      },
+      "body": "{\"account_id\":\"acct_01JABCDEFGHJKMNPQRSTVWXYZ0\",\"amount\":{\"amount\":\"12.50\",\"asset\":\"USDC\"},\"to\":{\"address\":\"0x70997970C51812dc3A010C7d01b50e0d17dc79C8\"},\"memo\":\"dataset purchase\"}"
+    },
+    "params": {
+      "key_id": "ses_01JABCDEFGHJKMNPQRSTVWXYZ0",
+      "created": 1790000000,
+      "lifetime_seconds": 120,
+      "nonce": "bm9uY2Utdm-VjdG9y"
+    },
+    "content_digest": "sha-256=:JnrG9k8U8oe5qWAovDjCedD3qlPwBgt+dQyQVd9lzxY=:",
+    "signature_base": "\"@method\": POST\n\"@target-uri\": https://api.example.test/v1/payments\n\"content-digest\": sha-256=:JnrG9k8U8oe5qWAovDjCedD3qlPwBgt+dQyQVd9lzxY=:\n\"idempotency-key\": idem-0001-0002\n\"@signature-params\": (\"@method\" \"@target-uri\" \"content-digest\" \"idempotency-key\");created=1790000000;expires=1790000120;nonce=\"bm9uY2Utdm-VjdG9y\";keyid=\"ses_01JABCDEFGHJKMNPQRSTVWXYZ0\";alg=\"eip191-secp256k1\";tag=\"agentbank\"",
+    "headers": {
+      "content-digest": "sha-256=:JnrG9k8U8oe5qWAovDjCedD3qlPwBgt+dQyQVd9lzxY=:",
+      "signature-input": "agentbank=(\"@method\" \"@target-uri\" \"content-digest\" \"idempotency-key\");created=1790000000;expires=1790000120;nonce=\"bm9uY2Utdm-VjdG9y\";keyid=\"ses_01JABCDEFGHJKMNPQRSTVWXYZ0\";alg=\"eip191-secp256k1\";tag=\"agentbank\"",
+      "signature": "agentbank=:6DYyN0m6CNNR48KXcTploGp1iSOj8Srji0Ay3zkJ68p8Ml6Xaq/re++93oSFhsgbv/L7oChCbTwv7GEv+zVrVRs=:"
+    }
+  },
+  "http_signature_get": {
+    "request": {
+      "method": "GET",
+      "url": "https://api.example.test/v1/accounts/acct_01JABCDEFGHJKMNPQRSTVWXYZ0/balances",
+      "headers": {}
+    },
+    "params": {
+      "key_id": "ses_01JABCDEFGHJKMNPQRSTVWXYZ0",
+      "created": 1790000100,
+      "lifetime_seconds": 60,
+      "nonce": "Z2V0LW5vbmNl"
+    },
+    "headers": {
+      "signature-input": "agentbank=(\"@method\" \"@target-uri\");created=1790000100;expires=1790000160;nonce=\"Z2V0LW5vbmNl\";keyid=\"ses_01JABCDEFGHJKMNPQRSTVWXYZ0\";alg=\"eip191-secp256k1\";tag=\"agentbank\"",
+      "signature": "agentbank=:w42OKNa1yM06WL+NhSJ/FuxbFk0usz4WXkSzEu2mnnd1O5ekd/Rj39YLt+Nz2fFhAbzyMMnJjgQ83lIKXgiPgBs=:"
+    }
+  },
+  "canonical_json": {
+    "input": {
+      "b": 1,
+      "a": [
+        2,
+        {
+          "d": null,
+          "c": "x"
+        }
+      ],
+      "e": "ü"
+    },
+    "output": "{\"a\":[2,{\"c\":\"x\",\"d\":null}],\"b\":1,\"e\":\"ü\"}"
+  },
+  "owner_authorization": {
+    "chain_id": 84532,
+    "action": "policy.loosen",
+    "subject": "agt_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    "payload": {
+      "agent": "agt_01JABCDEFGHJKMNPQRSTVWXYZ0",
+      "limits": {
+        "per_tx": "50.00",
+        "per_day": "500.00"
+      },
+      "counterparties": {
+        "mode": "allowlist",
+        "x402_domains": ["api.example-data.com"]
+      }
+    },
+    "payload_canonical_json": "{\"agent\":\"agt_01JABCDEFGHJKMNPQRSTVWXYZ0\",\"counterparties\":{\"mode\":\"allowlist\",\"x402_domains\":[\"api.example-data.com\"]},\"limits\":{\"per_day\":\"500.00\",\"per_tx\":\"50.00\"}}",
+    "payload_hash": "0xd229bb3374be43f80d0fea8a2f02e195283eb06457236fc56731c46b56747e9e",
+    "issued_at": 1790000000,
+    "expires_at": 1790000600,
+    "signature": "0xf837cf073e9f9566645f79f6fc73fa719cecb99599789db3fbd939648162d35f094233a113458cb13f8793a5e59a4fcef1010e7a6d0ad44bfc62a729f787d4e61b"
+  },
+  "webhook": {
+    "secret": "whsec_test_vector",
+    "body": "{\"id\":\"evt_01JABCDEFGHJKMNPQRSTVWXYZ0\",\"type\":\"payment.settled\",\"data\":{\"id\":\"pay_1\"}}",
+    "timestamp": 1790000000,
+    "header": "t=1790000000,v1=fe6f54776509c36a3c60aa6c9c7a87f7d7e825f12a125b3f1a7aab3cd749b72b"
+  }
+}

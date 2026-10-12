@@ -33,20 +33,20 @@ rejects any change that weakens them.
  Sellers (x402) ──► apps/facilitator         │        policy store · spend history · audit   │
                         │                     └───────────────────────────────────────────────┘
                         ▼                            ▲ freeze / pause sessions
-                 PostgreSQL 16 ◄── apps/indexer ─────┘ (reconciliation alerts)
+                 PostgreSQL 16 ◄── reconciler ◄─ apps/indexer (own account) ┘
                         │                ▲
                         ▼                │ logs (USDC Transfer, AuthorizationUsed, escrow/stream/vault events)
           ChainGateway (packages/chain) ─┴──► Base Sepolia: Safe + ERC-7579 + Smart Sessions,
                                                EntryPoint v0.7, Pimlico bundler/paymaster, USDC
 ```
 
-| Service            | Deploy                   | Holds                                                                        | Can do                                                                            |
-| ------------------ | ------------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `apps/api`         | API account              | Org/agent data, ledger, payments                                             | Validate, hold funds in the ledger, build operations, submit co-signed operations |
-| `apps/cosigner`    | **Separate AWS account** | Policies, sessions, mandates, freezes, its own spend history, KMS key handle | Evaluate policy independently and add (or refuse) the second signature            |
-| `apps/indexer`     | Indexer account          | Chain cursor, `chain_event`                                                  | Read the chain, post chain-evidenced ledger entries, reconcile, raise alerts      |
-| `apps/facilitator` | API account              | x402 authorization log, testnet relayer key                                  | Verify and settle payer-signed EIP-3009 authorizations                            |
-| `apps/console`     | API account              | Nothing (calls the API)                                                      | Principal dashboard: sign-in, approvals, freeze, policies                         |
+| Service            | Deploy                                 | Holds                                                                        | Can do                                                                                                                              |
+| ------------------ | -------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api`         | API account                            | Org/agent data, ledger, payments                                             | Validate, hold funds in the ledger, build operations, submit co-signed operations                                                   |
+| `apps/cosigner`    | **Separate AWS account**               | Policies, sessions, mandates, freezes, its own spend history, KMS key handle | Evaluate policy independently and add (or refuse) the second signature                                                              |
+| `apps/indexer`     | **Separate AWS account**, own database | Chain cursor, block hashes, raw logs                                         | Read the chain, detect reorgs, push normalized events to the API's internal reconciliation endpoints, run the nightly balance check |
+| `apps/facilitator` | API account                            | x402 authorization log, testnet relayer key                                  | Verify and settle payer-signed EIP-3009 authorizations                                                                              |
+| `apps/console`     | API account                            | Nothing (calls the API)                                                      | Principal dashboard: sign-in, approvals, freeze, policies                                                                           |
 
 The API never sees the co-signer key. A compromised API can ask the co-signer to sign, but the
 co-signer re-derives what the operation does from the raw user operation, evaluates its own
@@ -56,15 +56,16 @@ bounded by the on-chain session scope.
 
 ## Packages
 
-| Package           | Responsibility                                                                                                                                                                                                                                             |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`   | Money, ids, errors (RFC 9457), chains and the mainnet lock, assets, canonical JSON, RFC 9421 request signing, webhook HMAC, EIP-712 owner authorizations, policy and mandate schemas, **the API contract** (`src/api/routes.ts`) and the OpenAPI generator |
-| `packages/db`     | `SqlClient` over node-postgres or PGlite, serializable transactions with retry, SQL migrations                                                                                                                                                             |
-| `packages/ledger` | Double-entry ledger: accounts, journal entries, holds (post/void/expire), reversals, idempotency, invariants. `InMemoryLedger` and `PostgresLedger` behind one `Ledger` interface                                                                          |
-| `packages/policy` | Deterministic policy evaluator, policy diff (tighten/loosen), mandate compiler, session-scope compiler, auto-save rules                                                                                                                                    |
-| `packages/chain`  | `ChainGateway` interface with `SimulatedChain` (in-memory, reorg injection) and `EvmChainGateway` (Base Sepolia/Anvil via viem + permissionless + Rhinestone module-sdk); contract ABIs and addresses                                                      |
-| `packages/sdk-ts` | `@agentbank/sdk`: typed client, session keys, request signing, x402 client and seller middleware, webhook verification                                                                                                                                     |
-| `packages/mcp`    | `@agentbank/mcp`: MCP server exposing money tools to agents (stdio + streamable HTTP)                                                                                                                                                                      |
+| Package                   | Responsibility                                                                                                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`           | Money, ids, errors (RFC 9457), chains and the mainnet lock, assets, canonical JSON, RFC 9421 request signing, webhook HMAC, EIP-712 owner authorizations, policy and mandate schemas, **the API contract** (`src/api/routes.ts`) and the OpenAPI generator           |
+| `packages/db`             | `SqlClient` over node-postgres or PGlite, serializable transactions with retry, SQL migrations                                                                                                                                                                       |
+| `packages/ledger`         | Double-entry ledger: accounts, journal entries, holds (post/void/expire), reversals, idempotency, invariants. `InMemoryLedger` and `PostgresLedger` behind one `Ledger` interface                                                                                    |
+| `packages/policy`         | Deterministic policy evaluator, policy diff (tighten/loosen), mandate compiler, session-scope compiler, auto-save rules                                                                                                                                              |
+| `packages/reconciliation` | The reconciler mounted inside the API at `/internal/v1/*`: matches chain events to expected movements, posts ledger entries, settles payments/escrows/streams, raises suspense and mismatch events, reverses entries on reorgs (contract: `core/src/indexer-api.ts`) |
+| `packages/chain`          | `ChainGateway` interface with `SimulatedChain` (in-memory, reorg injection) and `EvmChainGateway` (Base Sepolia/Anvil via viem + permissionless + Rhinestone module-sdk); contract ABIs and addresses                                                                |
+| `packages/sdk-ts`         | `@agentbank/sdk`: typed client, session keys, request signing, x402 client and seller middleware, webhook verification                                                                                                                                               |
+| `packages/mcp`            | `@agentbank/mcp`: MCP server exposing money tools to agents (stdio + streamable HTTP)                                                                                                                                                                                |
 
 Migrations live in `packages/db/migrations` and are owned by domain: `0001_ledger.sql`
 (ledger), `0002_core.sql` (identity, authority, payments …), `0003_chain.sql` (indexer),
@@ -159,7 +160,14 @@ Two-phase movement: a **hold** reserves funds at authorization, then is **posted
 confirmation (optionally for a smaller amount, releasing the remainder) or **voided** on
 failure/expiry. Holds expire (default: signature deadline + 1 h); the worker voids them.
 
-### Reconciliation (indexer)
+### Reconciliation (indexer + reconciler)
+
+The indexer runs in its own cloud account with its own database and never touches the ledger
+database. It fetches the watchlist (`GET /internal/v1/watchlist`), reads logs, and pushes
+normalized events (`POST /internal/v1/chain-events`, `…/reorg`) to the API, authenticated with
+`signInternalRequest` and `INTERNAL_API_SHARED_SECRET`. The reconciler
+(`packages/reconciliation`, mounted in the API process) does the matching and posting inside
+the API's database transaction, idempotently by event id. Contract: `core/src/indexer-api.ts`.
 
 - Reads USDC `Transfer` and `AuthorizationUsed` events for every known address (account,
   spend key, treasury, bank revenue) plus all events of the escrow, streams and vault

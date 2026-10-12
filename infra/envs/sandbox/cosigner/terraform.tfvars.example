@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. No secrets belong in this file.
+
+account_id     = "111111111111" # sandbox co-signer account
+api_account_id = "222222222222" # sandbox API account (only principal allowed to connect)
+region         = "us-east-1"
+
+# Immutable image tag (git SHA) pushed to this account's ECR repository (output ecr_repository_url).
+# For the very first apply, before any image exists, set cosigner_min_count = 0.
+image_tag = "0123456789abcdef0123456789abcdef01234567"
+
+# chain_id = 84532   # Base Sepolia only; 8453 (mainnet) is rejected by validation.
+
+# availability_zone_ids = ["use1-az1", "use1-az2"]  # must overlap the API account's AZ IDs
+
+# Second pass, after envs/sandbox/api has created its endpoint (output cosigner_vpc_endpoint_id):
+# accepted_api_endpoint_ids = ["vpce-0123456789abcdef0"]
+
+# Sandbox keeps a short COMPLIANCE retention: locked objects (and the bucket) cannot be deleted
+# by anyone until they expire.
+audit_log_retention_days = 30
+
+alarm_email_addresses = ["oncall@example.com"]

@@ -246,7 +246,10 @@ export class PgliteClient implements SqlClient {
  * Create a client from a connection string. `pglite://memory` (or an empty
  * string) gives an in-process database; `pglite:///path` persists to disk.
  */
-export async function createSqlClient(url: string | undefined, options: Omit<PgClientOptions, "connectionString"> = {}): Promise<SqlClient> {
+export async function createSqlClient(
+  url: string | undefined,
+  options: Omit<PgClientOptions, "connectionString"> = {},
+): Promise<SqlClient> {
   if (!url || url === "pglite://memory") return PgliteClient.create();
   if (url.startsWith("pglite://")) return PgliteClient.create(url.slice("pglite://".length));
   return new PgClient({ connectionString: url, ...options });

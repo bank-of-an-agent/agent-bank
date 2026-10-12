@@ -206,3 +206,32 @@ describe("canonical JSON and audit chain", () => {
     expect(verifyAuditChain(records.filter((_, i) => i !== 6))).toBe(6);
   });
 });
+
+describe("internal request auth", () => {
+  it("binds time, method, path and body", async () => {
+    const { signInternalRequest, verifyInternalRequest } = await import("../src/cosigner-api");
+    const header = signInternalRequest("s3cret", "POST", "/internal/v1/cosign", '{"a":1}', NOW);
+    expect(() =>
+      verifyInternalRequest("s3cret", header, "POST", "/internal/v1/cosign", '{"a":1}', NOW + 5),
+    ).not.toThrow();
+    expect(() =>
+      verifyInternalRequest("s3cret", header, "POST", "/internal/v1/freeze", '{"a":1}', NOW),
+    ).toThrow(/invalid/);
+    expect(() =>
+      verifyInternalRequest("s3cret", header, "GET", "/internal/v1/cosign", '{"a":1}', NOW),
+    ).toThrow(/invalid/);
+    expect(() =>
+      verifyInternalRequest("s3cret", header, "POST", "/internal/v1/cosign", '{"a":2}', NOW),
+    ).toThrow(/invalid/);
+    expect(() =>
+      verifyInternalRequest("other", header, "POST", "/internal/v1/cosign", '{"a":1}', NOW),
+    ).toThrow(/invalid/);
+    expect(() =>
+      verifyInternalRequest("s3cret", header, "POST", "/internal/v1/cosign", '{"a":1}', NOW + 120),
+    ).toThrow(/expired/);
+    expect(() => verifyInternalRequest("s3cret", undefined, "POST", "/x", "", NOW)).toThrow(/Missing/);
+    expect(() =>
+      verifyInternalRequest("s3cret", "AgentBank-Internal t=1,v1=zz", "POST", "/x", "", 1),
+    ).toThrow(/Malformed/);
+  });
+});

@@ -2,3 +2,10 @@ packages:
   - "apps/*"
   - "packages/*"
   - "examples/*"
+
+# Dependencies allowed to run install scripts (pnpm 10+).
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - sharp
+  - unrs-resolver

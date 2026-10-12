@@ -17,7 +17,8 @@
 **/.turbo
 **/dist
 **/.next
-**/out
+# turbo prune output (only at the root; packages may legitimately have out/ directories)
+out
 **/coverage
 **/.nyc_output
 **/*.tsbuildinfo
@@ -39,7 +40,6 @@ result-*
 **/*.p12
 **/*.pfx
 **/*.keystore
-**/secrets
 **/.secrets
 
 # Logs
@@ -47,8 +47,9 @@ result-*
 **/npm-debug.log*
 **/pnpm-debug.log*
 
-# Not needed to build or run the Node services
+# Not needed to build or run the Node services (except the container health probe)
 infra
+!infra/docker/healthcheck.cjs
 contracts/out
 contracts/cache
 contracts/broadcast

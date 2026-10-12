@@ -80,10 +80,11 @@ RUN --mount=type=cache,id=agentbank-pnpm-store,target=/pnpm/store \
  && for output in dist .next public; do \
       if [ -e "apps/${APP}/${output}" ]; then rm -rf "/out/${output}" && cp -a "apps/${APP}/${output}" "/out/${output}"; fi; \
     done \
- && rm -rf /out/.next/cache \
+ && rm -rf /out/.next/cache /out/.turbo \
  && if [ ! -f /out/dist/index.js ] && [ ! -d /out/.next ]; then \
       echo "error: apps/${APP} produced neither dist/index.js nor .next/" >&2; exit 1; \
-    fi
+    fi \
+ && mkdir -p /scratch/empty
 
 # -----------------------------------------------------------------------------------------
 # 3. Runtime: distroless (no shell, no package manager), non-root uid 65532. Application
@@ -94,7 +95,7 @@ ARG APP
 ARG VERSION=0.0.0-dev
 ARG GIT_SHA=unknown
 ARG BUILD_DATE=unknown
-ARG SOURCE_URL=https://github.com/agent-bank/agent-bank
+ARG SOURCE_URL=https://github.com/bank-of-an-agent/agent-bank
 LABEL org.opencontainers.image.title="agent-bank-${APP}" \
       org.opencontainers.image.description="Agent Bank ${APP} service. Base Sepolia (testnet) only." \
       org.opencontainers.image.vendor="Agent Bank" \
@@ -107,22 +108,19 @@ LABEL org.opencontainers.image.title="agent-bank-${APP}" \
 ENV NODE_ENV=production \
     NODE_OPTIONS=--enable-source-maps \
     HEALTHCHECK_PATH=/healthz
+# Run the filesystem steps as root (distroless defaults to nonroot, and BuildKit creates
+# WORKDIR as the current user) so that /app and everything in it is root-owned (dirs 0755,
+# files 0644) and cannot be modified by the runtime user.
+USER 0:0
 WORKDIR /app
 COPY --from=builder --chown=0:0 /out/ /app/
 # Health probe shared by Docker HEALTHCHECK and the ECS task definition (no shell or curl in
-# distroless). Healthy = GET http://127.0.0.1:$PORT$HEALTHCHECK_PATH returns 2xx within 3s.
-COPY --chown=0:0 --chmod=0444 <<'EOF' /usr/local/lib/agentbank/healthcheck.cjs
-"use strict";
-const http = require("node:http");
-const port = Number(process.env.PORT || 8080);
-const path = process.env.HEALTHCHECK_PATH || "/healthz";
-const req = http.get({ host: "127.0.0.1", port, path, timeout: 3000 }, (res) => {
-  res.resume();
-  process.exit(res.statusCode >= 200 && res.statusCode < 300 ? 0 : 1);
-});
-req.on("timeout", () => req.destroy(new Error("timeout")));
-req.on("error", () => process.exit(1));
-EOF
+# distroless): exits 0 when GET http://127.0.0.1:$PORT$HEALTHCHECK_PATH returns 2xx within 3s.
+COPY --chown=0:0 infra/docker/healthcheck.cjs /usr/local/lib/agentbank/healthcheck.cjs
+# Writable scratch space for a read-only root filesystem. On Fargate a task volume mounted at a
+# path declared as VOLUME in the image inherits that path's ownership and mode (here /tmp,
+# 1777); otherwise it is root:0755 and unwritable for the non-root user.
+VOLUME ["/tmp"]
 USER 65532:65532
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
   CMD ["/nodejs/bin/node", "/usr/local/lib/agentbank/healthcheck.cjs"]
@@ -151,8 +149,13 @@ CMD ["dist/index.js"]
 FROM runtime-base AS runtime-console
 ENV PORT=3000 \
     HOSTNAME=0.0.0.0
+# Next.js writes its image/ISR cache here; owned by the runtime user and declared as a volume
+# for the same reason as /tmp.
+COPY --from=builder --chown=65532:65532 /scratch/empty /app/.next/cache
+VOLUME ["/app/.next/cache"]
 EXPOSE 3000
 CMD ["node_modules/next/dist/bin/next", "start"]
 
-# Final image: the runtime stage named after APP.
+# Final image: the runtime stage named after APP (a stage reference, not a registry image).
+# hadolint ignore=DL3006
 FROM runtime-${APP}

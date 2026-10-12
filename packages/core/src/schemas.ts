@@ -46,7 +46,15 @@ export const DomainSchema = z
     /^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*$/,
     "must be a lowercase hostname",
   )
+  .refine((host) => !/^[0-9]+$/.test(host.split(".").at(-1) ?? "") && !/(^|\.)0x/.test(host), {
+    message: "must be a hostname, not an IP address",
+  })
   .meta({ description: "Lowercase hostname, e.g. api.example-data.com" });
+
+/** ERC-8004 global agent id (printable ASCII, no whitespace). */
+export const Erc8004IdSchema = z
+  .string()
+  .regex(/^[\x21-\x7E]{1,200}$/, "must be printable ASCII without whitespace");
 
 export const ChainNameSchema = z.enum(["base-sepolia", "anvil", "simulated"]);
 

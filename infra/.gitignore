@@ -1,0 +1,23 @@
+# OpenTofu / Terraform working state (never commit state: it maps the security boundary)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+.terraform.tfstate.lock.info
+
+# Lock files are committed for root modules only (envs/**); running `tofu test` inside a
+# reusable module creates one there that should not be committed
+modules/**/.terraform.lock.hcl
+
+# Real variable files can contain account IDs and emails; only examples are committed
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

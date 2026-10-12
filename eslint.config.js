@@ -51,7 +51,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.test.ts", "**/test/**", "**/scripts/**", "examples/**"],
+    files: ["**/*.test.ts", "**/test/**", "**/scripts/**", "**/examples/**"],
     rules: { "no-console": "off" },
   },
   prettier,

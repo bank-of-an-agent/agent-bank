@@ -2574,11 +2574,9 @@
           "x402"
         ],
         "security": [
-          {},
           {}
         ],
         "x-agentbank-auth": [
-          "seller",
           "public"
         ],
         "x-agentbank-service": "facilitator",
@@ -2624,11 +2622,9 @@
           "x402"
         ],
         "security": [
-          {},
           {}
         ],
         "x-agentbank-auth": [
-          "seller",
           "public"
         ],
         "x-agentbank-service": "facilitator",
@@ -4837,6 +4833,43 @@
         }
       }
     },
+    "/v1/meta": {
+      "get": {
+        "operationId": "getMeta",
+        "summary": "Deployment facts: chain, USDC, contract addresses, signing chain id, features",
+        "tags": [
+          "Meta"
+        ],
+        "security": [
+          {}
+        ],
+        "x-agentbank-auth": [
+          "public"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meta"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/healthz": {
       "get": {
         "operationId": "health",
@@ -5322,7 +5355,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "minLength": 1
+                  "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
                 }
               },
               "erc8004_ids": {
@@ -5330,7 +5363,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "minLength": 1
+                  "pattern": "^[\\x21-\\x7E]{1,200}$"
                 }
               },
               "x402_domains": {
@@ -5362,7 +5395,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "minLength": 1
+                      "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
                     }
                   },
                   "erc8004_ids": {
@@ -5370,7 +5403,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "minLength": 1
+                      "pattern": "^[\\x21-\\x7E]{1,200}$"
                     }
                   },
                   "x402_domains": {
@@ -5408,10 +5441,12 @@
                           "example": "0x1111111111111111111111111111111111111111"
                         },
                         "agent_id": {
-                          "type": "string"
+                          "type": "string",
+                          "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
                         },
                         "erc8004_id": {
-                          "type": "string"
+                          "type": "string",
+                          "pattern": "^[\\x21-\\x7E]{1,200}$"
                         },
                         "x402_domain": {
                           "type": "string",
@@ -5473,6 +5508,7 @@
             "additionalProperties": false
           },
           "time_windows": {
+            "minItems": 1,
             "maxItems": 20,
             "type": "array",
             "items": {
@@ -5500,7 +5536,7 @@
                 },
                 "end": {
                   "type": "string",
-                  "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$"
+                  "pattern": "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"
                 },
                 "timezone": {
                   "default": "UTC",
@@ -5554,6 +5590,7 @@
             "example": "25.00"
           },
           "allowed_kinds": {
+            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string",
@@ -5725,6 +5762,20 @@
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp"
+          },
+          "retry_at": {
+            "description": "When a time-based denial (cooling period, time window) lifts",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "description": "ISO 8601 timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -6682,7 +6733,7 @@
           "user_op_hash": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{64}$",
-            "description": "Sign this hash with the owner key (EIP-191 personal sign)"
+            "description": "Sign the raw 32 bytes of this hash with the owner key (EIP-191 personal sign)"
           },
           "chain_id": {
             "type": "integer",
@@ -7115,6 +7166,12 @@
             "pattern": "^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\\.(?!-)[a-z0-9-]{1,63}(?<!-))*$",
             "description": "Lowercase hostname, e.g. api.example-data.com"
           },
+          "contract": {
+            "description": "Contract the payment interacts with (escrow, streams), for session allowed_contracts",
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
           "mandate_id": {
             "type": "string",
             "pattern": "^mdt_[0-9A-HJKMNP-TV-Z]{26}$"
@@ -7210,7 +7267,7 @@
           "user_op_hash": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{64}$",
-            "description": "Sign this hash with the session key (EIP-191 personal sign)"
+            "description": "Sign the raw 32 bytes of this hash with the session key (EIP-191 personal sign)"
           },
           "chain_id": {
             "type": "integer",
@@ -8202,6 +8259,23 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
             "description": "ISO 8601 timestamp"
           },
+          "pending_action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lock",
+                  "release",
+                  "refund",
+                  "dispute"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "On-chain action waiting for the session signature, if any"
+          },
           "signing_request": {
             "anyOf": [
               {
@@ -8246,6 +8320,7 @@
           "contract_address",
           "onchain_id",
           "expires_at",
+          "pending_action",
           "signing_request",
           "memo",
           "created_at",
@@ -8443,6 +8518,22 @@
               "null"
             ]
           },
+          "pending_action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "cancel",
+                  "top_up"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "On-chain action waiting for the session signature, if any"
+          },
           "signing_request": {
             "anyOf": [
               {
@@ -8476,6 +8567,7 @@
           "status",
           "contract_address",
           "onchain_id",
+          "pending_action",
           "signing_request",
           "created_at"
         ],
@@ -9853,6 +9945,137 @@
           "volume_per_org"
         ],
         "description": "Revenue by stream, gross margin and volume per org."
+      },
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "meta"
+          },
+          "api_version": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string",
+            "enum": [
+              "base-sepolia",
+              "anvil",
+              "simulated"
+            ]
+          },
+          "chain_id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "caip2": {
+            "type": "string"
+          },
+          "owner_authorization_chain_id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "EIP-712 domain chain id to use for OwnerAuthorization signatures"
+          },
+          "usdc": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "EVM address",
+                "example": "0x1111111111111111111111111111111111111111"
+              },
+              "decimals": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "eip712_name": {
+                "type": "string"
+              },
+              "eip712_version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "decimals",
+              "eip712_name",
+              "eip712_version"
+            ]
+          },
+          "contracts": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "EVM address",
+              "example": "0x1111111111111111111111111111111111111111"
+            },
+            "description": "Agent Bank contract addresses on this chain"
+          },
+          "cosigner_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "EVM address",
+                "example": "0x1111111111111111111111111111111111111111"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revenue_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "EVM address",
+                "example": "0x1111111111111111111111111111111111111111"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facilitator_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "features": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          }
+        },
+        "required": [
+          "object",
+          "api_version",
+          "chain",
+          "chain_id",
+          "caip2",
+          "owner_authorization_chain_id",
+          "usdc",
+          "contracts",
+          "cosigner_address",
+          "revenue_address",
+          "facilitator_url",
+          "features"
+        ],
+        "description": "Deployment facts clients need: chain, USDC, contract addresses, feature flags."
       },
       "Problem": {
         "type": "object",
