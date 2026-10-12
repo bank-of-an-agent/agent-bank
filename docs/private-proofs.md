@@ -199,9 +199,13 @@ Known limits, stated plainly:
 - **Public signals (30):** `nullifier, root, scope, nonce, mins[13], maxs[13]`.
 - **Scope:** for an HTTP verifier, `scope = keccak256(utf8("agentbank.proofs.scope.v1:" +
 scope_id)) mod r`, where `scope_id` is the verifier's host name (or any identifier up to 253
-  characters) and `r` is the BN254 scalar field order. For an on-chain consumer, `scope =
-keccak256(abi.encode("agentbank.proofs.scope.v1", chainId, consumer, context)) mod r`
-  (`AgentClaimsVerifier.scopeOf`). The reservation tag is `scope mod 2^64`.
+  characters) and `r` is the BN254 scalar field order. An on-chain consumer's scope id is
+  `eip155:<chainId>:<consumer>:<context>` (chain id in base 10 without leading zeros, at most 32
+  digits; consumer `0x` + 40 and context `0x` + 64 hex digits, either case; host names never
+  contain `:`). Exactly that form maps to
+  `scope = keccak256(abi.encode("agentbank.proofs.scope.v1", chainId, consumer, context)) mod r`,
+  which is `AgentClaimsVerifier.scopeOf(consumer, context)` on that chain; any other id is hashed
+  as a string. The reservation tag is `scope mod 2^64` either way.
 - **Nonce:** 31 bytes (fits the field). Stateless verifiers derive it as the first 31 bytes of
   `HMAC-SHA256(gate_key, canonicalJson(request without nonce))` and remember used nonces until
   the request expires.
@@ -241,6 +245,10 @@ sync-circuits`, which checks the manifest hashes.
 - Money attributes (`per_tx_limit`, `per_day_limit`, `balance`, `reserved_amount`,
   `volume_settled`) take decimal USDC strings; every other attribute takes base-10 integer
   strings. Omitted attributes and omitted `min`/`max` are unconstrained.
+- `scope` is the verifier's host name, or for a contract that calls `verifyAndConsume` the on-chain
+  scope id `eip155:<chainId>:<consumer>:<context>` (SDK builder `onchainScopeId`). The SDKs'
+  automatic HTTP flow only answers scopes equal to the challenging host, so agents prove on-chain
+  requests explicitly (`agent.proofs.prove(request)`).
 - `request_hash = canonicalKeccak(request)` (the same canonical JSON as owner authorizations).
 - SDK builders: `verifiedPrincipal()`, `verifiedCompany()`, `canPayPerTx(amount)`,
   `canPayPerDay(amount)`, `spendingCappedAt({ perTx, perDay })`, `balanceAtLeast(amount)`,
@@ -332,7 +340,9 @@ validUntil ≤ now + 7 days`, `leafCount > 0`, and a root not published before.
 - `verifyAndConsume(context, claims, proof, minAnonymitySet, maxRootAge)`: requires `claims.scope
 == scopeOf(msg.sender, context)`, marks `(scope, nonce)` used, emits `ClaimsAccepted` and
   returns the nullifier, so a contract can admit each agent once (sybil-resistant voting,
-  allowlists, marketplace admission).
+  allowlists, marketplace admission). Proofs for it answer a request whose scope is
+  `eip155:<chainId>:<consumer>:<context>`; `toClaimsVerifierArgs(request, presentation)`
+  (`to_claims_verifier_args` in Python) builds `claims` and `proof`.
 
 ## API
 
@@ -364,10 +374,14 @@ only like everything else).
   `agent.proofs.reserve({ amount, scope, expiresAt })`; `fetchWithPayment` answers proof
   challenges automatically when the agent has a proof secret. Verifiers use
   `@agentbank/sdk/proof-server`: `createProofGate({ scope, key, require })` plus adapters for
-  Web `Request`, Express, Hono, Fastify and Node, mirroring the x402 paywall.
+  Web `Request`, Express, Hono, Fastify and Node, mirroring the x402 paywall, and
+  `onchainScopeId` / `toClaimsVerifierArgs` / `CLAIMS_VERIFIER_ABI` for `AgentClaimsVerifier`.
 - **Python:** `agentbank.proofs` builds requests, verifies presentations (pure Python, `py_ecc`)
-  and runs a stateless `ProofGate`; proving shells out to the `agentbank-prove` CLI from
-  `@agentbank/proofs`, because proving needs the circuit's WebAssembly witness generator.
+  and runs a stateless `ProofGate` (`check`, or `peek` then `commit` in front of a paywall);
+  `onchain_scope_id` and `to_claims_verifier_args` cover on-chain consumers. Proving shells out to
+  the `agentbank-prove` CLI from `@agentbank/proofs`, because proving needs the circuit's
+  WebAssembly witness generator. Both SDKs apply the probing guard (30 proofs per scope per hour
+  by default).
 - **MCP:** `prove_claims` and `reserve_funds_for_proof` tools; `fetch_paid_resource` answers
   proof challenges.
 - **Console:** a "Private proofs" card per agent: enable, choose classes (owner signature when

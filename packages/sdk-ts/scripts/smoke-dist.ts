@@ -70,7 +70,12 @@ const rootInfo = {
   revoked: false,
 };
 
-async function proveWith(sdk: typeof Sdk, label: string, prover?: Sdk.Prover): Promise<void> {
+async function proveWith(
+  sdk: typeof Sdk,
+  label: string,
+  prover?: Sdk.Prover,
+  scope = "api.seller.example",
+): Promise<{ request: Sdk.ProofRequest; presentation: Sdk.ProofPresentation }> {
   const agent = new sdk.AgentClient({
     baseUrl: "http://agentbank.test",
     accountId: ACCOUNT,
@@ -84,7 +89,7 @@ async function proveWith(sdk: typeof Sdk, label: string, prover?: Sdk.Prover): P
     },
   });
   const request = server.createProofRequest({
-    scope: "api.seller.example",
+    scope,
     require: [server.verifiedCompany(), server.canPayPerTx("5.00"), server.balanceAtLeast("1000.00")],
   });
   const started = Date.now();
@@ -93,9 +98,29 @@ async function proveWith(sdk: typeof Sdk, label: string, prover?: Sdk.Prover): P
   if (!result.valid) throw new Error(`${label}: the built SDK's proof did not verify (${result.reason})`);
   console.log(`${label}: proved in ${Date.now() - started} ms, verified; nullifier ${result.nullifier}`);
   await sdk.releaseProofResources();
+  return { request, presentation };
 }
 
 await proveWith(esm, "dist/index.js (ESM)");
 await proveWith(cjs, "dist/index.cjs (CommonJS)");
 await proveWith(esm, "dist/index.js with nodeProver from dist/prover.js", proverEntry.nodeProver);
+
+// An on-chain consumer's scope id, proved explicitly, and AgentClaimsVerifier calldata from both
+// built entries that export it.
+const consumer = "0x00000000000000000000000000000000000a11ce";
+const context = `0x${"42".repeat(32)}` as const;
+const onchainId = esm.onchainScopeId(84532, consumer, context);
+const onchain = await proveWith(esm, `dist/index.js for ${onchainId.slice(0, 20)}…`, undefined, onchainId);
+const args = server.toClaimsVerifierArgs(onchain.request, onchain.presentation);
+if (
+  args.claims.scope !== server.onchainScope(84532, consumer, context) ||
+  args.claims.scope !== esm.scopeField(onchainId) ||
+  args.claims.mins.length !== 13 ||
+  JSON.stringify(proverEntry.toClaimsVerifierArgs(onchain.request, onchain.presentation), (_, v: unknown) =>
+    typeof v === "bigint" ? v.toString() : v,
+  ) !== JSON.stringify(args, (_, v: unknown) => (typeof v === "bigint" ? v.toString() : v))
+) {
+  throw new Error("the built SDK's AgentClaimsVerifier calldata is inconsistent");
+}
+console.log(`toClaimsVerifierArgs: scope ${args.claims.scope} = scopeOf(consumer, context)`);
 await server.releaseProverResources();

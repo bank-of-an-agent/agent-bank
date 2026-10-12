@@ -17,6 +17,7 @@
     "./verifier": "./src/verifier.ts",
     "./http": "./src/http.ts",
     "./prover": "./src/prover.ts",
+    "./onchain": "./src/onchain.ts",
     "./artifacts": "./src/artifacts.ts",
     "./cli": "./src/cli.ts",
     "./verification_key.json": "./artifacts/verification_key.json",

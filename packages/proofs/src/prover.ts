@@ -183,44 +183,14 @@ export async function prove(args: ProveArgs): Promise<ProofPresentation> {
   return presentation;
 }
 
-/** A Groth16 proof in the Solidity verifier's calldata order (`b` pairs swapped, as snarkjs exports). */
-export interface SolidityProof {
-  a: readonly [bigint, bigint];
-  b: readonly [readonly [bigint, bigint], readonly [bigint, bigint]];
-  c: readonly [bigint, bigint];
-}
-
-export function toSolidityProof(presentation: Pick<ProofPresentation, "proof">): SolidityProof {
-  const { pi_a, pi_b, pi_c } = presentation.proof;
-  return {
-    a: [BigInt(pi_a[0]), BigInt(pi_a[1])],
-    b: [
-      [BigInt(pi_b[0][1]), BigInt(pi_b[0][0])],
-      [BigInt(pi_b[1][1]), BigInt(pi_b[1][0])],
-    ],
-    c: [BigInt(pi_c[0]), BigInt(pi_c[1])],
-  };
-}
-
-/** `IAgentClaimsVerifier.Claims` for a request and presentation (for on-chain verification). */
-export function toSolidityClaims(
-  request: ProofRequest,
-  presentation: Pick<ProofPresentation, "root" | "nullifier">,
-): {
-  root: Hex;
-  nullifier: bigint;
-  scope: bigint;
-  nonce: bigint;
-  mins: bigint[];
-  maxs: bigint[];
-} {
-  const { mins, maxs } = bounds(request);
-  return {
-    root: toBytes32(fromBytes32(presentation.root)),
-    nullifier: fromBytes32(presentation.nullifier),
-    scope: scopeField(request.scope),
-    nonce: nonceField(request.nonce),
-    mins,
-    maxs,
-  };
-}
+export {
+  CLAIMS_VERIFIER_ABI,
+  toClaimsVerifierArgs,
+  toSolidityClaims,
+  toSolidityProof,
+  type ClaimsVerifierArgs,
+  type ClaimsVerifierClaims,
+  type ClaimsVerifierProof,
+  type SolidityProof,
+  type U64x13,
+} from "./onchain";

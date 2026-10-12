@@ -10,6 +10,10 @@
  * require a proof and a payment: put the gate first with `{ beforePaywall: true }`, then the
  * paywall from `@agentbank/sdk/x402-server`.
  *
+ * On-chain consumers ask for proofs with `scope: onchainScopeId(chainId, consumer, context)` and
+ * pass {@link toClaimsVerifierArgs} to `AgentClaimsVerifier.verify` or `verifyAndConsume`
+ * ({@link CLAIMS_VERIFIER_ABI}).
+ *
  * @example
  * ```ts
  * import { apiRootResolver, canPayPerTx, createProofGate, honoProofGate, verifiedCompany } from "@agentbank/sdk/proof-server";
@@ -99,7 +103,24 @@ export {
   type VerifyPresentationArgs,
 } from "@agentbank/proofs/verifier";
 
-export { onchainScope, scopeField, scopeTagOf } from "@agentbank/proofs/field";
+export {
+  isOnchainScopeId,
+  onchainScope,
+  onchainScopeId,
+  parseOnchainScopeId,
+  scopeField,
+  scopeTagOf,
+  type OnchainScopeRef,
+} from "@agentbank/proofs/field";
+
+export {
+  CLAIMS_VERIFIER_ABI,
+  toClaimsVerifierArgs,
+  type ClaimsVerifierArgs,
+  type ClaimsVerifierClaims,
+  type ClaimsVerifierProof,
+  type U64x13,
+} from "@agentbank/proofs/onchain";
 export { ProofRequestError } from "@agentbank/proofs";
 
 export type { ProofFailureReason, ProofPresentation, ProofRequest } from "./types";

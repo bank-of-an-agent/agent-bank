@@ -6,6 +6,7 @@ import {
   AgentClient,
   fetchWithProof,
   generateProofSecret,
+  onchainScopeId,
   ProofError,
   releaseProofResources,
   requestHash,
@@ -180,6 +181,26 @@ describe("fetchWithPayment answers proof challenges, then pays", () => {
     const error = await client.fetchWithPayment(URL_).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ProofError);
     expect(error).toMatchObject({ reason: "scope_mismatch", code: "forbidden" });
+    expect(witnessFetches()).toBe(before);
+  });
+
+  it("never answers a challenge for an on-chain scope id, even when acceptScope allows it", async () => {
+    const onchain = onchainScopeId(84532, SELLER, `0x${"01".repeat(32)}`);
+    const shop = seller({ gate: { scope: onchain } });
+    const client = agent({
+      x402: { network: "eip155:84532", fetch: shop.fetch },
+      proofs: { acceptScope: () => true },
+    });
+    const before = witnessFetches();
+    const error = await client.fetchWithPayment(URL_).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ProofError);
+    expect(error).toMatchObject({ reason: "scope_mismatch", request: { scope: onchain } });
+    expect((error as Error).message).toMatch(/on-chain scope/);
+    const standalone = await fetchWithProof(shop.fetch, URL_, undefined, {
+      prover: client.proofs,
+      acceptScope: () => true,
+    }).catch((e: unknown) => e);
+    expect(standalone).toMatchObject({ reason: "scope_mismatch" });
     expect(witnessFetches()).toBe(before);
   });
 });

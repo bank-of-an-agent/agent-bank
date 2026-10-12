@@ -1,3 +1,4 @@
+import { isOnchainScopeId } from "@agentbank/proofs/field";
 import { parseProofRequest } from "@agentbank/proofs/request";
 import type { Hex } from "viem";
 import type { FetchLike } from "../client";
@@ -89,7 +90,8 @@ function parseChallenge(http: typeof ProofHttp, header: string): ProofRequest {
  * the request retried with `AGENT-PROOF`. The proof is kept for later requests through the
  * same session (the x402 paid retry carries it too); when a later request is challenged again
  * (e.g. the gate used up the nonce), a fresh proof is made once. A fresh proof answered with
- * another challenge is a rejection ({@link ProofError} `proof_rejected`).
+ * another challenge is a rejection ({@link ProofError} `proof_rejected`). Challenges for an
+ * on-chain scope id (`eip155:…`) are refused (`scope_mismatch`) whatever `acceptScope` says.
  */
 export function createProofFetch(fetchImpl: FetchLike, options: ProofFetchOptions): ProofFetchSession {
   const prover = options.prover;
@@ -138,6 +140,15 @@ export function createProofFetch(fetchImpl: FetchLike, options: ProofFetchOption
       if (prover.canProve === false) return response;
       const challengeUrl = new URL(response.url || url);
       const request = parseChallenge(http, challenge);
+      if (isOnchainScopeId(request.scope)) {
+        // Never answered over HTTP, whatever acceptScope says: the server could submit the proof
+        // to that contract as this agent. On-chain requests are proved explicitly (proofs.prove).
+        throw new ProofError(
+          "scope_mismatch",
+          `${challengeUrl.host} asked for a proof for the on-chain scope "${request.scope}"; the automatic flow only proves to the host that asks (prove on-chain requests explicitly with proofs.prove)`,
+          { request },
+        );
+      }
       if (!acceptScope(request.scope, challengeUrl)) {
         throw new ProofError(
           "scope_mismatch",

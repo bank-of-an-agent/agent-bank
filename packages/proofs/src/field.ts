@@ -45,21 +45,79 @@ export function toField(value: bigint | string): bigint {
 }
 
 /**
- * The scope of an HTTP (off-chain) verifier: keccak256(utf8("agentbank.proofs.scope.v1:" +
- * scopeId)) mod r, where `scopeId` is the verifier's host name or any identifier of 1 to 253
- * characters.
+ * An on-chain scope id: `eip155:<chainId>:<consumer>:<context>`, with the chain id in base 10
+ * (1 to 32 digits, no leading zero), the consumer as 0x + 40 hex digits and the context as 0x +
+ * 64 hex digits (either case). Host names never contain ":", so no HTTP scope looks like one.
+ */
+const ONCHAIN_SCOPE_ID_RE = /^eip155:([1-9][0-9]{0,31}):(0x[0-9a-fA-F]{40}):(0x[0-9a-fA-F]{64})$/;
+
+/** The parts of an on-chain scope id. */
+export interface OnchainScopeRef {
+  chainId: bigint;
+  /** The consuming contract, checksummed. */
+  consumer: Address;
+  /** The consumer's 32-byte context, lowercase. */
+  context: Hex;
+}
+
+/**
+ * The scope id of an on-chain consumer (`msg.sender` of `AgentClaimsVerifier.verifyAndConsume`
+ * on chain `chainId`, with `context`): `eip155:<chainId>:<consumer>:<context>`, hex in lowercase.
+ * Proof requests carry it as `scope`; `scopeField` maps it to `scopeOf(consumer, context)`.
+ */
+export function onchainScopeId(chainId: number | bigint, consumer: string, context: string): string {
+  const chain = typeof chainId === "number" && Number.isSafeInteger(chainId) ? BigInt(chainId) : chainId;
+  if (typeof chain !== "bigint" || chain < 1n || chain.toString().length > 32) {
+    throw new RangeError("chainId must be a positive integer of at most 32 digits");
+  }
+  if (typeof consumer !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(consumer)) {
+    throw new RangeError("consumer must be a 0x-prefixed 20-byte hex address");
+  }
+  if (typeof context !== "string" || !BYTES32_RE.test(context)) {
+    throw new RangeError("context must be 0x-prefixed 32-byte hex");
+  }
+  return `eip155:${chain}:${consumer.toLowerCase()}:${context.toLowerCase()}`;
+}
+
+/** The chain, consumer and context of an on-chain scope id; null for any other scope. */
+export function parseOnchainScopeId(scopeId: string): OnchainScopeRef | null {
+  const match = typeof scopeId === "string" ? ONCHAIN_SCOPE_ID_RE.exec(scopeId) : null;
+  if (match === null) return null;
+  const [, chain, consumer, context] = match as unknown as [string, string, string, string];
+  return {
+    chainId: BigInt(chain),
+    consumer: getAddress(consumer.toLowerCase()),
+    context: context.toLowerCase() as Hex,
+  };
+}
+
+/** Whether `scopeId` is an on-chain scope id (`eip155:<chainId>:<consumer>:<context>`). */
+export function isOnchainScopeId(scopeId: string): boolean {
+  return parseOnchainScopeId(scopeId) !== null;
+}
+
+/**
+ * The field element of a scope id (1 to 253 characters):
+ *
+ * - an on-chain scope id `eip155:<chainId>:<consumer>:<context>` maps to
+ *   `onchainScope(chainId, consumer, context)`, which equals
+ *   `AgentClaimsVerifier.scopeOf(consumer, context)` on that chain;
+ * - any other identifier (an HTTP verifier's host name) maps to
+ *   keccak256(utf8("agentbank.proofs.scope.v1:" + scopeId)) mod r.
  */
 export function scopeField(scopeId: string): bigint {
   if (typeof scopeId !== "string" || scopeId.length === 0 || scopeId.length > MAX_SCOPE_LENGTH) {
     throw new RangeError(`scope must be 1 to ${MAX_SCOPE_LENGTH} characters`);
   }
+  const onchain = parseOnchainScopeId(scopeId);
+  if (onchain !== null) return onchainScope(onchain.chainId, onchain.consumer, onchain.context);
   return BigInt(keccak256(stringToBytes(`${SCOPE_DOMAIN}:${scopeId}`))) % SNARK_SCALAR_FIELD;
 }
 
 /**
  * The scope of an on-chain consumer, equal to `AgentClaimsVerifier.scopeOf(consumer, context)`
  * on chain `chainId`: keccak256(abi.encode("agentbank.proofs.scope.v1", chainId, consumer,
- * context)) mod r.
+ * context)) mod r. Requests name it with `onchainScopeId(chainId, consumer, context)`.
  */
 export function onchainScope(chainId: number | bigint, consumer: Address, context: Hex): bigint {
   if (!BYTES32_RE.test(context)) throw new RangeError("context must be 0x-prefixed 32-byte hex");

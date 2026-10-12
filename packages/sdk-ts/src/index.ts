@@ -102,7 +102,14 @@ export {
   type ReservationNeeded,
 } from "./proofs/errors";
 export { generateProofSecret, identityCommitment } from "@agentbank/proofs/tree";
-export { scopeField, scopeTagOf } from "@agentbank/proofs/field";
+export {
+  isOnchainScopeId,
+  onchainScopeId,
+  parseOnchainScopeId,
+  scopeField,
+  scopeTagOf,
+  type OnchainScopeRef,
+} from "@agentbank/proofs/field";
 export { parseProofRequest, requestHash } from "@agentbank/proofs/request";
 
 export {

@@ -21,11 +21,24 @@
       "counterparties"
     ],
     "disclosure_classes": {
-      "principal": ["principal_verification"],
-      "limits": ["per_tx_limit", "per_day_limit"],
-      "balance": ["balance"],
-      "reservations": ["reserved_amount", "reserved_until", "reserved_for"],
-      "account_age": ["account_created_on"],
+      "principal": [
+        "principal_verification"
+      ],
+      "limits": [
+        "per_tx_limit",
+        "per_day_limit"
+      ],
+      "balance": [
+        "balance"
+      ],
+      "reservations": [
+        "reserved_amount",
+        "reserved_until",
+        "reserved_for"
+      ],
+      "account_age": [
+        "account_created_on"
+      ],
       "reputation": [
         "payments_settled",
         "volume_settled",
@@ -42,35 +55,58 @@
       "mask": 0
     },
     {
-      "classes": ["principal"],
+      "classes": [
+        "principal"
+      ],
       "mask": 1
     },
     {
-      "classes": ["limits"],
+      "classes": [
+        "limits"
+      ],
       "mask": 6
     },
     {
-      "classes": ["balance"],
+      "classes": [
+        "balance"
+      ],
       "mask": 8
     },
     {
-      "classes": ["reservations"],
+      "classes": [
+        "reservations"
+      ],
       "mask": 112
     },
     {
-      "classes": ["account_age"],
+      "classes": [
+        "account_age"
+      ],
       "mask": 128
     },
     {
-      "classes": ["reputation"],
+      "classes": [
+        "reputation"
+      ],
       "mask": 7936
     },
     {
-      "classes": ["principal", "limits", "reputation"],
+      "classes": [
+        "principal",
+        "limits",
+        "reputation"
+      ],
       "mask": 7943
     },
     {
-      "classes": ["principal", "limits", "balance", "reservations", "account_age", "reputation"],
+      "classes": [
+        "principal",
+        "limits",
+        "balance",
+        "reservations",
+        "account_age",
+        "reputation"
+      ],
       "mask": 8191
     }
   ],
@@ -133,6 +169,182 @@
       "context": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "scope": "12161478115592592256132410248367640299681992441465266964312437898907801951678",
       "tag": "12905285381166013886"
+    }
+  ],
+  "onchain_scope_ids": [
+    {
+      "chain_id": "84532",
+      "consumer": "0x00000000000000000000000000000000000a11ce",
+      "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "parsed": {
+        "chain_id": "84532",
+        "consumer": "0x00000000000000000000000000000000000A11cE",
+        "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68"
+      },
+      "scope": "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+      "scope_bytes32": "0x2fcdc29b33cc8a15e9649724756a35b3ef08688329524ef5966b3be044b00684",
+      "tag": "10838822762608330372"
+    },
+    {
+      "chain_id": "84532",
+      "consumer": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "context": "0xCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCD",
+      "scope_id": "eip155:84532:0x70997970c51812dc3a010c7d01b50e0d17dc79c8:0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "parsed": {
+        "chain_id": "84532",
+        "consumer": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        "context": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+      },
+      "scope": "1733803562610222541627226404817868116086515479245362593332970052288790748685",
+      "scope_bytes32": "0x03d54c4c629ae524ad2d2a40366af4d17f7087963c471f54178aebdbff3d5e0d",
+      "tag": "1696427539770990093"
+    },
+    {
+      "chain_id": "31337",
+      "consumer": "0x5FBDB2315678AFECB367F032D93F642F64180AA3",
+      "context": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "scope_id": "eip155:31337:0x5fbdb2315678afecb367f032d93f642f64180aa3:0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "parsed": {
+        "chain_id": "31337",
+        "consumer": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        "context": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "scope": "12161478115592592256132410248367640299681992441465266964312437898907801951678",
+      "scope_bytes32": "0x1ae32716472f46f452403015abda9c9ab047c19a74434989b318c8add5711dbe",
+      "tag": "12905285381166013886"
+    },
+    {
+      "chain_id": "99999999999999999999999999999999",
+      "consumer": "0x1111111111111111111111111111111111111111",
+      "context": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "scope_id": "eip155:99999999999999999999999999999999:0x1111111111111111111111111111111111111111:0x0000000000000000000000000000000000000000000000000000000000000000",
+      "parsed": {
+        "chain_id": "99999999999999999999999999999999",
+        "consumer": "0x1111111111111111111111111111111111111111",
+        "context": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "scope": "13738220360520355598010147833020511758255204632938735589011954896445836122343",
+      "scope_bytes32": "0x1e5f8ea29b7f65824f970562891ab916cf9dd4b177ee6fb9609e72dcd1c458e7",
+      "tag": "6962128366699043047"
+    }
+  ],
+  "scope_id_cases": [
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": true,
+      "scope": "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+      "tag": "10838822762608330372"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000A11CE:0x2486D1ABABE1B60DA21BE608AA2B9FE1ABCEB2D01942060A150B931230778E68",
+      "onchain": true,
+      "scope": "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+      "tag": "10838822762608330372"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000A11CE:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": true,
+      "scope": "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+      "tag": "10838822762608330372"
+    },
+    {
+      "scope_id": "EIP155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "13005951976229875720888322543122011843136014766087604905926826715006599682980",
+      "tag": "1075122350207523748"
+    },
+    {
+      "scope_id": "eip155:0:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "4939519612048455854399911616902971010424125750948274475862951823680953151385",
+      "tag": "1650355086022176665"
+    },
+    {
+      "scope_id": "eip155:084532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "10064465179297812377898613901273493377925545008348598370360219053942952089183",
+      "tag": "15142062727749359199"
+    },
+    {
+      "scope_id": "eip155:999999999999999999999999999999999:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "19499464627142546965328886074060513010765034396792025097657008195502056471206",
+      "tag": "3346963901351262886"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "422467873999802745253868864177575766599199666191450960908829813526634568152",
+      "tag": "8587835627214346712"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e",
+      "onchain": false,
+      "scope": "17611839513127525078216121321501838655714188469587043731619196319470183112251",
+      "tag": "9321902702536285755"
+    },
+    {
+      "scope_id": "eip155:84532:00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "18966062793259013817081723740046524497956160059769981226736074671007184058766",
+      "tag": "6083396754973784462"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68:extra",
+      "onchain": false,
+      "scope": "3340578524143094844118231724567141243207242967054232516258877438226141603508",
+      "tag": "52035749201897140"
+    },
+    {
+      "scope_id": " eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "onchain": false,
+      "scope": "13541037831363774528525389373366786487643552519943609064545175092574640143465",
+      "tag": "18440784180445969513"
+    },
+    {
+      "scope_id": "eip155:84532:0x00000000000000000000000000000000000a11ce",
+      "onchain": false,
+      "scope": "18718098270044034401319725078445987343364516491437706135675084708660220887721",
+      "tag": "16819375731550814889"
+    },
+    {
+      "scope_id": "eip155:84532",
+      "onchain": false,
+      "scope": "21700048958986636154268371100085960978137100368477678245353124905765734992769",
+      "tag": "15796640960433900417"
+    }
+  ],
+  "invalid_onchain_scope_ids": [
+    {
+      "chain_id": "0",
+      "consumer": "0x00000000000000000000000000000000000a11ce",
+      "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68"
+    },
+    {
+      "chain_id": "100000000000000000000000000000000",
+      "consumer": "0x00000000000000000000000000000000000a11ce",
+      "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68"
+    },
+    {
+      "chain_id": "84532",
+      "consumer": "0x1234",
+      "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68"
+    },
+    {
+      "chain_id": "84532",
+      "consumer": "00000000000000000000000000000000000a11ce",
+      "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68"
+    },
+    {
+      "chain_id": "84532",
+      "consumer": "0x00000000000000000000000000000000000a11ce",
+      "context": "0x00"
+    },
+    {
+      "chain_id": "84532",
+      "consumer": "0x00000000000000000000000000000000000a11ce",
+      "context": "0xzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
     }
   ],
   "money_bounds": [
@@ -272,7 +484,21 @@
       },
       "canonical_json": "{\"chain_id\":84532,\"constraints\":{},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
       "request_hash": "0x325f641edccf7918cadb444dc48fb3516970dea4d934403cee933faa3ecfe7f9",
-      "mins": ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+      "mins": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
       "maxs": [
         "18446744073709551615",
         "18446744073709551615",
@@ -326,7 +552,21 @@
       },
       "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"account_created_on\":{\"max\":\"1752224100\"},\"balance\":{\"min\":\"1000.00\"},\"disputes_lost\":{\"max\":\"0\"},\"payments_settled\":{\"min\":\"10\"},\"per_tx_limit\":{\"min\":\"5.00\"},\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
       "request_hash": "0x60bd317877e5251c1cda1abc4a281514d8dcd8f3cf823e325c4af18eaa953764",
-      "mins": ["2", "5000000", "0", "1000000000", "0", "0", "0", "0", "10", "0", "0", "0", "0"],
+      "mins": [
+        "2",
+        "5000000",
+        "0",
+        "1000000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "10",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
       "maxs": [
         "2",
         "18446744073709551615",
@@ -435,6 +675,69 @@
       ]
     },
     {
+      "name": "onchain_scope",
+      "request": {
+        "type": "agentbank.proof_request.v1",
+        "scope": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+        "request_id": "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+        "nonce": "0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "issued_at": 1760000100,
+        "expires_at": 1760000400,
+        "constraints": {
+          "principal_verification": {
+            "min": "2",
+            "max": "2"
+          },
+          "reserved_amount": {
+            "min": "25.00"
+          },
+          "reserved_until": {
+            "min": "1760086500"
+          },
+          "reserved_for": {
+            "min": "10838822762608330372",
+            "max": "10838822762608330372"
+          }
+        },
+        "max_root_age_seconds": 7200,
+        "min_anonymity_set": 16,
+        "chain_id": 84532,
+        "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      },
+      "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"},\"reserved_amount\":{\"min\":\"25.00\"},\"reserved_for\":{\"max\":\"10838822762608330372\",\"min\":\"10838822762608330372\"},\"reserved_until\":{\"min\":\"1760086500\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68\",\"type\":\"agentbank.proof_request.v1\"}",
+      "request_hash": "0xa3c82fc394158209f374e830daa6f869fe3644d988bdfe86ad77f78da632243f",
+      "mins": [
+        "2",
+        "0",
+        "0",
+        "0",
+        "25000000",
+        "1760086500",
+        "10838822762608330372",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "maxs": [
+        "2",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "10838822762608330372",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615",
+        "18446744073709551615"
+      ]
+    },
+    {
       "name": "intersected",
       "request": {
         "type": "agentbank.proof_request.v1",
@@ -459,7 +762,21 @@
       },
       "canonical_json": "{\"chain_id\":84532,\"constraints\":{\"per_tx_limit\":{\"min\":\"3.00\"},\"principal_verification\":{\"max\":\"2\",\"min\":\"2\"}},\"expires_at\":1760000400,\"issued_at\":1760000100,\"max_root_age_seconds\":7200,\"min_anonymity_set\":16,\"nonce\":\"0x5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e\",\"registry\":\"0x5FbDB2315678afecb367f032d93F642f64180aa3\",\"request_id\":\"9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f\",\"scope\":\"api.seller.example\",\"type\":\"agentbank.proof_request.v1\"}",
       "request_hash": "0xbeb14b35b7ea5f34e6de24b8d5d0a6d6eb506f18ff9b8c926ece70555ede055f",
-      "mins": ["2", "3000000", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+      "mins": [
+        "2",
+        "3000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
       "maxs": [
         "2",
         "18446744073709551615",
@@ -907,7 +1224,28 @@
           "6939770416153240137322503476966641397417391950902474480970945462551409848591",
           "10941962436777715901943463195175331263348098796018438960955633645115732864202"
         ],
-        "path_bits": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        "path_bits": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       },
       {
         "index": 1,
@@ -934,7 +1272,28 @@
           "6939770416153240137322503476966641397417391950902474480970945462551409848591",
           "10941962436777715901943463195175331263348098796018438960955633645115732864202"
         ],
-        "path_bits": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        "path_bits": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       },
       {
         "index": 7,
@@ -961,7 +1320,28 @@
           "6939770416153240137322503476966641397417391950902474480970945462551409848591",
           "10941962436777715901943463195175331263348098796018438960955633645115732864202"
         ],
-        "path_bits": [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        "path_bits": [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       },
       {
         "index": 19,
@@ -988,7 +1368,28 @@
           "6939770416153240137322503476966641397417391950902474480970945462551409848591",
           "10941962436777715901943463195175331263348098796018438960955633645115732864202"
         ],
-        "path_bits": [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        "path_bits": [
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       }
     ]
   },
@@ -1039,7 +1440,28 @@
         "6939770416153240137322503476966641397417391950902474480970945462551409848591",
         "10941962436777715901943463195175331263348098796018438960955633645115732864202"
       ],
-      "path_bits": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "path_bits": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
       "attributes": {
         "principal_verification": "2",
         "per_tx_limit": "25000000",
@@ -1061,8 +1483,8 @@
     "request": {
       "type": "agentbank.proof_request.v1",
       "scope": "api.seller.example",
-      "request_id": "9042e173147dfed2e7948ebecf5c321b",
-      "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+      "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+      "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
       "issued_at": 1760000100,
       "expires_at": 1760000400,
       "constraints": {
@@ -1095,39 +1517,42 @@
       "chain_id": 84532,
       "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     },
-    "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+    "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
     "presentation": {
       "type": "agentbank.proof.v1",
-      "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+      "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
       "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
       "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
       "proof": {
         "pi_a": [
-          "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-          "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+          "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+          "5997288848538761459357776690398798012923977203247170356930168815253374776633",
           "1"
         ],
         "pi_b": [
           [
-            "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-            "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+            "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+            "5051299970261686908091686060917221642003096968019156809493118598692542072532"
           ],
           [
-            "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-            "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+            "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+            "14471954482677247504591144029068564867384229625284625225248349384516777104073"
           ],
-          ["1", "0"]
+          [
+            "1",
+            "0"
+          ]
         ],
         "pi_c": [
-          "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-          "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+          "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+          "17513377717426314091657515664614281709640639274686460998809757530635383348981",
           "1"
         ],
         "protocol": "groth16",
         "curve": "bn128"
       }
     },
-    "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ==",
+    "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ==",
     "root_info": {
       "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
       "epoch": "7",
@@ -1141,7 +1566,7 @@
       "3415999076835126084190726985220666576157080945681156937192513792660839945172",
       "6270059574849017231113411108805510312836853768380550967647071309946369014435",
       "7783571142662378032774545842123794300551940069470764337997240928210660770474",
-      "31420080906571686854937297380001359533107354194259432544474887279849694774",
+      "57263843928044749033278952240087099607208594106964994533967743233175281584",
       "2",
       "5000000",
       "0",
@@ -1169,11 +1594,231 @@
       "0",
       "18446744073709551615"
     ],
+    "claims_verifier_args": {
+      "claims": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "3415999076835126084190726985220666576157080945681156937192513792660839945172",
+        "scope": "7783571142662378032774545842123794300551940069470764337997240928210660770474",
+        "nonce": "57263843928044749033278952240087099607208594106964994533967743233175281584",
+        "mins": [
+          "2",
+          "5000000",
+          "0",
+          "0",
+          "500000000",
+          "1760003700",
+          "2421086520919343786",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "maxs": [
+          "2",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "2421086520919343786",
+          "1752224100",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "0",
+          "18446744073709551615"
+        ]
+      },
+      "proof": {
+        "a": [
+          "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+          "5997288848538761459357776690398798012923977203247170356930168815253374776633"
+        ],
+        "b": [
+          [
+            "5051299970261686908091686060917221642003096968019156809493118598692542072532",
+            "7848046571470160261554006092389294717809166343630437884757381738402841462677"
+          ],
+          [
+            "14471954482677247504591144029068564867384229625284625225248349384516777104073",
+            "4580248619571845394068973189128302228022743226372563059252227858731773146948"
+          ]
+        ],
+        "c": [
+          "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+          "17513377717426314091657515664614281709640639274686460998809757530635383348981"
+        ]
+      }
+    },
     "expected": {
       "valid": true,
       "reason": null,
       "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
       "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3"
+    }
+  },
+  "onchain_proof": {
+    "description": "A request for an on-chain consumer (scope = onchainScopeId(chain_id, consumer, context), so the scope signal is AgentClaimsVerifier.scopeOf(consumer, context) on that chain) and the agent's presentation from its base leaf. verify_presentation(request, presentation, root_info, now) must accept it; claims_verifier_args are the AgentClaimsVerifier.verify / verifyAndConsume arguments.",
+    "chain_id": 84532,
+    "consumer": "0x00000000000000000000000000000000000a11ce",
+    "context": "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+    "now": 1760000100,
+    "request": {
+      "type": "agentbank.proof_request.v1",
+      "scope": "eip155:84532:0x00000000000000000000000000000000000a11ce:0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68",
+      "request_id": "0123456789abcdef0123456789abcdef",
+      "nonce": "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+      "issued_at": 1760000100,
+      "expires_at": 1760000400,
+      "constraints": {
+        "principal_verification": {
+          "min": "2",
+          "max": "2"
+        },
+        "per_tx_limit": {
+          "min": "5.00"
+        }
+      },
+      "max_root_age_seconds": 7200,
+      "min_anonymity_set": 16,
+      "chain_id": 84532,
+      "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+    },
+    "request_hash": "0xd6a46b68995876b5629e767ed0511a42aece53dc9c360dc3b26af38806e6853c",
+    "presentation": {
+      "type": "agentbank.proof.v1",
+      "request_hash": "0xd6a46b68995876b5629e767ed0511a42aece53dc9c360dc3b26af38806e6853c",
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+      "nullifier": "0x00b9bfada1050d888c1de1b58917d6f4acd1882ed7b4d968ae909b95e9cd5726",
+      "proof": {
+        "pi_a": [
+          "14154151088432390118435208011491738920564731671769966441563739651278641624400",
+          "12424253319855412491884339860187092357197223426473427436527811599050444558813",
+          "1"
+        ],
+        "pi_b": [
+          [
+            "10732693680616860064413403066235330075096223167422972266372228876366550092738",
+            "14430543686854804706608454805427118841526721221765964643747856759450989364545"
+          ],
+          [
+            "3238196948902928262542146362954631487370918369909671172279966625746224425626",
+            "5599613752626999837053756462214047149594307993219305881005604926444962407656"
+          ],
+          [
+            "1",
+            "0"
+          ]
+        ],
+        "pi_c": [
+          "10928732076194674130062335375563453006917756518986753861408586018320673517492",
+          "358022745788639338311764766111044229507996181414357261072376021008259783001",
+          "1"
+        ],
+        "protocol": "groth16",
+        "curve": "bn128"
+      }
+    },
+    "root_info": {
+      "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+      "epoch": "7",
+      "snapshot_at": 1760000000,
+      "published_at": 1760000012,
+      "valid_until": 1760007200,
+      "leaf_count": 20,
+      "revoked": false
+    },
+    "public_signals": [
+      "328189621564369102367416606296587448619530388699547281931057859124997740326",
+      "6270059574849017231113411108805510312836853768380550967647071309946369014435",
+      "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+      "21285310521565477099921136950126453649498158945889809566076761766160501772",
+      "2",
+      "5000000",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "2",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615",
+      "18446744073709551615"
+    ],
+    "claims_verifier_args": {
+      "claims": {
+        "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
+        "nullifier": "328189621564369102367416606296587448619530388699547281931057859124997740326",
+        "scope": "21622250654731169321346562268707875334636617471551514945835471479863705077380",
+        "nonce": "21285310521565477099921136950126453649498158945889809566076761766160501772",
+        "mins": [
+          "2",
+          "5000000",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "maxs": [
+          "2",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615",
+          "18446744073709551615"
+        ]
+      },
+      "proof": {
+        "a": [
+          "14154151088432390118435208011491738920564731671769966441563739651278641624400",
+          "12424253319855412491884339860187092357197223426473427436527811599050444558813"
+        ],
+        "b": [
+          [
+            "14430543686854804706608454805427118841526721221765964643747856759450989364545",
+            "10732693680616860064413403066235330075096223167422972266372228876366550092738"
+          ],
+          [
+            "5599613752626999837053756462214047149594307993219305881005604926444962407656",
+            "3238196948902928262542146362954631487370918369909671172279966625746224425626"
+          ]
+        ],
+        "c": [
+          "10928732076194674130062335375563453006917756518986753861408586018320673517492",
+          "358022745788639338311764766111044229507996181414357261072376021008259783001"
+        ]
+      }
     }
   },
   "tampered": [
@@ -1182,8 +1827,8 @@
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1218,29 +1863,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0xnot-hex",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1258,15 +1906,15 @@
       },
       "now": 1760000100,
       "expected_reason": "malformed",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4bm90LWhleCIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4bm90LWhleCIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "root_outside_field",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1301,29 +1949,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1341,15 +1992,15 @@
       },
       "now": 1760000100,
       "expected_reason": "malformed",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZiIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZiIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "request_expired",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1384,29 +2035,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1424,15 +2078,15 @@
       },
       "now": 1760000401,
       "expected_reason": "request_expired",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "constraints_changed_after_issue",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1467,29 +2121,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0x7a9a6cf3d76f0e625e9b7f77c4a0410d027e9c3dea4ce1641b6b305bf504ae53",
+        "request_hash": "0xdabd998c44d58cf99eda56df7af83aed54fc603aab21b004c4d5f5239060328f",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1507,14 +2164,14 @@
       },
       "now": 1760000100,
       "expected_reason": "nonce_invalid",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI0LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHg3YTlhNmNmM2Q3NmYwZTYyNWU5YjdmNzdjNGEwNDEwZDAyN2U5YzNkZWE0Y2UxNjQxYjZiMzA1YmY1MDRhZTUzIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI0LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhkYWJkOTk4YzQ0ZDU4Y2Y5OWVkYTU2ZGY3YWY4M2FlZDU0ZmM2MDNhYWIyMWIwMDRjNGQ1ZjUyMzkwNjAzMjhmIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "forged_nonce",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
         "nonce": "0xababababababababababababababababababababababababababababababab",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
@@ -1550,29 +2207,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1590,15 +2250,15 @@
       },
       "now": 1760000100,
       "expected_reason": "nonce_invalid",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweGFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweGFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiYWJhYmFiIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "replayed",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1633,29 +2293,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1674,15 +2337,15 @@
       "now": 1760000100,
       "submit_twice": true,
       "expected_reason": "nonce_reused",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "request_hash_mismatch",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1722,24 +2385,27 @@
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1757,15 +2423,15 @@
       },
       "now": 1760000100,
       "expected_reason": "request_hash_mismatch",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHgxNjM4OGY0YzNlZDM3YTc3YWQ0YzEwZGZhYzJmOGU2MjUwMWQ2MGYwZWMwMTc5MjYxNTEzODA2OGMxZjhmYTNmIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHgxNjM4OGY0YzNlZDM3YTc3YWQ0YzEwZGZhYzJmOGU2MjUwMWQ2MGYwZWMwMTc5MjYxNTEzODA2OGMxZjhmYTNmIiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "unknown_root",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1800,29 +2466,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1832,15 +2501,15 @@
       "root_info": null,
       "now": 1760000100,
       "expected_reason": "unknown_root",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "root_revoked",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1875,29 +2544,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1915,15 +2587,15 @@
       },
       "now": 1760000100,
       "expected_reason": "root_revoked",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "root_expired",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -1958,29 +2630,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -1998,15 +2673,15 @@
       },
       "now": 1760000100,
       "expected_reason": "root_expired",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "root_too_old",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -2041,29 +2716,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -2081,15 +2759,15 @@
       },
       "now": 1760000100,
       "expected_reason": "root_too_old",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "anonymity_set_too_small",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -2124,29 +2802,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -2164,15 +2845,15 @@
       },
       "now": 1760000100,
       "expected_reason": "anonymity_set_too_small",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "nullifier_swapped",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -2207,29 +2888,32 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x0000000000000000000000000000000000000000000000000000000000003039",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
           "pi_c": [
-            "3475053586280805163177545543227047267106884496765503326698070983373936015192",
-            "6089574164170974187813373921410354725581541265515857283189000591859542106287",
+            "14684545857835830407347022071259338397651963998518711569003877985037206931138",
+            "17513377717426314091657515664614281709640639274686460998809757530635383348981",
             "1"
           ],
           "protocol": "groth16",
@@ -2247,15 +2931,15 @@
       },
       "now": 1760000100,
       "expected_reason": "invalid_proof",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMzAzOSIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjM0NzUwNTM1ODYyODA4MDUxNjMxNzc1NDU1NDMyMjcwNDcyNjcxMDY4ODQ0OTY3NjU1MDMzMjY2OTgwNzA5ODMzNzM5MzYwMTUxOTIiLCI2MDg5NTc0MTY0MTcwOTc0MTg3ODEzMzczOTIxNDEwMzU0NzI1NTgxNTQxMjY1NTE1ODU3MjgzMTg5MDAwNTkxODU5NTQyMTA2Mjg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMzAzOSIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxNDY4NDU0NTg1NzgzNTgzMDQwNzM0NzAyMjA3MTI1OTMzODM5NzY1MTk2Mzk5ODUxODcxMTU2OTAwMzg3Nzk4NTAzNzIwNjkzMTEzOCIsIjE3NTEzMzc3NzE3NDI2MzE0MDkxNjU3NTE1NjY0NjE0MjgxNzA5NjQwNjM5Mjc0Njg2NDYwOTk4ODA5NzU3NTMwNjM1MzgzMzQ4OTgxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
     },
     {
       "name": "proof_point_not_on_curve",
       "request": {
         "type": "agentbank.proof_request.v1",
         "scope": "api.seller.example",
-        "request_id": "9042e173147dfed2e7948ebecf5c321b",
-        "nonce": "0x11c87b92d35ae03baab09b705b25352de3fba2e8901ea09a0c0a9e9d4ae636",
+        "request_id": "976ba88759b50d3b66dc8c8d5690d2fb",
+        "nonce": "0x2069020566bfd8399dc78546957081d7b781db77b736b28ac31bd09fa75fb0",
         "issued_at": 1760000100,
         "expires_at": 1760000400,
         "constraints": {
@@ -2290,27 +2974,34 @@
       },
       "presentation": {
         "type": "agentbank.proof.v1",
-        "request_hash": "0xf6e2df9c54201e019b860e5df6accc2d6e7de9957a1864599af5971cfe0023e5",
+        "request_hash": "0xc41a5697ba30960279d12cd11e9b32f42c30a6ef3ea54bc83a5fb47abb3339f9",
         "root": "0x0ddcba5b66edc0e67f893dbca5b66dc593456d6cb82fcb45a9216abef862faa3",
         "nullifier": "0x078d630fdd8a769224fc1a85b004020a4b4fd8523abea89b9918f426d43153d4",
         "proof": {
           "pi_a": [
-            "8898643676613674163377322683770595961364329156213690853675094929683465235886",
-            "12597019345411551470336589978892187257338324677187497275700706938829949585267",
+            "10021131544751249318630829870426848913476494867290397774071329517870995203384",
+            "5997288848538761459357776690398798012923977203247170356930168815253374776633",
             "1"
           ],
           "pi_b": [
             [
-              "3196686136901283146118063871803441896151633839981533281607281026967993868075",
-              "12196987045786962880274480022304309199719321676411645858212336250172697862191"
+              "7848046571470160261554006092389294717809166343630437884757381738402841462677",
+              "5051299970261686908091686060917221642003096968019156809493118598692542072532"
             ],
             [
-              "11928907280579465656918305500089298145540358331004221749864342567621877434822",
-              "12086905410177187830931323239601086358218581050034232584616786199846492979754"
+              "4580248619571845394068973189128302228022743226372563059252227858731773146948",
+              "14471954482677247504591144029068564867384229625284625225248349384516777104073"
             ],
-            ["1", "0"]
+            [
+              "1",
+              "0"
+            ]
           ],
-          "pi_c": ["1", "1", "1"],
+          "pi_c": [
+            "1",
+            "1",
+            "1"
+          ],
           "protocol": "groth16",
           "curve": "bn128"
         }
@@ -2326,7 +3017,7 @@
       },
       "now": 1760000100,
       "expected_reason": "invalid_proof",
-      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6IjkwNDJlMTczMTQ3ZGZlZDJlNzk0OGViZWNmNWMzMjFiIiwibm9uY2UiOiIweDExYzg3YjkyZDM1YWUwM2JhYWIwOWI3MDViMjUzNTJkZTNmYmEyZTg5MDFlYTA5YTBjMGE5ZTlkNGFlNjM2IiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhmNmUyZGY5YzU0MjAxZTAxOWI4NjBlNWRmNmFjY2MyZDZlN2RlOTk1N2ExODY0NTk5YWY1OTcxY2ZlMDAyM2U1Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiODg5ODY0MzY3NjYxMzY3NDE2MzM3NzMyMjY4Mzc3MDU5NTk2MTM2NDMyOTE1NjIxMzY5MDg1MzY3NTA5NDkyOTY4MzQ2NTIzNTg4NiIsIjEyNTk3MDE5MzQ1NDExNTUxNDcwMzM2NTg5OTc4ODkyMTg3MjU3MzM4MzI0Njc3MTg3NDk3Mjc1NzAwNzA2OTM4ODI5OTQ5NTg1MjY3IiwiMSJdLCJwaV9iIjpbWyIzMTk2Njg2MTM2OTAxMjgzMTQ2MTE4MDYzODcxODAzNDQxODk2MTUxNjMzODM5OTgxNTMzMjgxNjA3MjgxMDI2OTY3OTkzODY4MDc1IiwiMTIxOTY5ODcwNDU3ODY5NjI4ODAyNzQ0ODAwMjIzMDQzMDkxOTk3MTkzMjE2NzY0MTE2NDU4NTgyMTIzMzYyNTAxNzI2OTc4NjIxOTEiXSxbIjExOTI4OTA3MjgwNTc5NDY1NjU2OTE4MzA1NTAwMDg5Mjk4MTQ1NTQwMzU4MzMxMDA0MjIxNzQ5ODY0MzQyNTY3NjIxODc3NDM0ODIyIiwiMTIwODY5MDU0MTAxNzcxODc4MzA5MzEzMjMyMzk2MDEwODYzNTgyMTg1ODEwNTAwMzQyMzI1ODQ2MTY3ODYxOTk4NDY0OTI5Nzk3NTQiXSxbIjEiLCIwIl1dLCJwaV9jIjpbIjEiLCIxIiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In19fQ=="
+      "agent_proof_header": "eyJyZXF1ZXN0Ijp7InR5cGUiOiJhZ2VudGJhbmsucHJvb2ZfcmVxdWVzdC52MSIsInNjb3BlIjoiYXBpLnNlbGxlci5leGFtcGxlIiwicmVxdWVzdF9pZCI6Ijk3NmJhODg3NTliNTBkM2I2NmRjOGM4ZDU2OTBkMmZiIiwibm9uY2UiOiIweDIwNjkwMjA1NjZiZmQ4Mzk5ZGM3ODU0Njk1NzA4MWQ3Yjc4MWRiNzdiNzM2YjI4YWMzMWJkMDlmYTc1ZmIwIiwiaXNzdWVkX2F0IjoxNzYwMDAwMTAwLCJleHBpcmVzX2F0IjoxNzYwMDAwNDAwLCJjb25zdHJhaW50cyI6eyJwcmluY2lwYWxfdmVyaWZpY2F0aW9uIjp7Im1pbiI6IjIiLCJtYXgiOiIyIn0sInBlcl90eF9saW1pdCI6eyJtaW4iOiI1LjAwIn0sInJlc2VydmVkX2Ftb3VudCI6eyJtaW4iOiI1MDAuMDAifSwicmVzZXJ2ZWRfdW50aWwiOnsibWluIjoiMTc2MDAwMzcwMCJ9LCJyZXNlcnZlZF9mb3IiOnsibWluIjoiMjQyMTA4NjUyMDkxOTM0Mzc4NiIsIm1heCI6IjI0MjEwODY1MjA5MTkzNDM3ODYifSwiYWNjb3VudF9jcmVhdGVkX29uIjp7Im1heCI6IjE3NTIyMjQxMDAifSwiZGlzcHV0ZXNfbG9zdCI6eyJtYXgiOiIwIn19LCJtYXhfcm9vdF9hZ2Vfc2Vjb25kcyI6NzIwMCwibWluX2Fub255bWl0eV9zZXQiOjE2LCJjaGFpbl9pZCI6ODQ1MzIsInJlZ2lzdHJ5IjoiMHg1RmJEQjIzMTU2NzhhZmVjYjM2N2YwMzJkOTNGNjQyZjY0MTgwYWEzIn0sInByZXNlbnRhdGlvbiI6eyJ0eXBlIjoiYWdlbnRiYW5rLnByb29mLnYxIiwicmVxdWVzdF9oYXNoIjoiMHhjNDFhNTY5N2JhMzA5NjAyNzlkMTJjZDExZTliMzJmNDJjMzBhNmVmM2VhNTRiYzgzYTVmYjQ3YWJiMzMzOWY5Iiwicm9vdCI6IjB4MGRkY2JhNWI2NmVkYzBlNjdmODkzZGJjYTViNjZkYzU5MzQ1NmQ2Y2I4MmZjYjQ1YTkyMTZhYmVmODYyZmFhMyIsIm51bGxpZmllciI6IjB4MDc4ZDYzMGZkZDhhNzY5MjI0ZmMxYTg1YjAwNDAyMGE0YjRmZDg1MjNhYmVhODliOTkxOGY0MjZkNDMxNTNkNCIsInByb29mIjp7InBpX2EiOlsiMTAwMjExMzE1NDQ3NTEyNDkzMTg2MzA4Mjk4NzA0MjY4NDg5MTM0NzY0OTQ4NjcyOTAzOTc3NzQwNzEzMjk1MTc4NzA5OTUyMDMzODQiLCI1OTk3Mjg4ODQ4NTM4NzYxNDU5MzU3Nzc2NjkwMzk4Nzk4MDEyOTIzOTc3MjAzMjQ3MTcwMzU2OTMwMTY4ODE1MjUzMzc0Nzc2NjMzIiwiMSJdLCJwaV9iIjpbWyI3ODQ4MDQ2NTcxNDcwMTYwMjYxNTU0MDA2MDkyMzg5Mjk0NzE3ODA5MTY2MzQzNjMwNDM3ODg0NzU3MzgxNzM4NDAyODQxNDYyNjc3IiwiNTA1MTI5OTk3MDI2MTY4NjkwODA5MTY4NjA2MDkxNzIyMTY0MjAwMzA5Njk2ODAxOTE1NjgwOTQ5MzExODU5ODY5MjU0MjA3MjUzMiJdLFsiNDU4MDI0ODYxOTU3MTg0NTM5NDA2ODk3MzE4OTEyODMwMjIyODAyMjc0MzIyNjM3MjU2MzA1OTI1MjIyNzg1ODczMTc3MzE0Njk0OCIsIjE0NDcxOTU0NDgyNjc3MjQ3NTA0NTkxMTQ0MDI5MDY4NTY0ODY3Mzg0MjI5NjI1Mjg0NjI1MjI1MjQ4MzQ5Mzg0NTE2Nzc3MTA0MDczIl0sWyIxIiwiMCJdXSwicGlfYyI6WyIxIiwiMSIsIjEiXSwicHJvdG9jb2wiOiJncm90aDE2IiwiY3VydmUiOiJibjEyOCJ9fX0="
     }
   ]
 }

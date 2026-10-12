@@ -8,7 +8,8 @@ which agent it is; the verifier learns only that the statement holds.
 | Entry point                   | Runs in        | What it has                                                                                                |
 | ----------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
 | `@agentbank/proofs`           | Node, browsers | Schema constants, scopes, the Poseidon tree, request builders, the verifier, root resolvers, the HTTP gate |
-| `@agentbank/proofs/prover`    | Node           | `prove`, `prepareProof`, `toSolidityProof`, `toSolidityClaims`                                             |
+| `@agentbank/proofs/onchain`   | Node, browsers | `CLAIMS_VERIFIER_ABI`, `toClaimsVerifierArgs` (`AgentClaimsVerifier` calldata)                             |
+| `@agentbank/proofs/prover`    | Node           | `prove`, `prepareProof`, `toClaimsVerifierArgs`, `toSolidityProof`, `toSolidityClaims`                     |
 | `@agentbank/proofs/artifacts` | Node           | Paths to the bundled circuit files, manifest loading and SHA-256 checks                                    |
 | `agentbank-prove`             | Node (CLI)     | The prover as a process, for SDKs without a WebAssembly witness generator (Python)                         |
 
@@ -43,6 +44,16 @@ rebuilds the public signals from your own request and returns `{ valid, reason, 
 the reasons of the design doc (`malformed`, `request_expired`, `nonce_invalid`, `nonce_reused`,
 `request_hash_mismatch`, `unknown_root`, `root_revoked`, `root_expired`, `root_too_old`,
 `anonymity_set_too_small`, `invalid_proof`).
+
+## On-chain consumers
+
+A contract that admits agents with `AgentClaimsVerifier.verifyAndConsume(context, …)` asks for the
+scope id `onchainScopeId(chainId, consumer, context)`, i.e. `eip155:<chainId>:<consumer>:<context>`;
+`scopeField` maps exactly that form to `onchainScope(chainId, consumer, context)`, which equals the
+contract's `scopeOf(consumer, context)`. `toClaimsVerifierArgs(request, presentation)` returns the
+`claims` and `proof` arguments. `RUN_ANVIL_TESTS=1 pnpm --filter @agentbank/proofs test` deploys the
+contracts repository's compiled verifier on a fresh Anvil and checks both with `verify` and
+`verifyAndConsume` (`CONTRACTS_DIR`, `ANVIL_CMD`, `FORGE_CMD` override the defaults).
 
 ## Prove (an agent)
 
@@ -98,7 +109,8 @@ these files.
 
 ## Cross-language vectors
 
-`test/vectors/proofs.json` (scopes, bounds, request hashes, gate nonces, Poseidon leaves, a tree, and a
-gate-issued request with a real proof plus tampered variants) is what the Python SDK checks against.
+`test/vectors/proofs.json` (scopes and on-chain scope ids, bounds, request hashes, gate nonces, Poseidon
+leaves, a tree, a gate-issued request with a real proof plus tampered variants, and a proof for an
+on-chain scope id with its `AgentClaimsVerifier` calldata) is what the Python SDK checks against.
 Regenerate with `pnpm --filter @agentbank/proofs vectors`; the tests fail if a deterministic part
 changes.

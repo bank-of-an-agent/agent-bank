@@ -2,18 +2,26 @@
  * Writes test/vectors/proofs.json: cross-language vectors for the Python SDK (scope
  * derivation, bounds, request hashes, gate nonces, Poseidon leaves, a small tree) plus one
  * complete gate-issued request with a real proof, its root record and tampered variants with
- * the reason each must be refused for. Everything is deterministic except the proof and the
- * gate's random request_id; the vectors test recomputes the deterministic part.
+ * the reason each must be refused for, and a proof for an on-chain scope id with its
+ * AgentClaimsVerifier calldata. Everything is deterministic except the proofs and the gate's
+ * random request_id; the vectors test recomputes the deterministic part.
  *   pnpm --filter @agentbank/proofs vectors
  */
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { keccak256, stringToBytes } from "viem";
-import { toBytes32 } from "../src/field";
+import { onchainScopeId, toBytes32 } from "../src/field";
 import { createProofGate, encodeHeaderJson, encodeProof, PROOF_HEADERS } from "../src/http";
+import { toClaimsVerifierArgs } from "../src/onchain";
 import { prove } from "../src/prover";
-import { requestHash, type ProofRequest } from "../src/request";
+import {
+  canPayPerTx,
+  createProofRequest,
+  requestHash,
+  verifiedCompany,
+  type ProofRequest,
+} from "../src/request";
 import {
   publicSignals,
   releaseProverResources,
@@ -31,7 +39,7 @@ import {
   rootInfoJson,
   SCOPE,
 } from "../test/fixtures";
-import { deterministicVectors } from "../test/vector-data";
+import { claimsArgsJson, deterministicVectors, ONCHAIN_CONSUMER, ONCHAIN_CONTEXT } from "../test/vector-data";
 
 const TTL_SECONDS = 300;
 const fixture = buildFixture();
@@ -51,6 +59,23 @@ const root = presentation.root;
 
 const accepted = await gate.check({ [PROOF_HEADERS.proof]: encodeProof({ request, presentation }) });
 if (accepted.kind !== "verified") throw new Error(`the fresh proof did not verify: ${accepted.reason}`);
+
+// A proof for an on-chain consumer (the contracts repository's claims fixtures' consumer and
+// context on Base Sepolia): its scope signal is AgentClaimsVerifier.scopeOf(consumer, context).
+const onchainRequest = createProofRequest({
+  scope: onchainScopeId(CHAIN_ID, ONCHAIN_CONSUMER, ONCHAIN_CONTEXT),
+  require: [verifiedCompany(), canPayPerTx("5.00")],
+  now: NOW,
+  chainId: CHAIN_ID,
+  registry: REGISTRY,
+  requestId: "0123456789abcdef0123456789abcdef",
+  nonce: `0x${"0c".repeat(31)}`,
+});
+const onchainPresentation = await prove({
+  secret: AGENT_SECRET,
+  witness: fixture.baseWitness,
+  request: onchainRequest,
+});
 
 interface Tampered {
   name: string;
@@ -200,7 +225,22 @@ const vectors = {
     agent_proof_header: encodeProof({ request, presentation }),
     root_info: info(),
     public_signals: publicSignals(request, presentation),
+    claims_verifier_args: claimsArgsJson(toClaimsVerifierArgs(request, presentation)),
     expected: { valid: true, reason: null, nullifier: accepted.nullifier, root },
+  },
+  onchain_proof: {
+    description:
+      "A request for an on-chain consumer (scope = onchainScopeId(chain_id, consumer, context), so the scope signal is AgentClaimsVerifier.scopeOf(consumer, context) on that chain) and the agent's presentation from its base leaf. verify_presentation(request, presentation, root_info, now) must accept it; claims_verifier_args are the AgentClaimsVerifier.verify / verifyAndConsume arguments.",
+    chain_id: CHAIN_ID,
+    consumer: ONCHAIN_CONSUMER,
+    context: ONCHAIN_CONTEXT,
+    now: NOW,
+    request: onchainRequest,
+    request_hash: requestHash(onchainRequest),
+    presentation: onchainPresentation,
+    root_info: rootInfoJson(fixture.rootInfo, onchainPresentation.root),
+    public_signals: publicSignals(onchainRequest, onchainPresentation),
+    claims_verifier_args: claimsArgsJson(toClaimsVerifierArgs(onchainRequest, onchainPresentation)),
   },
   tampered: tampered.map((t) => ({
     ...t,

@@ -105,7 +105,8 @@ pnpm db:up            # PostgreSQL 16 on 127.0.0.1:54329 (docker compose)
 ```
 
 Opt-in suites: `RUN_LIVE_TESTS=1` (read-only Base Sepolia checks) and `RUN_FORK_TESTS=1` (an Anvil
-fork of Base Sepolia with a local bundler) in `packages/chain`. Coverage gates: `packages/ledger`,
+fork of Base Sepolia with a local bundler) in `packages/chain`, and `RUN_ANVIL_TESTS=1` in
+`packages/proofs` (SDK proofs checked by the real `AgentClaimsVerifier` on a fresh Anvil). Coverage gates: `packages/ledger`,
 `packages/policy` and `packages/proofs` at ≥ 90%.
 
 Ground rules (enforced in review and CI): no code path lets a bank-held key move funds; testnet

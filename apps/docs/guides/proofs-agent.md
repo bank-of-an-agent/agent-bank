@@ -181,7 +181,7 @@ with agent.x402.client(max_amount="0.10") as http:
     paid = x402_receipt(response)  # what was paid, or None
 ```
 
-The Python transport answers only a challenge whose scope is the request's host; `agent.proofs.transport(allowed_scopes={…})` lists others (pass it as `transport=` to `agent.x402.client()`). The Python SDK has no probing guard: count the proofs you give each verifier yourself.
+The Python transport answers only a challenge whose scope is the request's host; `agent.proofs.transport(allowed_scopes={…})` lists others (pass it as `transport=` to `agent.x402.client()`). Proofs count against the same probing guard as in TypeScript: `AgentBank(max_presentations_per_scope_per_hour=10)` (default 30) limits `agent.proofs.prove` and the transports, which refuse with `ProofRefusedError` reason `rate_limited` and `retry_after_seconds`.
 
 ## 4. Prove by hand
 
@@ -210,7 +210,9 @@ header = encode_proof(request, presentation)  # send as AGENT-PROOF
 
 :::
 
-`prove` and `answer` in TypeScript apply the same probing guard and local checks as the automatic flow. From another language, run the prover as a process: `agentbank-prove` reads `{"secret", "witness", "request"}` on stdin and writes the presentation on stdout, with the witness from `GET /v1/accounts/{id}/proofs/witness` ([`@agentbank/proofs`](https://github.com/bank-of-an-agent/agent-bank/tree/main/packages/proofs#cli-agentbank-prove)).
+`prove` and `answer` apply the same probing guard and local checks as the automatic flow.
+
+**Proving to a contract.** A contract that admits agents with `AgentClaimsVerifier.verifyAndConsume` asks for its on-chain scope id, `eip155:<chainId>:<consumer>:<context>` (built with `onchainScopeId`, `onchain_scope_id` in Python). The automatic HTTP flow never answers such a request, so a web server cannot pass a contract's challenge off as its own; prove it by hand as above, after checking that the consumer is the contract you mean to deal with, and submit it with `toClaimsVerifierArgs(request, presentation)` (`to_claims_verifier_args`), as in [On-chain verification](/guides/proofs-verifier#on-chain-verification). A contract on a mainnet is refused (`mainnet_locked`). From another language, run the prover as a process: `agentbank-prove` reads `{"secret", "witness", "request"}` on stdin and writes the presentation on stdout, with the witness from `GET /v1/accounts/{id}/proofs/witness` ([`@agentbank/proofs`](https://github.com/bank-of-an-agent/agent-bank/tree/main/packages/proofs#cli-agentbank-prove)).
 
 ## 5. Proof of funds: reservations
 
@@ -283,8 +285,8 @@ The SDKs refuse before proving whenever the agent cannot or should not answer, a
 | `reservation_pending`                                       | A matching reservation exists, but no published root includes it yet                    | Wait for the next root (usually under a minute) and retry                                                                                      |
 | `undisclosed`                                               | The request bounds facts of a class the owner did not disclose (`undisclosedClasses`)   | Decline, or ask the owner to disclose that class; the agent cannot widen disclosure                                                            |
 | `unsatisfiable`                                             | The attested facts lie outside the requested bounds (`attributes`)                      | The agent does not qualify. Facts change only at the next snapshot (balances in whole dollars), and limits only by the owner's policy          |
-| `rate_limited`                                              | The probing guard: this verifier already got `maxPresentationsPerScopePerHour` proofs   | Wait `retryAfterMs`. A verifier asking that often, with varying thresholds, may be narrowing down the values; do not just raise the limit      |
-| `scope_mismatch` (TS), `scope_not_allowed` (Python)         | A server asked for a proof for another scope than its own host name                     | Do not prove: it may be relaying another verifier's challenge. Allow a scope explicitly (`acceptScope`, `allowed_scopes`) only if you trust it |
+| `rate_limited`                                              | The probing guard: this verifier already got `maxPresentationsPerScopePerHour` proofs   | Wait `retryAfterMs` (`retry_after_seconds`). A verifier asking that often, with varying thresholds, may be narrowing down the values           |
+| `scope_mismatch` (TS), `scope_not_allowed` (Python)         | A server asked for a proof for another scope than its own host name, or for a contract  | Do not prove: it may be relaying another verifier's challenge. Allow a scope explicitly (`acceptScope`, `allowed_scopes`) only if you trust it |
 | `request_expired`                                           | The challenge expired before it was proved                                              | Request the resource again for a fresh challenge                                                                                               |
 | `witness_mismatch`                                          | The secret does not match the enrolled commitment, or the witness is stale              | Check the configured secret; re-enroll after rotating it                                                                                       |
 | `chain_mismatch`                                            | The request names another chain or registry than the agent's                            | The verifier uses another deployment; decline                                                                                                  |

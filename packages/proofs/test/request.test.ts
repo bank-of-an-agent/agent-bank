@@ -1,7 +1,7 @@
 import { canonicalKeccak } from "@agentbank/core";
 import { describe, expect, it } from "vitest";
 import { ProofRequestError } from "../src/errors";
-import { scopeTagOf } from "../src/field";
+import { onchainScope, onchainScopeId, scopeTag, scopeTagOf } from "../src/field";
 import {
   accountOlderThan,
   balanceAtLeast,
@@ -178,6 +178,25 @@ describe("proof requests", () => {
     expect(request.registry).toBeNull();
     expect(Math.abs(request.issued_at - Date.now() / 1000)).toBeLessThan(5);
     expect(createProofRequest({ scope: SCOPE }).constraints).toEqual({});
+  });
+
+  it("accepts on-chain scope ids, and reservations tag them like scopeOf", () => {
+    const consumer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    const context = `0x${"cd".repeat(32)}` as const;
+    const scope = onchainScopeId(84532, consumer, context);
+    const request = createProofRequest({
+      scope,
+      require: [verifiedCompany(), reservedFor("10.00", { forSeconds: 600 })],
+      now: NOW,
+    });
+    expect(request.scope).toBe(scope);
+    expect(parseProofRequest(request)).toEqual(request);
+    const tag = scopeTag(onchainScope(84532, consumer, context)).toString();
+    expect(tag).toBe(scopeTagOf(scope).toString());
+    expect(request.constraints.reserved_for).toEqual({ min: tag, max: tag });
+    // The longest on-chain id (a 32-digit chain id) still fits the 253-character limit.
+    const longest = onchainScopeId(10n ** 32n - 1n, consumer, context);
+    expect(parseProofRequest({ ...request, scope: longest }).scope).toBe(longest);
   });
 
   it("hashes requests as canonical keccak", () => {

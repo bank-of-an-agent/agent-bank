@@ -13,6 +13,9 @@
  *
  * Outside Node, pass a prover of your own (`proofs.prover`).
  *
+ * `toClaimsVerifierArgs(request, presentation)` turns a proof for an on-chain scope id into the
+ * arguments of `AgentClaimsVerifier.verify` / `verifyAndConsume`.
+ *
  * @packageDocumentation
  */
 import { existsSync } from "node:fs";
@@ -49,4 +52,12 @@ export function defaultArtifacts(): ProverArtifacts {
 export const nodeProver: Prover = (input) => prove({ ...input, artifacts: defaultArtifacts() });
 
 export { prove, releaseProverResources };
+export {
+  CLAIMS_VERIFIER_ABI,
+  toClaimsVerifierArgs,
+  type ClaimsVerifierArgs,
+  type ClaimsVerifierClaims,
+  type ClaimsVerifierProof,
+  type U64x13,
+} from "@agentbank/proofs/onchain";
 export type { Prover, ProverArtifacts, ProverInput } from "./proofs/agent";

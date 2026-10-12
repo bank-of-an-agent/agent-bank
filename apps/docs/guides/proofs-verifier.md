@@ -27,7 +27,7 @@ A requirement is a bound on one or more attested facts. Pick the builders for wh
 Requirements are intersected into one bound per fact; a combination that cannot hold is refused with a `ProofRequestError`. Ask only for what you need:
 
 - **Each bound needs the owner's consent.** An agent whose owner did not disclose a class cannot prove anything about it, so every class you add excludes some agents.
-- **Keep thresholds fixed per resource.** Every answer reveals that the bound holds, so agents limit how many proofs they give one verifier (30 per hour by default in the TypeScript SDK). Varying thresholds from request to request is what probing looks like.
+- **Keep thresholds fixed per resource.** Every answer reveals that the bound holds, so agents limit how many proofs they give one verifier (30 per hour by default in both SDKs). Varying thresholds from request to request is what probing looks like.
 - **Values are coarse and dated.** Balances and volumes are whole dollars, the account's age is in days, and every fact is as of the last snapshot (at most a couple of hours old). A balance can be spent after the snapshot; ask for a reservation when you need a commitment.
 
 ## A gate in a few lines
@@ -208,7 +208,19 @@ fastify.get("/report", { preHandler: [proof.preHandler, pay.preHandler], onSend:
 export const GET = withProofGate(gate, withPaywall(paywall, handler), { beforePaywall: true });
 ```
 
-The Python SDK has no paywall and its gate always uses a proof up when it accepts it. In front of another x402 server, the Python gate still works; the agent SDKs then prove a second time with the payment.
+The Python SDK has no paywall of its own. In front of one, split the gate's check: `peek` verifies without using the proof up, so the agent's paid retry can carry the same proof, and `commit` uses it up right before you serve (`check` does both at once):
+
+```python
+result = await gate.peek(request.headers)
+if result.kind == "proof-required":
+    return JSONResponse(result.response.body, status_code=401, headers=result.response.headers)
+if not paid(request):  # your x402 server's check
+    return payment_required()  # 402: the proof stays valid for the paid retry
+if not await gate.commit(result):  # False: the proof was used meanwhile (a replay)
+    challenge = gate.challenge("nonce_reused")
+    return JSONResponse(challenge.body, status_code=401, headers=challenge.headers)
+return JSONResponse(serve(), headers=result.headers)
+```
 
 A seller that gates and charges the same resource sees the agent's pseudonym next to its payment, which comes from the agent's spend key and is linked on-chain to its account. Payments are not private.
 
@@ -276,11 +288,44 @@ The gate never takes the statement from the agent: it rebuilds the public inputs
 | `verifyAndConsume(context, claims, proof, minAnonymitySet, maxRootAge)` | For contracts that admit agents: requires `claims.scope == scopeOf(msg.sender, context)`, uses up `(scope, nonce)`, emits `ClaimsAccepted`, returns the nullifier |
 | `scopeOf(consumer, context)`                                            | The on-chain scope: `keccak256(abi.encode("agentbank.proofs.scope.v1", block.chainid, consumer, context)) mod r`                                                  |
 
-`maxRootAge` of `0` skips the age check. `Claims` is `{ root, nullifier, scope, nonce, mins[13], maxs[13] }`. Build it from **your own** request, never from what the agent sends: `toSolidityClaims(request, presentation)` and `toSolidityProof(presentation)` from `@agentbank/proofs/prover` (a workspace package of the monorepo) produce the calldata, with the proof's `b` pairs swapped as the generated verifier expects. In Python, `public_signals(request, presentation)` returns the 30 public signals (nullifier, root, scope, nonce, mins, maxs) to map onto `Claims`.
+`maxRootAge` of `0` skips the age check. `Claims` is `{ root, nullifier, scope, nonce, mins[13], maxs[13] }` and `Groth16Proof` is `{ a, b, c }` in snarkjs's calldata order. Build both from **your own** request, never from a statement the agent sends: `toClaimsVerifierArgs(request, presentation)` from `@agentbank/sdk/proof-server` (or `/prover`) returns `{ claims, proof }` typed for viem, with the scope, nonce and bounds from the request and only the root, nullifier and proof from the presentation. In Python, `to_claims_verifier_args(request, presentation)` returns the same, with `as_tuple()` for web3.py.
+
+**Scopes for contracts.** `verify` accepts a proof for any scope. `verifyAndConsume` accepts only proofs for `scopeOf(msg.sender, context)`, so a contract that admits agents asks for its on-chain scope id, `eip155:<chainId>:<consumer>:<context>`: `onchainScopeId(chainId, consumer, context)` (`onchain_scope_id` in Python) builds it, and the SDKs map it to exactly `scopeOf(consumer, context)` on that chain. Agents prove such requests explicitly with `agent.proofs.prove(request)` (`bank.proofs.prove` in Python); the automatic HTTP flow never answers them, so a web server cannot relay a contract's challenge.
+
+```ts
+import { createPublicClient, http } from "viem";
+import { baseSepolia } from "viem/chains";
+import {
+  CLAIMS_VERIFIER_ABI,
+  createProofRequest,
+  onchainScopeId,
+  toClaimsVerifierArgs,
+  verifiedCompany,
+} from "@agentbank/sdk/proof-server";
+
+// consumer: your contract, which calls verifyAndConsume with `context` (32 bytes of its choosing);
+// verifier: `verifier` in GET /v1/proofs/circuit.
+const request = createProofRequest({
+  scope: onchainScopeId(baseSepolia.id, consumer, context),
+  require: [verifiedCompany()],
+});
+const presentation = await agent.proofs.prove(request); // the agent, with its proof secret
+const { claims, proof } = toClaimsVerifierArgs(request, presentation);
+
+const client = createPublicClient({ chain: baseSepolia, transport: http() });
+const ok = await client.readContract({
+  address: verifier,
+  abi: CLAIMS_VERIFIER_ABI,
+  functionName: "verify",
+  args: [claims, proof, 16, 7_200n], // minAnonymitySet, maxRootAge (seconds)
+});
+// Admission: pass `claims` and `proof` to your contract, which calls
+// verifier.verifyAndConsume(context, claims, proof, 16, 2 hours) and gets the nullifier back.
+```
 
 - **Check the bounds yourself.** `verifyAndConsume` checks the scope and the nonce, but `mins` and `maxs` come from the caller: a consuming contract must require that they are its own requirements.
 - **Bound the gas for untrusted proofs.** A malformed proof (a point off the curve) makes the BN254 pairing precompile consume all the gas forwarded to it before `verify` returns `false`. A contract that relays untrusted proofs should cap it, for example `verifier.verify{gas: 1_000_000}(claims, proof, 16, 2 hours)`.
-- **Scopes differ.** The agent SDKs prove for string scopes (an HTTP verifier's host name), which `verify` accepts. `verifyAndConsume` needs a proof made for `scopeOf(consumer, context)`; `onchainScope(chainId, consumer, context)` (`onchain_scope` in Python) computes it off-chain, but the SDK provers do not take a numeric scope yet.
+- **One nonce, one admission.** `verifyAndConsume` uses up `(scope, nonce)`; `createProofRequest` draws a random nonce per request, and a reservation for the contract is tagged with its scope like any other (`reservedFor` defaults to the request's scope).
 
 ## What you trust
 

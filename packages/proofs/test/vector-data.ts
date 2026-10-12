@@ -1,7 +1,15 @@
 import { bytesToHex, canonicalJson, utf8 } from "@agentbank/core";
 import type { Address, Hex } from "viem";
-import { onchainScope, scopeField, scopeTag, toBytes32 } from "../src/field";
+import {
+  onchainScope,
+  onchainScopeId,
+  parseOnchainScopeId,
+  scopeField,
+  scopeTag,
+  toBytes32,
+} from "../src/field";
 import { gateNonce } from "../src/http";
+import type { ClaimsVerifierArgs } from "../src/onchain";
 import {
   accountOlderThan,
   balanceAtLeast,
@@ -51,6 +59,29 @@ import {
 
 const dec = (v: bigint) => v.toString();
 
+/** `AgentClaimsVerifier` arguments as the vectors carry them (integers as base-10 strings). */
+export function claimsArgsJson({ claims, proof }: ClaimsVerifierArgs) {
+  return {
+    claims: {
+      root: claims.root,
+      nullifier: dec(claims.nullifier),
+      scope: dec(claims.scope),
+      nonce: dec(claims.nonce),
+      mins: claims.mins.map(dec),
+      maxs: claims.maxs.map(dec),
+    },
+    proof: {
+      a: proof.a.map(dec),
+      b: proof.b.map((pair) => pair.map(dec)),
+      c: proof.c.map(dec),
+    },
+  };
+}
+
+/** The consumer and context of the on-chain proof vector (the contracts repository's claims fixtures'). */
+export const ONCHAIN_CONSUMER: Address = "0x00000000000000000000000000000000000a11ce";
+export const ONCHAIN_CONTEXT: Hex = "0x2486d1ababe1b60da21be608aa2b9fe1abceb2d01942060a150b931230778e68";
+
 function requestCase(name: string, request: ProofRequest) {
   const { mins, maxs } = bounds(request);
   return {
@@ -71,6 +102,15 @@ const fixed = {
   nonce: `0x${"5e".repeat(31)}` as Hex,
   requestId: "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
 };
+
+function assertThrows(fn: () => unknown): void {
+  try {
+    fn();
+  } catch {
+    return;
+  }
+  throw new Error("expected an error");
+}
 
 function attributeRecord(values: Readonly<Record<Attribute, bigint>>): Record<string, string> {
   return Object.fromEntries(ATTRIBUTES.map((a) => [a, dec(values[a])]));
@@ -107,6 +147,74 @@ export function deterministicVectors() {
   ).map(([chainId, consumer, context]) => {
     const scope = onchainScope(chainId, consumer, context);
     return { chain_id: chainId, consumer, context, scope: dec(scope), tag: dec(scopeTag(scope)) };
+  });
+
+  // On-chain scope ids: built by onchainScopeId (any input case; lowercase out), then mapped to
+  // AgentClaimsVerifier.scopeOf(consumer, context) by scopeField.
+  const onchainIds = (
+    [
+      [84532n, ONCHAIN_CONSUMER, ONCHAIN_CONTEXT],
+      [84532n, "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", `0x${"CD".repeat(32)}`],
+      [31337n, "0x5FBDB2315678AFECB367F032D93F642F64180AA3", `0x${"ff".repeat(32)}`],
+      [10n ** 32n - 1n, "0x1111111111111111111111111111111111111111", `0x${"00".repeat(32)}`],
+    ] as [bigint, string, string][]
+  ).map(([chainId, consumer, context]) => {
+    const scopeId = onchainScopeId(chainId, consumer, context);
+    const parsed = parseOnchainScopeId(scopeId) as NonNullable<ReturnType<typeof parseOnchainScopeId>>;
+    const scope = scopeField(scopeId);
+    return {
+      chain_id: dec(chainId),
+      consumer,
+      context,
+      scope_id: scopeId,
+      parsed: { chain_id: dec(parsed.chainId), consumer: parsed.consumer, context: parsed.context },
+      scope: dec(scope),
+      scope_bytes32: toBytes32(scope),
+      tag: dec(scopeTag(scope)),
+    };
+  });
+
+  // How scopeField reads ids that look like on-chain ids: only the exact form is on-chain (in any
+  // case of hex digits); everything else is an ordinary string scope.
+  const [first] = onchainIds as [(typeof onchainIds)[number]];
+  const [, , consumerHex, contextHex] = first.scope_id.split(":") as [string, string, string, string];
+  const scopeIdCases = [
+    first.scope_id,
+    first.scope_id.toUpperCase().replace("EIP155", "eip155").replaceAll("0X", "0x"),
+    `eip155:84532:${consumerHex.toUpperCase().replace("0X", "0x")}:${contextHex}`,
+    `EIP155:84532:${consumerHex}:${contextHex}`,
+    `eip155:0:${consumerHex}:${contextHex}`,
+    `eip155:084532:${consumerHex}:${contextHex}`,
+    `eip155:${"9".repeat(33)}:${consumerHex}:${contextHex}`,
+    `eip155:84532:${consumerHex.slice(0, -2)}:${contextHex}`,
+    `eip155:84532:${consumerHex}:${contextHex.slice(0, -2)}`,
+    `eip155:84532:${consumerHex.slice(2)}:${contextHex}`,
+    `eip155:84532:${consumerHex}:${contextHex}:extra`,
+    ` eip155:84532:${consumerHex}:${contextHex}`,
+    `eip155:84532:${consumerHex}`,
+    "eip155:84532",
+  ].map((scopeId) => {
+    const scope = scopeField(scopeId);
+    return {
+      scope_id: scopeId,
+      onchain: parseOnchainScopeId(scopeId) !== null,
+      scope: dec(scope),
+      tag: dec(scopeTag(scope)),
+    };
+  });
+
+  const invalidOnchainIds = (
+    [
+      ["0", ONCHAIN_CONSUMER, ONCHAIN_CONTEXT],
+      [dec(10n ** 32n), ONCHAIN_CONSUMER, ONCHAIN_CONTEXT],
+      ["84532", "0x1234", ONCHAIN_CONTEXT],
+      ["84532", ONCHAIN_CONSUMER.slice(2), ONCHAIN_CONTEXT],
+      ["84532", ONCHAIN_CONSUMER, "0x00"],
+      ["84532", ONCHAIN_CONSUMER, `0x${"zz".repeat(32)}`],
+    ] as [string, string, string][]
+  ).map(([chainId, consumer, context]) => {
+    assertThrows(() => onchainScopeId(BigInt(chainId), consumer, context));
+    return { chain_id: chainId, consumer, context };
   });
 
   const moneyBounds = [
@@ -192,6 +300,14 @@ export function deterministicVectors() {
       }),
     ),
     requestCase(
+      "onchain_scope",
+      createProofRequest({
+        ...fixed,
+        scope: onchainScopeId(fixed.chainId, ONCHAIN_CONSUMER, ONCHAIN_CONTEXT),
+        require: [verifiedCompany(), reservedFor("25.00", { until: NOW + 86_400 })],
+      }),
+    ),
+    requestCase(
       "intersected",
       createProofRequest({
         ...fixed,
@@ -267,6 +383,9 @@ export function deterministicVectors() {
     disclosure_masks: masks,
     scopes,
     onchain_scopes: onchain,
+    onchain_scope_ids: onchainIds,
+    scope_id_cases: scopeIdCases,
+    invalid_onchain_scope_ids: invalidOnchainIds,
     money_bounds: moneyBounds,
     integer_bounds: integerBounds,
     requests,

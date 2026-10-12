@@ -1,13 +1,19 @@
 import { readFileSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
-import { fromBytes32 } from "../src/field";
+import { fromBytes32, onchainScope, scopeField } from "../src/field";
 import { createProofGate, gateNonce, PROOF_HEADERS } from "../src/http";
+import { toClaimsVerifierArgs } from "../src/onchain";
 import { prepareProof } from "../src/prover";
 import { parseProofRequest, requestHash, type ProofRequest } from "../src/request";
 import { computeRoot } from "../src/tree";
-import { publicSignals, releaseProverResources, type ProofPresentation } from "../src/verifier";
+import {
+  publicSignals,
+  releaseProverResources,
+  verifyPresentation,
+  type ProofPresentation,
+} from "../src/verifier";
 import { GATE_REQUIREMENTS, rootInfoFromJson } from "./fixtures";
-import { deterministicVectors } from "./vector-data";
+import { claimsArgsJson, deterministicVectors } from "./vector-data";
 
 /** The committed vectors the Python SDK runs must stay true. */
 const vectors = JSON.parse(readFileSync(new URL("./vectors/proofs.json", import.meta.url), "utf8"));
@@ -82,6 +88,29 @@ describe("committed proof vectors", () => {
       root: vectors.proof.expected.root,
     });
     expect(await g.check(headers)).toMatchObject({ kind: "proof-required", reason: "nonce_reused" });
+  });
+
+  it("carry AgentClaimsVerifier calldata for the gate-issued proof", () => {
+    const { request, presentation } = vectors.proof;
+    expect(claimsArgsJson(toClaimsVerifierArgs(request, presentation))).toEqual(
+      vectors.proof.claims_verifier_args,
+    );
+  });
+
+  it("carry a proof for an on-chain scope id that verifies, with its calldata", async () => {
+    const v = vectors.onchain_proof;
+    expect(scopeField(v.request.scope)).toBe(onchainScope(v.chain_id, v.consumer, v.context));
+    expect(requestHash(v.request)).toBe(v.request_hash);
+    expect(publicSignals(v.request, v.presentation)).toEqual(v.public_signals);
+    expect(v.public_signals[2]).toBe(onchainScope(v.chain_id, v.consumer, v.context).toString());
+    const result = await verifyPresentation({
+      request: v.request,
+      presentation: v.presentation,
+      rootInfo: rootInfoFromJson(v.root_info),
+      now: v.now,
+    });
+    expect(result).toMatchObject({ valid: true, reason: null });
+    expect(claimsArgsJson(toClaimsVerifierArgs(v.request, v.presentation))).toEqual(v.claims_verifier_args);
   });
 
   it("carry tampered variants refused for the stated reason", async () => {

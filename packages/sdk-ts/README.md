@@ -155,6 +155,25 @@ app.get(
 Adapters: `withProofGate` (Web `Request`/`Response`), `honoProofGate`, `expressProofGate`,
 `nodeProofGate`, `fastifyProofGate`; `proofOf(request)` returns the verified proof.
 
+Contracts verify on-chain with `AgentClaimsVerifier`. A contract that admits agents through
+`verifyAndConsume` asks for its own scope id, `onchainScopeId(chainId, consumer, context)`
+(`eip155:<chainId>:<consumer>:<context>`, which maps to `scopeOf(consumer, context)`); the agent
+proves it explicitly (the automatic fetch flow never answers on-chain scopes), and
+`toClaimsVerifierArgs(request, presentation)` returns `{ claims, proof }` for viem with
+`CLAIMS_VERIFIER_ABI` (all three from `@agentbank/sdk/proof-server`; the helper also from
+`/prover`):
+
+```ts
+const request = createProofRequest({ scope: onchainScopeId(84532, consumer, context), require });
+const { claims, proof } = toClaimsVerifierArgs(request, await agent.proofs.prove(request));
+await client.readContract({
+  address: verifier,
+  abi: CLAIMS_VERIFIER_ABI,
+  functionName: "verify",
+  args: [claims, proof, 16, 7_200n],
+});
+```
+
 Runnable versions: [`examples/`](examples) (principal setup, agent payment, x402 fetch, seller
 paywall). Guides: the [documentation site](../../apps/docs).
 

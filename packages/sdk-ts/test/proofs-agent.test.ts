@@ -1,5 +1,6 @@
 import { inspect } from "node:util";
 import { DISCLOSURE_CLASSES } from "@agentbank/core/api";
+import { decodeFunctionData, encodeFunctionData } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -10,8 +11,10 @@ import {
   InvalidRequestError,
   NotFoundError,
   PermissionDeniedError,
+  onchainScopeId,
   ProofError,
   releaseProofResources,
+  scopeField,
   scopeTagOf,
   type AgentClientOptions,
   type ProofRequest,
@@ -20,15 +23,19 @@ import {
   apiRootResolver,
   balanceAtLeast,
   canPayPerTx,
+  CLAIMS_VERIFIER_ABI,
   createProofRequest,
   decodeProof,
   encodeProofRequired,
+  onchainScope,
   reputation,
   reservedFor,
+  toClaimsVerifierArgs,
   verifiedCompany,
   verifyPresentation,
   type Requirement,
 } from "../src/proof-server";
+import * as proverEntry from "../src/prover";
 import { startFakeApi, type FakeApi } from "./helpers/fake-api";
 
 const ACCT = "acct_01JABCDEFGHJKMNPQRSTVWXYZ0";
@@ -208,6 +215,68 @@ describe("prove", () => {
     expect((mainnet as PermissionDeniedError).code).toBe("mainnet_locked");
     expect((await proofError(agent().proofs.prove({ nope: 1 } as never))).reason).toBe("invalid_request");
     expect((await proofError(agent().proofs.prove("%%%"))).reason).toBe("invalid_request");
+    expect(witnessFetches()).toBe(fetches);
+  });
+});
+
+describe("on-chain scopes", () => {
+  const consumer = "0x00000000000000000000000000000000000A11CE";
+  const context = `0x${"42".repeat(32)}` as const;
+
+  it("proves for an on-chain scope id explicitly, with AgentClaimsVerifier calldata", async () => {
+    const scope = onchainScopeId(84532, consumer, context);
+    expect(scope).toBe(`eip155:84532:${consumer.toLowerCase()}:${context}`);
+    const req = createProofRequest({ scope, require: [verifiedCompany(), canPayPerTx("5.00")] });
+    const presentation = await agent().proofs.prove(req);
+    expect(await verify(req, presentation)).toMatchObject({ valid: true, reason: null });
+
+    const args = toClaimsVerifierArgs(req, presentation);
+    expect(args.claims.scope).toBe(onchainScope(84532, consumer, context));
+    expect(args.claims.scope).toBe(scopeField(scope));
+    expect(args.claims.nonce).toBe(BigInt(req.nonce));
+    expect(proverEntry.toClaimsVerifierArgs(req, presentation)).toEqual(args);
+    // The arguments fit viem's types for the ABI and encode as the contract expects.
+    const verifyCall = encodeFunctionData({
+      abi: CLAIMS_VERIFIER_ABI,
+      functionName: "verify",
+      args: [args.claims, args.proof, 16, 7_200n],
+    });
+    expect(decodeFunctionData({ abi: CLAIMS_VERIFIER_ABI, data: verifyCall }).args).toEqual([
+      args.claims,
+      args.proof,
+      16,
+      7_200n,
+    ]);
+    const consumeCall = encodeFunctionData({
+      abi: proverEntry.CLAIMS_VERIFIER_ABI,
+      functionName: "verifyAndConsume",
+      args: [context, args.claims, args.proof, 16, 0n],
+    });
+    expect(consumeCall.slice(0, 10)).not.toBe(verifyCall.slice(0, 10));
+  });
+
+  it("never answers on-chain scopes automatically, and refuses contracts on a mainnet", async () => {
+    const scope = onchainScopeId(84532, consumer, context);
+    const permissive = agent({ proofs: { acceptScope: () => true } });
+    expect(permissive.proofs.acceptsScope(scope, new URL("http://api.seller.example/"))).toBe(false);
+    expect(permissive.proofs.acceptsScope("anything.example", new URL("http://api.seller.example/"))).toBe(
+      true,
+    );
+    // One probing budget per scope, however the on-chain scope id is spelled.
+    const once = agent({ proofs: { maxPresentationsPerScopePerHour: 1 } });
+    await once.proofs.prove(createProofRequest({ scope, require: [verifiedCompany()] }));
+    const shouted = scope.toUpperCase().replace("EIP155", "eip155").replaceAll("0X", "0x");
+    const limited = await proofError(
+      once.proofs.prove(createProofRequest({ scope: shouted, require: [verifiedCompany()] })),
+    );
+    expect(limited.reason).toBe("rate_limited");
+
+    const fetches = witnessFetches();
+    const mainnet = await agent()
+      .proofs.prove(createProofRequest({ scope: onchainScopeId(8453, consumer, context) }))
+      .catch((e: unknown) => e);
+    expect(mainnet).toBeInstanceOf(PermissionDeniedError);
+    expect((mainnet as PermissionDeniedError).code).toBe("mainnet_locked");
     expect(witnessFetches()).toBe(fetches);
   });
 });

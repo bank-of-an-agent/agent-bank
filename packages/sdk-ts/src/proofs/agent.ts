@@ -1,5 +1,11 @@
 import { formatAmount, isLockedMainnet, parseAmount } from "@agentbank/core";
-import { scopeTagOf, toBytes32 } from "@agentbank/proofs/field";
+import {
+  isOnchainScopeId,
+  parseOnchainScopeId,
+  scopeField,
+  scopeTagOf,
+  toBytes32,
+} from "@agentbank/proofs/field";
 import { bounds, formatBoundValue, parseProofRequest } from "@agentbank/proofs/request";
 import { ATTRIBUTE_INFO, MAX_U64 } from "@agentbank/proofs/schema";
 import { identityCommitment, parseSecret } from "@agentbank/proofs/tree";
@@ -183,9 +189,12 @@ class PresentationLimiter {
     this.#max = max;
   }
 
-  /** Take a slot for `scope` (throws `rate_limited`); the returned function gives it back. */
+  /**
+   * Take a slot for the request's scope (throws `rate_limited`); the returned function gives it
+   * back. Keyed by the scope's field element, so spellings of one on-chain scope id share a budget.
+   */
   take(request: ProofRequest): () => void {
-    const scope = request.scope;
+    const scope = scopeField(request.scope).toString();
     const now = Date.now();
     const recent = (this.#log.get(scope) ?? []).filter((t) => t > now - HOUR_MS);
     if (recent.length >= this.#max) {
@@ -193,7 +202,7 @@ class PresentationLimiter {
       const oldest = recent[0];
       throw new ProofError(
         "rate_limited",
-        `Refusing to prove: ${recent.length} presentation(s) to "${scope}" in the last hour reach maxPresentationsPerScopePerHour (${this.#max}); a verifier asking many questions can narrow down the attested values`,
+        `Refusing to prove: ${recent.length} presentation(s) to "${request.scope}" in the last hour reach maxPresentationsPerScopePerHour (${this.#max}); a verifier asking many questions can narrow down the attested values`,
         { request, ...(oldest !== undefined ? { retryAfterMs: oldest + HOUR_MS - now } : {}) },
       );
     }
@@ -378,9 +387,12 @@ export class AgentProofs extends Proofs {
     return this.#secret === undefined ? undefined : toBytes32(identityCommitment(this.#secret));
   }
 
-  /** Whether the automatic fetch flow answers a challenge for `scope` from `url`. */
+  /**
+   * Whether the automatic fetch flow answers a challenge for `scope` from `url`: never for an
+   * on-chain scope id (prove those with {@link prove}), otherwise per `acceptScope`.
+   */
   acceptsScope(scope: string, url: URL): boolean {
-    return this.#acceptScope(scope, url);
+    return !isOnchainScopeId(scope) && this.#acceptScope(scope, url);
   }
 
   #requireSecret(): Hex {
@@ -413,7 +425,9 @@ export class AgentProofs extends Proofs {
    * value): fetch the witness (from a matching active reservation when the request
    * constrains reservations), check locally that it can satisfy the request, and prove
    * (about 1.5 s in Node). Send the result back as
-   * `AGENT-PROOF: encodeProof({ request, presentation })`.
+   * `AGENT-PROOF: encodeProof({ request, presentation })`, or, for an on-chain consumer
+   * (scope `onchainScopeId(chainId, consumer, context)`, which the automatic fetch flow never
+   * answers), submit `toClaimsVerifierArgs(request, presentation)` to `AgentClaimsVerifier`.
    *
    * @throws {@link ProofError} `proof_secret_missing`, `invalid_request`, `request_expired`,
    *   `rate_limited` (probing guard), `reservation_required`, `reservation_pending`,
@@ -426,6 +440,13 @@ export class AgentProofs extends Proofs {
       throw new PermissionDeniedError(
         "mainnet_locked",
         `The proof request is for chain ${parsed.chain_id}, a mainnet; Agent Bank is testnet-only`,
+      );
+    }
+    const consumerChain = parseOnchainScopeId(parsed.scope)?.chainId;
+    if (consumerChain !== undefined && isLockedMainnet(Number(consumerChain))) {
+      throw new PermissionDeniedError(
+        "mainnet_locked",
+        `The proof request is for a contract on chain ${consumerChain}, a mainnet; Agent Bank is testnet-only`,
       );
     }
     if (nowSeconds() > parsed.expires_at) {
