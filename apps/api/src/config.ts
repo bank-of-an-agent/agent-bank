@@ -1,3 +1,4 @@
+import { SIMULATED_ATTESTER_KEY } from "@agentbank/chain";
 import {
   AddressSchema,
   assertTestnet,
@@ -94,6 +95,17 @@ const EnvSchema = z.object({
   FEATURE_ESCROW: bool(true),
   FEATURE_STREAMS: bool(true),
   FEATURE_TREASURY_SWEEP: bool(false),
+  FEATURE_PRIVATE_PROOFS: bool(true),
+
+  /**
+   * Private proofs (docs/private-proofs.md): the AgentAttestationRegistry attester key. Testnet
+   * key from the secret manager; it publishes and revokes roots and can move nothing. Defaults to
+   * the public simulated attester on the simulated chain only.
+   */
+  PROOFS_ATTESTER_KEY: optionalString,
+  PROOFS_ROOT_INTERVAL_SECONDS: int(3_600, 60, 7 * 86_400),
+  PROOFS_ROOT_TTL_SECONDS: int(7_200, 120, 7 * 86_400),
+  PROOFS_MIN_ANONYMITY_SET: int(16, 1, 1_000_000),
 
   RATE_LIMIT_PER_MINUTE: int(600, 1, 1_000_000),
   WEBHOOK_RETRY_SCHEDULE_SECONDS: optionalString,
@@ -175,7 +187,22 @@ export interface Config {
   consoleSessionTtlSeconds: number;
   staffToken: string | undefined;
   allowOpenSignup: boolean;
-  features: { escrow: boolean; streams: boolean; treasurySweep: boolean };
+  features: { escrow: boolean; streams: boolean; treasurySweep: boolean; privateProofs: boolean };
+  /** Private proofs: attested-facts roots (`proofs-roots` job) and the attester key. */
+  proofs: {
+    /**
+     * `AgentAttestationRegistry` attester (`PROOFS_ATTESTER_KEY`): publishes and revokes roots,
+     * never moves funds, never the relayer key. Absent on anvil/base-sepolia: roots are not
+     * published (the job reports `invalid_state`); the simulated chain uses its public attester.
+     */
+    attesterKey: `0x${string}` | undefined;
+    /** Rebuild the tree at least this often even when nothing changed. */
+    rootIntervalSeconds: number;
+    /** `valid_until = snapshot_at + rootTtlSeconds`. */
+    rootTtlSeconds: number;
+    /** Fewest leaves a root should have before default verifiers accept it (16; sandboxes use 1). */
+    minAnonymitySet: number;
+  };
   rateLimitPerMinute: number;
   webhookRetryScheduleSeconds: readonly number[];
   webhookTimeoutMs: number;
@@ -316,6 +343,29 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       problems.push("API_RELAYER_KEY: must be a 32-byte hex key");
     else relayerKey = rawRelayerKey as `0x${string}`;
   }
+  let attesterKey: `0x${string}` | undefined;
+  if (e.PROOFS_ATTESTER_KEY) {
+    const key = e.PROOFS_ATTESTER_KEY;
+    if (!/^0x[0-9a-fA-F]{64}$/.test(key)) problems.push("PROOFS_ATTESTER_KEY: must be a 32-byte hex key");
+    else if (rawRelayerKey && key.toLowerCase() === rawRelayerKey.toLowerCase())
+      problems.push("PROOFS_ATTESTER_KEY: must not be the relayer key (API_RELAYER_KEY)");
+    else if (
+      [e.COSIGNER_DEV_PRIVATE_KEY, e.SANDBOX_FAUCET_KEY].some(
+        (k) => k && k.toLowerCase() === key.toLowerCase(),
+      )
+    )
+      problems.push("PROOFS_ATTESTER_KEY: must be a key of its own (not the co-signer or faucet key)");
+    else if (chain.name !== "simulated" && key.toLowerCase() === SIMULATED_ATTESTER_KEY.toLowerCase())
+      problems.push(
+        "PROOFS_ATTESTER_KEY: the public simulated attester key only works on the simulated chain",
+      );
+    else attesterKey = key as `0x${string}`;
+  }
+  if (e.PROOFS_ROOT_TTL_SECONDS <= e.PROOFS_ROOT_INTERVAL_SECONDS) {
+    problems.push(
+      "PROOFS_ROOT_TTL_SECONDS: must be greater than PROOFS_ROOT_INTERVAL_SECONDS (roots would lapse between builds)",
+    );
+  }
   let deployment: Record<string, unknown> | undefined;
   if (e.AGENTBANK_DEPLOYMENT_JSON) {
     try {
@@ -386,6 +436,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       escrow: e.FEATURE_ESCROW,
       streams: e.FEATURE_STREAMS,
       treasurySweep: e.FEATURE_TREASURY_SWEEP,
+      privateProofs: e.FEATURE_PRIVATE_PROOFS,
+    },
+    proofs: {
+      attesterKey,
+      rootIntervalSeconds: e.PROOFS_ROOT_INTERVAL_SECONDS,
+      rootTtlSeconds: e.PROOFS_ROOT_TTL_SECONDS,
+      minAnonymitySet: e.PROOFS_MIN_ANONYMITY_SET,
     },
     rateLimitPerMinute: e.RATE_LIMIT_PER_MINUTE,
     webhookRetryScheduleSeconds: schedule,

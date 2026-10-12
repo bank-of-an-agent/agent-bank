@@ -98,6 +98,9 @@ importers:
       pino:
         specifier: ^10.4.0
         version: 10.4.0
+      snarkjs:
+        specifier: 0.7.6
+        version: 0.7.6
       viem:
         specifier: ^2.57.4
         version: 2.57.4(typescript@6.0.3)(zod@4.6.6)
@@ -524,12 +527,15 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@agentbank/proofs':
-        specifier: workspace:*
-        version: link:../proofs
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.1
         version: 1.32.1(@cfworker/json-schema@4.1.1)(zod@4.6.6)
+      poseidon-lite:
+        specifier: 0.3.0
+        version: 0.3.0
+      snarkjs:
+        specifier: 0.7.6
+        version: 0.7.6
       viem:
         specifier: ^2.57.4
         version: 2.57.4(typescript@6.0.3)(zod@4.6.6)
@@ -540,6 +546,9 @@ importers:
       '@agentbank/core':
         specifier: workspace:*
         version: link:../core
+      '@agentbank/proofs':
+        specifier: workspace:*
+        version: link:../proofs
       '@agentbank/sdk':
         specifier: workspace:*
         version: link:../sdk-ts
@@ -615,9 +624,12 @@ importers:
 
   packages/sdk-ts:
     dependencies:
-      '@agentbank/proofs':
-        specifier: workspace:*
-        version: link:../proofs
+      poseidon-lite:
+        specifier: 0.3.0
+        version: 0.3.0
+      snarkjs:
+        specifier: 0.7.6
+        version: 0.7.6
       viem:
         specifier: ^2.57.4
         version: 2.57.4(typescript@6.0.3)(zod@4.6.6)
@@ -628,6 +640,9 @@ importers:
       '@agentbank/core':
         specifier: workspace:*
         version: link:../core
+      '@agentbank/proofs':
+        specifier: workspace:*
+        version: link:../proofs
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6

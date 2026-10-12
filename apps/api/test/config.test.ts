@@ -57,7 +57,18 @@ describe("configuration", () => {
   it("treats a missing COSIGNER_URL as fail-closed rather than an error", () => {
     const config = loadConfig({ NODE_ENV: "test", DATABASE_URL: "pglite://memory" });
     expect(config.cosigner.url).toBeUndefined();
-    expect(config.features).toEqual({ escrow: true, streams: true, treasurySweep: false });
+    expect(config.features).toEqual({
+      escrow: true,
+      streams: true,
+      treasurySweep: false,
+      privateProofs: true,
+    });
+    expect(config.proofs).toEqual({
+      attesterKey: undefined,
+      rootIntervalSeconds: 3_600,
+      rootTtlSeconds: 7_200,
+      minAnonymitySet: 16,
+    });
     expect(config.allowOpenSignup).toBe(false);
   });
 
@@ -106,6 +117,53 @@ describe("configuration", () => {
     expect(loadConfig({ ...base, API_RELAYER_KEY: `0x${"22".repeat(32)}` }).relayerKey).toBe(
       `0x${"22".repeat(32)}`,
     );
+  });
+});
+
+describe("private proofs configuration", () => {
+  const relayer = `0x${"22".repeat(32)}`;
+  const attester = `0x${"33".repeat(32)}`;
+
+  it("keeps the attester key apart from every key that can pay gas or sign", () => {
+    expect(loadConfig({ ...base, PROOFS_ATTESTER_KEY: attester }).proofs.attesterKey).toBe(attester);
+    expect(() => loadConfig({ ...base, PROOFS_ATTESTER_KEY: "0x1234" })).toThrow(/PROOFS_ATTESTER_KEY/);
+    expect(() =>
+      loadConfig({
+        ...base,
+        API_RELAYER_KEY: relayer,
+        PROOFS_ATTESTER_KEY: relayer.toUpperCase().replace("0X", "0x"),
+      }),
+    ).toThrow(/must not be the relayer key/);
+    expect(() =>
+      loadConfig({ ...base, COSIGNER_DEV_PRIVATE_KEY: attester, PROOFS_ATTESTER_KEY: attester }),
+    ).toThrow(/key of its own/);
+    expect(() =>
+      loadConfig({
+        ...base,
+        AGENTBANK_CHAIN: "anvil",
+        REVENUE_ADDRESS: "0x1111111111111111111111111111111111111111",
+        PROOFS_ATTESTER_KEY: "0xee60ebc5dbb838b5f3537acbce54e4aafa54a18a57da395b994875a6e3df63c0",
+      }),
+    ).toThrow(/only works on the simulated chain/);
+  });
+
+  it("validates the root schedule and the feature flag", () => {
+    const config = loadConfig({
+      ...base,
+      FEATURE_PRIVATE_PROOFS: "false",
+      PROOFS_ROOT_INTERVAL_SECONDS: "60",
+      PROOFS_ROOT_TTL_SECONDS: "600",
+      PROOFS_MIN_ANONYMITY_SET: "1",
+    });
+    expect(config.features.privateProofs).toBe(false);
+    expect(config.proofs).toMatchObject({ rootIntervalSeconds: 60, rootTtlSeconds: 600, minAnonymitySet: 1 });
+    expect(() =>
+      loadConfig({ ...base, PROOFS_ROOT_INTERVAL_SECONDS: "7200", PROOFS_ROOT_TTL_SECONDS: "3600" }),
+    ).toThrow(/must be greater than PROOFS_ROOT_INTERVAL_SECONDS/);
+    expect(() => loadConfig({ ...base, PROOFS_ROOT_TTL_SECONDS: String(8 * 86_400) })).toThrow(
+      /PROOFS_ROOT_TTL_SECONDS/,
+    );
+    expect(() => loadConfig({ ...base, PROOFS_MIN_ANONYMITY_SET: "0" })).toThrow(/PROOFS_MIN_ANONYMITY_SET/);
   });
 });
 
@@ -193,7 +251,13 @@ describe("meta", () => {
       owner_authorization_chain_id: 1337,
       usdc: { address: h.chain.contracts.usdc, decimals: 6, eip712_name: "USDC", eip712_version: "2" },
       cosigner_address: h.cosigner.address,
-      features: { escrow: true, streams: true, treasury_sweep: false, open_signup: true },
+      features: {
+        escrow: true,
+        streams: true,
+        treasury_sweep: false,
+        open_signup: true,
+        private_proofs: true,
+      },
     });
     expect(res.body.contracts.escrow).toBe(h.chain.contracts.escrow);
     expect(res.body.revenue_address).toMatch(/^0x/);

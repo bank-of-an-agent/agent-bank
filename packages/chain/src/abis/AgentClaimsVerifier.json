@@ -1,5 +1,21 @@
 [
   {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "registry_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groth16Verifier_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "function",
     "name": "ATTRIBUTE_COUNT",
     "inputs": [],
@@ -388,5 +404,10 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
   }
 ]

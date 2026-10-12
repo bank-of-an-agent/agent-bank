@@ -1,6 +1,7 @@
 import type { ChainGateway } from "@agentbank/chain";
 import type { SimulatedChain } from "@agentbank/chain/simulated";
 import type { Clock, CosignerClient } from "@agentbank/core";
+import type { LocalAccount } from "viem/accounts";
 import type { SqlClient } from "@agentbank/db";
 import type { Ledger } from "@agentbank/ledger";
 import type { Config } from "./config";
@@ -26,6 +27,12 @@ export interface AppDeps {
   logger: Logger;
   /** `@agentbank/reconciliation`, mounted on `/internal/*` for the indexer. Optional. */
   reconciler?: Reconciler;
+  /**
+   * `AgentAttestationRegistry` attester (private proofs): publishes and revokes attested-facts
+   * roots. It can move no funds and is never the relayer key. Absent: the simulated chain falls
+   * back to its public attester; other chains do not publish roots (`invalid_state`).
+   */
+  attester?: LocalAccount;
   /** The in-memory chain behind `chain` on `AGENTBANK_CHAIN=simulated` (faucet, dev block producer). */
   simulator?: SimulatedChain;
   /** Releases resources beyond the database (the in-process co-signer). */

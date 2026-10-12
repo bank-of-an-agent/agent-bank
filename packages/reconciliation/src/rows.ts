@@ -75,6 +75,9 @@ export interface EscrowRow {
   payment_id: string | null;
   tx_hash: string | null;
   memo: string | null;
+  /** Split of a resolved dispute (`Resolved` event), minor units; null until resolved. */
+  resolution_payee_amount?: bigint | null;
+  resolution_payer_amount?: bigint | null;
   created_at: Date;
   updated_at: Date;
 }

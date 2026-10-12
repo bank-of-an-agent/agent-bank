@@ -1,7 +1,10 @@
 /**
- * Row shapes of the tables the API reads (0002_core + 0005_api). Both database drivers map
- * `int8` to bigint, `timestamptz` to Date, arrays to arrays and `jsonb` to parsed JSON.
+ * Row shapes of the tables the API reads (0002_core + 0005_api + 0006_proofs). Both database
+ * drivers map `int8` to bigint, `numeric` to string, `timestamptz` to Date, arrays to arrays and
+ * `jsonb` to parsed JSON.
  */
+
+import type { Attribute } from "@agentbank/proofs";
 
 export type KycStatus = "pending" | "in_review" | "approved" | "rejected";
 export type Tier = "free" | "pro" | "business" | "enterprise";
@@ -287,6 +290,9 @@ export interface EscrowRow {
   tx_hash: string | null;
   memo: string | null;
   mandate_id: string | null;
+  /** Split of a resolved dispute (`Resolved`), recorded by the reconciler; null until resolved. */
+  resolution_payee_amount: bigint | null;
+  resolution_payer_amount: bigint | null;
   op_session_id: string | null;
   op_deadline: Date | null;
   op_submitted_at: Date | null;
@@ -519,5 +525,86 @@ export interface CosignerOutboxRow {
   next_attempt_at: Date;
   last_error: string | null;
   created_at: Date;
+  updated_at: Date;
+}
+
+// ---------------------------------------------------------------- private proofs (0006_proofs)
+
+export interface ProofSettingsRow {
+  agent_id: string;
+  org_id: string;
+  enabled: boolean;
+  disclose: string[];
+  disclosure_mask: number;
+  updated_at: Date;
+  updated_by: string;
+}
+
+export interface ProofIdentityRow {
+  account_id: string;
+  agent_id: string;
+  org_id: string;
+  identity_commitment: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export type ProofReservationStatus = "pending" | "active" | "released" | "expired";
+
+export interface ProofReservationRow {
+  id: string;
+  account_id: string;
+  agent_id: string;
+  org_id: string;
+  chain_id: number;
+  hold_id: string;
+  amount: bigint;
+  /** numeric(20,0): a u64 as a base-10 string. */
+  scope_tag: string;
+  expires_at: Date;
+  status: ProofReservationStatus;
+  included_in_epoch: bigint | null;
+  created_at: Date;
+  released_at: Date | null;
+}
+
+export type ProofRootStatusRow = "publishing" | "published" | "revoked" | "expired" | "failed";
+
+export interface ProofRootRow {
+  chain_id: number;
+  root: string;
+  epoch: bigint;
+  snapshot_at: Date;
+  valid_until: Date;
+  leaf_count: number;
+  status: ProofRootStatusRow;
+  tx_hash: string | null;
+  published_at: Date | null;
+  revoked_at: Date | null;
+  revoke_tx_hash: string | null;
+  narrowing: boolean;
+  failure_reason: string | null;
+  created_at: Date;
+}
+
+export interface ProofLeafRow {
+  chain_id: number;
+  epoch: bigint;
+  leaf_index: number;
+  account_id: string;
+  reservation_id: string | null;
+  leaf: string;
+  /** Attribute name → u64 as a base-10 string (all 13, circuit order). */
+  attributes: Record<Attribute, string>;
+  disclosure_mask: number;
+}
+
+export interface ProofTreeStateRow {
+  chain_id: number;
+  dirty: boolean;
+  narrowing: boolean;
+  dirty_since: Date | null;
+  version: bigint;
+  min_epoch: bigint;
   updated_at: Date;
 }

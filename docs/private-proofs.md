@@ -192,7 +192,8 @@ Known limits, stated plainly:
 - **Leaf:** `Poseidon(identity, Poseidon(attributes[0..12], mask))`, `identity = Poseidon(secret)`.
 - **Tree:** depth 20 (about one million leaves), Poseidon(2) nodes, empty subtrees hash from
   zero leaves (`zero[0] = 0`, `zero[i+1] = Poseidon(zero[i], zero[i])`). `pathBits[i] = 1` when
-  the node at level `i` is a right child. Leaves are ordered by account id, then reservation id.
+  the node at level `i` is a right child. Leaves are ordered by account id, then reservation id,
+  followed by the epoch's salt leaf (see [Roots](#roots)).
 - **Nullifier:** `Poseidon(secret, scope)`: the same agent and verifier always produce the same
   value; different verifiers get unlinkable values.
 - **Public signals (30):** `nullifier, root, scope, nonce, mins[13], maxs[13]`.
@@ -303,6 +304,11 @@ Failure reasons: `malformed`, `request_expired`, `nonce_invalid`, `nonce_reused`
 - Each root records `epoch` (strictly increasing), `snapshot_at`, `valid_until = snapshot_at +
 PROOFS_ROOT_TTL_SECONDS` (default 7,200), `leaf_count`, the transaction hash and a status:
   `publishing → published → (revoked | expired)`, or `failed`.
+- Every tree ends with a public **salt leaf** after the attested leaves:
+  `keccak256(abi.encode("agentbank.proofs.epoch-salt.v1", chainId, epoch)) mod r`. The registry
+  refuses a root it has seen, and an unchanged set of facts would hash to the same tree. No one
+  knows a Poseidon preimage of the salt, so it proves nothing, and `leaf_count` (the anonymity
+  set) counts only the attested leaves.
 - Leaves are stored per epoch so witnesses can be served for every valid root. Roots older than
   their validity window are pruned after a day.
 - A build triggered by a narrowing change revokes all older valid roots after the new one lands.

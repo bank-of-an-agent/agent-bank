@@ -20,6 +20,7 @@
     "./artifacts": "./src/artifacts.ts",
     "./cli": "./src/cli.ts",
     "./verification_key.json": "./artifacts/verification_key.json",
+    "./manifest.json": "./artifacts/manifest.json",
     "./package.json": "./package.json"
   },
   "scripts": {

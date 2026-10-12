@@ -112,12 +112,21 @@ export async function undoEffects(tx: SqlClient, effects: readonly Effect[], now
 }
 
 const RESTORABLE: Record<"escrow" | "stream", readonly string[]> = {
-  escrow: ["status", "onchain_id", "tx_hash", "pending_action"],
+  escrow: [
+    "status",
+    "onchain_id",
+    "tx_hash",
+    "pending_action",
+    "resolution_payee_amount",
+    "resolution_payer_amount",
+  ],
   stream: ["status", "onchain_id", "tx_hash", "pending_action", "deposit", "last_settled_at"],
 };
 
 const TYPED: Record<string, "bigint" | "timestamptz" | "text"> = {
   deposit: "bigint",
+  resolution_payee_amount: "bigint",
+  resolution_payer_amount: "bigint",
   last_settled_at: "timestamptz",
 };
 

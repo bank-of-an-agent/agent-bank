@@ -4,6 +4,7 @@ import {
   contractsFromDeployment,
   EvmChainGateway,
   pimlicoUrl,
+  simulatedAttesterAccount,
   type AgentBankDeploymentFile,
   type ChainGateway,
 } from "@agentbank/chain";
@@ -15,7 +16,7 @@ import { createReconciler } from "@agentbank/reconciliation";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { privateKeyToAccount } from "viem/accounts";
+import { privateKeyToAccount, type LocalAccount } from "viem/accounts";
 import type { Config } from "./config";
 import { HttpCosignerClient } from "./cosigner/http-client";
 import { unavailableCosigner } from "./cosigner/unavailable";
@@ -79,6 +80,16 @@ export async function createChain(
   return { gateway };
 }
 
+/**
+ * The private-proofs attester (`PROOFS_ATTESTER_KEY`), or the public simulated attester on the
+ * simulated chain. Undefined elsewhere: roots are then not published (the job reports why).
+ */
+export function createAttester(config: Config): LocalAccount | undefined {
+  if (config.proofs.attesterKey) return privateKeyToAccount(config.proofs.attesterKey);
+  if (config.chain.name === "simulated") return simulatedAttesterAccount(config.chain.id);
+  return undefined;
+}
+
 /** The reconciler mounted on `/internal/*` for the indexer (`@agentbank/reconciliation`). */
 export function createApiReconciler(deps: Omit<AppDeps, "reconciler">): Reconciler {
   const contracts = deps.chain.contracts;
@@ -129,6 +140,7 @@ export async function createDeps(config: Config, logger: Logger, db?: SqlClient)
       timeoutMs: config.cosigner.timeoutMs,
     });
   }
+  const attester = createAttester(config);
   const base = {
     config,
     db: sql,
@@ -139,6 +151,7 @@ export async function createDeps(config: Config, logger: Logger, db?: SqlClient)
     screening: new SandboxScreening(config.screening.denylist),
     kyb: new SandboxKyb(),
     logger,
+    ...(attester ? { attester } : {}),
     ...(simulator ? { simulator } : {}),
     ...(close ? { close } : {}),
   };

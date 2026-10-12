@@ -851,6 +851,7 @@ export class GroupPlanner {
     let next: string;
     let type: WebhookEventType;
     let credited: Credited[] = [];
+    let resolution: { payee: string; payer: string } | null = null;
     switch (event.name) {
       case "Released": {
         const amount = uintOf(event.args.amount);
@@ -889,6 +890,8 @@ export class GroupPlanner {
         );
         next = "resolved";
         type = "escrow.released";
+        // The split decides the `disputes_lost` attribute of private proofs (who got less than half).
+        resolution = { payee: payeeAmount.toString(), payer: payerAmount.toString() };
         break;
       }
       case "Disputed": {
@@ -909,6 +912,9 @@ export class GroupPlanner {
         status: next,
         pending_action: null,
         tx_hash: this.group.txHash,
+        ...(resolution
+          ? { resolution_payee_amount: resolution.payee, resolution_payer_amount: resolution.payer }
+          : {}),
       });
       if (!row) return;
       this.ctx.escrows.set(row.id, row);
@@ -1232,9 +1238,15 @@ async function updateEscrow(
   const prev: Record<string, string | null> = {};
   for (const column of Object.keys(next))
     prev[column] = textOf((escrow as unknown as Record<string, unknown>)[column]);
+  const amount = (column: "resolution_payee_amount" | "resolution_payer_amount"): bigint | null => {
+    if (!(column in next)) return escrow[column] ?? null;
+    const value = next[column] ?? null;
+    return value === null ? null : BigInt(value);
+  };
   const row = await one<EscrowRow>(
     x.tx,
-    `UPDATE escrow SET status = COALESCE($2, status), onchain_id = $3, tx_hash = $4, pending_action = $5, updated_at = $6
+    `UPDATE escrow SET status = COALESCE($2, status), onchain_id = $3, tx_hash = $4, pending_action = $5, updated_at = $6,
+            resolution_payee_amount = $7, resolution_payer_amount = $8
       WHERE id = $1 RETURNING *`,
     [
       escrow.id,
@@ -1243,6 +1255,8 @@ async function updateEscrow(
       "tx_hash" in next ? (next.tx_hash ?? null) : escrow.tx_hash,
       "pending_action" in next ? (next.pending_action ?? null) : escrow.pending_action,
       x.now,
+      amount("resolution_payee_amount"),
+      amount("resolution_payer_amount"),
     ],
   );
   if (row) x.effect({ type: "escrow", escrow_id: escrow.id, prev, next });

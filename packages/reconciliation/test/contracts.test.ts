@@ -99,6 +99,14 @@ describe("escrow, streams, vaults and top-ups", () => {
     return rows[0] as { status: string; onchain_id: string | null };
   }
 
+  async function resolution(id: string): Promise<{ payee: bigint | null; payer: bigint | null }> {
+    const { rows } = await bank.db.query<{ payee: bigint | null; payer: bigint | null }>(
+      "SELECT resolution_payee_amount AS payee, resolution_payer_amount AS payer FROM escrow WHERE id = $1",
+      [id],
+    );
+    return rows[0] as { payee: bigint | null; payer: bigint | null };
+  }
+
   it("escrow: lock, release to an agent, dispute and resolve, refund by the payee", async () => {
     bank = await SimBank.create();
     const org = await bank.createOrg();
@@ -143,12 +151,47 @@ describe("escrow, streams, vaults and top-ups", () => {
     await bank.sync();
     expect((await escrowRow(e2.escrowId)).status).toBe("resolved");
     expect((await escrowRow(e3.escrowId)).status).toBe("refunded");
+    // The split of the resolved dispute (private proofs' disputes_lost reads it).
+    expect(await resolution(e2.escrowId)).toEqual({ payee: usd(12), payer: usd(8) });
+    expect(await resolution(e3.escrowId)).toEqual({ payee: null, payer: null });
+    expect(await resolution(e1.escrowId)).toEqual({ payee: null, payer: null });
     expect(await bank.ledger.balance(pocket(payer, "escrow"))).toBe(0n);
     expect(await bank.ledger.balance(pocket(payer, "operating"))).toBe(usd(90) - usd(53) + usd(8) + usd(10));
     expect(await bank.ledger.balance(chainRef(bank.chain.chainId, "USDC"))).toBe(-usd(90) + usd(12));
     const types = await eventTypes(bank);
     for (const t of ["escrow.locked", "escrow.released", "escrow.disputed", "escrow.refunded"])
       expect(types).toContain(t);
+    await expectReconciled(bank);
+  });
+
+  it("escrow: a reorg that drops the resolution clears the recorded split", async () => {
+    bank = await SimBank.create();
+    const org = await bank.createOrg();
+    const payer = await bank.createAccount(org);
+    const outsider = privateKeyToAccount(generatePrivateKey());
+    const arbiter = privateKeyToAccount(generatePrivateKey());
+    bank.faucet(payer.address, usd(40));
+    await bank.sync();
+    const escrow = bank.chain.contracts.escrow as Address;
+    const e = await lockEscrow(payer, outsider.address, usd(20), { arbiter: arbiter.address });
+    await bank.sync();
+    await bank.operate(payer, [escrowDisputeCall({ escrow, escrowId: 1n })]);
+    await bank.sync();
+    expect((await escrowRow(e.escrowId)).status).toBe("disputed");
+
+    const resolveTx = bank.chain.sendTransaction({
+      from: arbiter.address,
+      to: escrow,
+      data: escrowResolveCall({ escrow, escrowId: 1n, payeeAmount: usd(5) }).data,
+    });
+    await bank.sync();
+    expect((await escrowRow(e.escrowId)).status).toBe("resolved");
+    expect(await resolution(e.escrowId)).toEqual({ payee: usd(5), payer: usd(15) });
+
+    bank.chain.injectReorg(1, { drop: [resolveTx] });
+    await bank.sync();
+    expect((await escrowRow(e.escrowId)).status).toBe("disputed");
+    expect(await resolution(e.escrowId)).toEqual({ payee: null, payer: null });
     await expectReconciled(bank);
   });
 

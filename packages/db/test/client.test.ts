@@ -75,6 +75,43 @@ describe("SqlClient", () => {
     ).rejects.toThrow(/check/i);
   });
 
+  it("refuses mainnet private-proof roots and malformed proof rows", async () => {
+    const root = `0x${"ab".repeat(32)}`;
+    const insertRoot = (chainId: number, epoch: number, value: string) =>
+      db.query(
+        `INSERT INTO proof_root (chain_id, root, epoch, snapshot_at, valid_until, leaf_count, status, created_at)
+         VALUES ($1, $2, $3, now(), now() + interval '2 hours', 1, 'publishing', now())`,
+        [chainId, value, epoch],
+      );
+    await expect(insertRoot(8453, 1, root)).rejects.toThrow(/check/i);
+    await insertRoot(84532, 1, root);
+    await expect(insertRoot(84532, 2, root)).rejects.toSatisfy((e: unknown) => isUniqueViolation(e));
+    await expect(insertRoot(84532, 1, `0x${"cd".repeat(32)}`)).rejects.toSatisfy((e: unknown) =>
+      isUniqueViolation(e),
+    );
+    await expect(insertRoot(84532, 3, "0xABC")).rejects.toThrow(/check/i);
+    await expect(
+      db.query("INSERT INTO proof_tree_state (chain_id, updated_at) VALUES (1, now())"),
+    ).rejects.toThrow(/check/i);
+    await db.query("INSERT INTO agent (id, org_id, name) VALUES ('agt_x', 'org_x', 'x')");
+    await expect(
+      db.query(
+        `INSERT INTO proof_settings (agent_id, org_id, enabled, disclose, disclosure_mask, updated_at, updated_by)
+         VALUES ('agt_x', 'org_x', true, ARRAY['balance', 'secrets'], 8, now(), 'test')`,
+      ),
+    ).rejects.toThrow(/check/i);
+    await expect(
+      db.query(
+        `INSERT INTO proof_settings (agent_id, org_id, enabled, disclose, disclosure_mask, updated_at, updated_by)
+         VALUES ('agt_x', 'org_x', true, ARRAY['balance'], 8192, now(), 'test')`,
+      ),
+    ).rejects.toThrow(/check/i);
+    const { rows } = await db.query<{ a: bigint | null; b: bigint | null }>(
+      "SELECT resolution_payee_amount AS a, resolution_payer_amount AS b FROM escrow LIMIT 1",
+    );
+    expect(rows).toEqual([]);
+  });
+
   it("keeps the audit log append-only", async () => {
     await db.query(
       "INSERT INTO audit_log (seq, at, actor, action, subject, payload, prev_hash, hash) VALUES (1, now(), 'a', 'b', 'c', '{}', '0x0', '0x1')",

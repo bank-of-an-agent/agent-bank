@@ -6,6 +6,7 @@ import { pollReceipts } from "../domain/receipts";
 import type { AppDeps } from "../deps";
 import { expirePending, prune } from "./expiry";
 import { settleStreams, triggerTopUps } from "./keepers";
+import { runProofReservations, runProofRoots } from "./proofs";
 import { processSettled } from "./settlement";
 import { notifyStatements } from "./statements";
 import { deliverWebhooks } from "./webhooks";
@@ -36,6 +37,8 @@ export const JOBS: readonly JobDefinition[] = [
   { name: "billing-subscriptions", everySeconds: 3_600, run: accrueAllSubscriptions },
   { name: "statements-ready", everySeconds: 3_600, run: notifyStatements },
   { name: "maintenance-prune", everySeconds: 3_600, run: prune },
+  { name: "proofs-roots", everySeconds: 30, run: runProofRoots },
+  { name: "proofs-reservations", everySeconds: 60, run: runProofReservations },
   {
     name: "reconciliation-retry-reversals",
     everySeconds: 60,

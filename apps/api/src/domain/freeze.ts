@@ -5,6 +5,7 @@ import {
   ownerPayloads,
   type OwnerAuthorization,
 } from "@agentbank/core";
+import type { SqlClient } from "@agentbank/db";
 import type { AgentRow, OrgRow } from "../db/rows";
 import { one } from "../db/sql";
 import type { AppDeps } from "../deps";
@@ -15,6 +16,7 @@ import { actorOf, audit } from "./audit";
 import { deliverCosignerOutbox, enqueueCosigner } from "./cosigner-outbox";
 import { emitEvent } from "./events";
 import { verifyOwnerAuth } from "./owner-auth";
+import { markProofTreeDirty } from "./proofs";
 
 /**
  * Freezing is a tightening change: it applies at once in the API (frozen agents cannot write)
@@ -52,6 +54,10 @@ export async function freezeAgent(
       kind: "freeze",
       payload: { scope: "agent", id: agentId, reason },
     });
+    // A frozen agent leaves the attested tree at once: rebuild and revoke older roots.
+    if (await provesPrivately(tx, "agent_id", agentId)) {
+      await markProofTreeDirty(tx, deps.config.chain.id, { narrowing: true }, now);
+    }
     return { agent: updated, outboxId: id };
   });
   await deliverCosignerOutbox(deps, [outboxId]).catch(() => 0);
@@ -135,6 +141,9 @@ export async function freezeOrg(deps: AppDeps, auth: AuthContext, reason: string
       kind: "freeze",
       payload: { scope: "org", id: updated.id, reason },
     });
+    if (await provesPrivately(tx, "org_id", updated.id)) {
+      await markProofTreeDirty(tx, deps.config.chain.id, { narrowing: true }, now);
+    }
     return { org: updated, outboxId: id };
   });
   await deliverCosignerOutbox(deps, [outboxId]).catch(() => 0);
@@ -185,6 +194,14 @@ export async function unfreezeOrg(
   });
 }
 
+/** Whether the agent (or any agent of the org) has private proofs enabled, i.e. may be in the tree. */
+async function provesPrivately(tx: SqlClient, column: "agent_id" | "org_id", id: string): Promise<boolean> {
+  return (
+    (await one(tx, `SELECT 1 AS x FROM proof_settings WHERE ${column} = $1 AND enabled LIMIT 1`, [id])) !==
+    undefined
+  );
+}
+
 function laterOf(a: Date, b: Date): Date {
   if (Number.isNaN(a.getTime())) return b;
   return a.getTime() >= b.getTime() ? a : b;
@@ -211,6 +228,17 @@ export async function applyDueUnfreezes(deps: AppDeps, now: Date): Promise<numbe
     );
     for (const org of orgs.rows) {
       await audit(tx, now, { actor: "system", action: "org.unfrozen", subject: org.id });
+    }
+    // Unfrozen agents with private proofs return to the attested tree at the next root.
+    if (
+      agents.rows.length + orgs.rows.length > 0 &&
+      (await one(
+        tx,
+        "SELECT 1 AS x FROM proof_settings WHERE enabled AND (agent_id = ANY($1::text[]) OR org_id = ANY($2::text[])) LIMIT 1",
+        [agents.rows.map((a) => a.id), orgs.rows.map((o) => o.id)],
+      ))
+    ) {
+      await markProofTreeDirty(tx, deps.config.chain.id, { narrowing: false }, now);
     }
     return agents.rows.length + orgs.rows.length;
   });

@@ -1,5 +1,5 @@
 import type { ChainGateway } from "@agentbank/chain";
-import { SimulatedChain } from "@agentbank/chain/simulated";
+import { SimulatedChain, simulatedAttesterAccount } from "@agentbank/chain/simulated";
 import {
   ManualClock,
   ownerAuthorizationTypedData,
@@ -119,6 +119,7 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
     screening: options.screening ?? new SandboxScreening(config.screening.denylist),
     kyb: new SandboxKyb(),
     logger: options.logger ?? createLogger("silent"),
+    attester: simulatedAttesterAccount(chain.chainId),
     simulator: sim,
   };
   const deps: AppDeps = { ...base, reconciler: createApiReconciler(base) };

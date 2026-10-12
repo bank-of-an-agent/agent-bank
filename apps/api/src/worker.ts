@@ -8,7 +8,8 @@ import { createDeps } from "./wiring";
  * Background worker entry point (`dist/worker.js`). Every job in `src/jobs` gets a pg-boss
  * queue; a ticker sends one throttled job per period (pg-boss dedupes across worker
  * instances), and a handler runs it. Job names: see `JOBS` (e.g. `webhooks-deliver`,
- * `operations-receipts`, `payments-expire`, `streams-settle`, `billing-subscriptions`).
+ * `operations-receipts`, `payments-expire`, `streams-settle`, `billing-subscriptions`,
+ * `proofs-roots`, `proofs-reservations`).
  */
 async function main(): Promise<void> {
   const config = loadConfig();

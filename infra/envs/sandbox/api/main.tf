@@ -60,11 +60,13 @@ locals {
     CHAIN_RPC_URL              = "Base Sepolia JSON-RPC URL (embeds the RPC provider's API key)."
     INTERNAL_API_SHARED_SECRET = "HMAC key authenticating the indexer's /internal/* calls. Must equal agent-bank-sandbox/indexer/INTERNAL_API_SHARED_SECRET."
     CONSOLE_SESSION_SECRET     = "Key the console uses to sign and encrypt session cookies."
+    API_RELAYER_KEY            = "Private key of the API's keeper relayer (permissionless keeper calls, spend-key permits). TESTNET ONLY: a Base Sepolia gas wallet that never holds funds and cannot move anyone's."
+    PROOFS_ATTESTER_KEY        = "Private key of the AgentAttestationRegistry attester (private-proof roots). TESTNET ONLY: publishes and revokes roots, moves no funds; must differ from every other key. KMS outside testnet."
   }
 
   # Least privilege: each service's execution role can read only the secrets listed here.
   service_secrets = {
-    api         = ["DATABASE_URL", "COSIGNER_SHARED_SECRET", "PIMLICO_API_KEY", "WEBHOOK_SIGNING_KEY", "SCREENING_API_KEY", "KYB_API_KEY", "CHAIN_RPC_URL", "INTERNAL_API_SHARED_SECRET"]
+    api         = ["DATABASE_URL", "COSIGNER_SHARED_SECRET", "PIMLICO_API_KEY", "WEBHOOK_SIGNING_KEY", "SCREENING_API_KEY", "KYB_API_KEY", "CHAIN_RPC_URL", "INTERNAL_API_SHARED_SECRET", "API_RELAYER_KEY", "PROOFS_ATTESTER_KEY"]
     facilitator = ["DATABASE_URL", "FACILITATOR_RELAYER_KEY", "SCREENING_API_KEY", "CHAIN_RPC_URL"]
     console     = ["CONSOLE_SESSION_SECRET"]
   }

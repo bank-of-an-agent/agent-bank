@@ -344,7 +344,9 @@ finality and injectable reorgs) so the full stack runs and is tested without a n
 All services read env vars validated with Zod at startup (fail fast). See `.env.example`.
 Notable: `AGENTBANK_CHAIN` (`simulated` | `anvil` | `base-sepolia`), `DATABASE_URL`,
 `COSIGNER_URL`, `COSIGNER_SHARED_SECRET`, `COSIGNER_SIGNER` (`local` testnet-only | `kms`),
-`PIMLICO_API_KEY`, `FEATURE_TREASURY_SWEEP`.
+`PIMLICO_API_KEY`, `FEATURE_TREASURY_SWEEP`, `FEATURE_PRIVATE_PROOFS`, `PROOFS_ATTESTER_KEY` (the
+registry attester; a key of its own that can move nothing). The API's full list:
+[`apps/api/README.md`](../apps/api/README.md).
 
 ## Testing
 

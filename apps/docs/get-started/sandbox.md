@@ -40,7 +40,9 @@ cp .env.example .env
 | `COSIGNER_KMS_KEY_ID`    | empty                                                      | KMS key id when `COSIGNER_SIGNER=kms`                                                                |
 | `ALLOW_OPEN_SIGNUP`      | `true`                                                     | Lets `POST /v1/orgs` create orgs without an invitation; the sandbox KYB provider auto-approves them  |
 
-The services read further optional variables (feature flags such as `FEATURE_ESCROW`, `FEATURE_STREAMS` and the counsel-gated `FEATURE_TREASURY_SWEEP`, rate limits, webhook settings), all validated at startup: a service with an invalid environment exits with a message listing every problem.
+The services read further optional variables (feature flags such as `FEATURE_ESCROW`, `FEATURE_STREAMS`, `FEATURE_PRIVATE_PROOFS` and the counsel-gated `FEATURE_TREASURY_SWEEP`, rate limits, webhook settings), all validated at startup: a service with an invalid environment exits with a message listing every problem.
+
+Private proofs are on by default. On the simulated chain the API publishes attested-facts roots with the public simulated attester key; on Anvil and Base Sepolia set `PROOFS_ATTESTER_KEY` (a testnet key of its own, never the relayer key) or roots are not published. A sandbox has few agents, so set `PROOFS_MIN_ANONYMITY_SET=1` and ask for `min_anonymity_set: 1` in your proof requests while you experiment (the SDK default is 16). `PROOFS_ROOT_INTERVAL_SECONDS` (3600) and `PROOFS_ROOT_TTL_SECONDS` (7200) set how often roots are rebuilt and how long they stay valid.
 
 ## 3. Start the stack
 

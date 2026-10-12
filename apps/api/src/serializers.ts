@@ -20,6 +20,12 @@ import type {
   PlanRow,
   PolicyDecisionRow,
   PolicyRow,
+  ProofIdentityRow,
+  ProofReservationRow,
+  ProofReservationStatus,
+  ProofRootRow,
+  ProofRootStatusRow,
+  ProofSettingsRow,
   SessionRow,
   StreamRow,
   SubscriptionRow,
@@ -554,5 +560,88 @@ export function serializeSubscription(row: SubscriptionRow, plan: PlanRow): Wire
     status: row.status,
     current_period_start: iso(row.current_period_start),
     current_period_end: iso(row.current_period_end),
+  };
+}
+
+// ---------------------------------------------------------------- private proofs
+
+type DisclosureClassWire = Wire<typeof R.ProofSettings>["disclose"][number];
+
+/** Settings of an agent that never configured proofs: not in the tree, nothing disclosed. */
+export function serializeProofSettings(
+  agentId: string,
+  row: ProofSettingsRow | undefined,
+): Wire<typeof R.ProofSettings> {
+  return {
+    object: "proof_settings",
+    agent_id: agentId,
+    enabled: row?.enabled ?? false,
+    disclose: (row?.disclose ?? []) as DisclosureClassWire[],
+    disclosure_mask: row?.disclosure_mask ?? 0,
+    updated_at: row ? iso(row.updated_at) : null,
+  };
+}
+
+export function serializeProofIdentity(row: ProofIdentityRow): Wire<typeof R.ProofIdentity> {
+  return {
+    object: "proof_identity",
+    account_id: row.account_id,
+    identity_commitment: row.identity_commitment,
+    created_at: iso(row.created_at),
+    updated_at: iso(row.updated_at),
+  };
+}
+
+/** A pending or active reservation past its expiry reads as expired before the worker voids it. */
+export function proofReservationStatus(row: ProofReservationRow, now: Date): ProofReservationStatus {
+  if ((row.status === "pending" || row.status === "active") && row.expires_at.getTime() <= now.getTime()) {
+    return "expired";
+  }
+  return row.status;
+}
+
+export function serializeProofReservation(
+  row: ProofReservationRow,
+  now: Date,
+): Wire<typeof R.ProofReservation> {
+  return {
+    id: row.id,
+    object: "proof_reservation",
+    account_id: row.account_id,
+    agent_id: row.agent_id,
+    amount: usdc(row.amount),
+    scope_tag: BigInt(row.scope_tag).toString(),
+    expires_at: iso(row.expires_at),
+    status: proofReservationStatus(row, now),
+    hold_id: row.hold_id,
+    created_at: iso(row.created_at),
+    released_at: isoOrNull(row.released_at),
+    included_in_epoch: row.included_in_epoch === null ? null : row.included_in_epoch.toString(),
+  };
+}
+
+/** A published root reads as expired once `now` is past `valid_until`. */
+export function proofRootStatus(row: ProofRootRow, now: Date): ProofRootStatusRow {
+  if (row.status === "published" && now.getTime() > row.valid_until.getTime()) return "expired";
+  return row.status;
+}
+
+export function serializeProofRoot(
+  row: ProofRootRow,
+  registry: string | null,
+  now: Date,
+): Wire<typeof R.ProofRoot> {
+  return {
+    object: "proof_root",
+    root: row.root,
+    epoch: row.epoch.toString(),
+    snapshot_at: iso(row.snapshot_at),
+    published_at: isoOrNull(row.published_at),
+    valid_until: iso(row.valid_until),
+    leaf_count: row.leaf_count,
+    status: proofRootStatus(row, now),
+    tx_hash: row.tx_hash,
+    chain_id: row.chain_id,
+    registry,
   };
 }
