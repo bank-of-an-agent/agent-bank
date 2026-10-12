@@ -183,9 +183,15 @@ describe("cap on settlements in flight", () => {
     expect(viaHttp.headers["retry-after"]).toBe("1");
     expect(viaHttp.json()).toMatchObject({ errorReason: "facilitator_busy" });
 
-    h.chain.mine();
-    expect((await first).body.success).toBe(true);
-    expect((await second).body.success).toBe(true);
+    // Keep mining until both in-flight settlements have their receipts: on a slower database
+    // (PostgreSQL in CI) a settlement may submit after a single mine() call.
+    const drain = setInterval(() => h.chain.mine(), 5);
+    try {
+      expect((await first).body.success).toBe(true);
+      expect((await second).body.success).toBe(true);
+    } finally {
+      clearInterval(drain);
+    }
     expect(h.facilitator.inflightSettlements).toBe(0);
 
     // Capacity is back: the refused payment settles now.
