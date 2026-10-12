@@ -515,7 +515,12 @@ export class Vaults extends Resource {
   deposit(id: string, body: VaultTransferInput, options?: RequestOptions): Promise<Vault> {
     return this.client.request("depositVault", { ...options, params: { id }, body });
   }
-  /** Withdraw to the account (principal only; owner authorization `vault.withdraw` before unlock). */
+  /**
+   * Withdraw to the account (principal only). Goal vaults and unlocked
+   * locked vaults need no signature; an early withdrawal from a locked vault
+   * answers `owner_signature_required` with TimeLockVaults `EarlyWithdrawal`
+   * typed data to sign first. `PrincipalClient.withdrawVault` runs that flow.
+   */
   withdraw(id: string, body: VaultTransferInput, options?: RequestOptions): Promise<Vault> {
     return this.client.request("withdrawVault", { ...options, params: { id }, body });
   }

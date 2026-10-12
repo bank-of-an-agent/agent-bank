@@ -3,17 +3,19 @@ import {
   DEFAULT_SESSION_TTL_SECONDS,
   MAX_SESSION_TTL_SECONDS,
   ownerPayloads,
+  parseAmount,
   SessionScopeSchema,
 } from "@agentbank/core";
 import { routes, type RequestOf, type RouteDef } from "@agentbank/core/api";
 import type { z } from "zod";
 import { AgentBankClient, type ClientOptions, type RequestOptions } from "./client";
-import { InvalidRequestError } from "./errors";
+import { AgentBankError, InvalidRequestError, PermissionDeniedError } from "./errors";
 import { pollUntil, type WaitOptions } from "./internal/poll";
 import { formatIssues, summarizeIssues } from "./internal/zod";
 import { ownerAuthorize, type OwnerAuthorizeInput } from "./owner";
 import { signOperationHash, type OwnerSigner, type SpendSigner } from "./signers";
 import { signSpendKeyPermit, type SpendKeyPermitOptions } from "./spend-key";
+import { earlyWithdrawalTypedData } from "./vaults";
 import type {
   Account,
   Agent,
@@ -542,7 +544,7 @@ export class PrincipalClient extends AgentBankClient {
       writeOptions(options, "rule"),
     );
     if (result.status !== "pending_install" || !result.install_operation_id) return result;
-    await this.#signFollowUp(result.install_operation_id, options);
+    await this.#signFollowUp(result.install_operation_id, options, { purpose: "topup.configure" });
     return options.waitForInstall
       ? ((await this.treasury.getAutoTopUp(agentId, readOptions(options))) ?? result)
       : result;
@@ -566,36 +568,71 @@ export class PrincipalClient extends AgentBankClient {
       writeOptions(options, "rule"),
     );
     if (result.status !== "pending_install" || !result.install_operation_id) return result;
-    await this.#signFollowUp(result.install_operation_id, options);
+    await this.#signFollowUp(result.install_operation_id, options, { purpose: "sweep.configure" });
     return options.waitForInstall
       ? ((await this.treasury.getSweepRule(accountId, readOptions(options))) ?? result)
       : result;
   }
 
   /**
-   * Withdraw from a vault to its account. Before the unlock date this needs
-   * the owner (`vault.withdraw`), and a locked vault's early withdrawal is an
-   * owner operation that is signed right away; pass `authorize: false` for
-   * unlocked goal vaults.
+   * Withdraw from a vault back to its account.
+   *
+   * - **Goal vaults** and **locked vaults past their unlock date**: one
+   *   request, no signature.
+   * - **Early withdrawal from a locked vault**: the API answers
+   *   `owner_signature_required` with the TimeLockVaults EIP-712
+   *   `EarlyWithdrawal` to sign. The SDK checks it (contract = the
+   *   deployment's `vaults` and the vault's `contract_address`, chain from
+   *   `GET /v1/meta`, vault id and amount as requested, deadline within an
+   *   hour), signs its own copy with the owner key, retries with
+   *   `owner_authorization` (`expires_at` = the deadline), and signs the
+   *   resulting `vault.withdraw` owner operation. The generic `vault.withdraw`
+   *   OwnerAuthorization (`ownerPayloads.vaultWithdraw`) is not used here.
+   *
+   * @throws {@link PermissionDeniedError} (`forbidden`) if the challenge
+   *   does not match the request; nothing is signed then.
    */
-  async withdrawVault(
-    vaultId: string,
-    amount: Money,
-    options: OwnerFlowOptions & { authorize?: boolean } = {},
-  ): Promise<Vault> {
+  async withdrawVault(vaultId: string, amount: Money, options: OwnerFlowOptions = {}): Promise<Vault> {
     const body = canonicalBody("withdrawVault", { amount });
-    const authorize = options.authorize ?? (options.owner ?? this.#owner) !== undefined;
-    const owner_authorization = authorize
-      ? await this.authorize(ownerPayloads.vaultWithdraw(vaultId, body.amount), options.owner)
-      : undefined;
-    const vault = await this.vaults.withdraw(
-      vaultId,
-      { ...body, ...(owner_authorization ? { owner_authorization } : {}) },
-      writeOptions(options, "withdraw"),
-    );
-    if (!vault.pending_operation_id || !authorize) return vault;
-    await this.#signFollowUp(vault.pending_operation_id, options);
-    return options.waitForInstall ? this.vaults.retrieve(vaultId, readOptions(options)) : vault;
+    try {
+      return await this.vaults.withdraw(vaultId, body, writeOptions(options, "withdraw"));
+    } catch (error) {
+      const challenge = error instanceof AgentBankError ? error.extensions.typed_data : undefined;
+      if (!(error instanceof AgentBankError) || error.code !== "owner_signature_required" || !challenge) {
+        throw error;
+      }
+      const owner = this.#requireOwner(options.owner);
+      const [vault, meta] = await Promise.all([
+        this.vaults.retrieve(vaultId, readOptions(options)),
+        this.#deployment(options),
+      ]);
+      const typedData = earlyWithdrawalTypedData(challenge, {
+        meta,
+        vault,
+        amountMinor: parseAmount(body.amount.amount, 6),
+      });
+      const signature = await owner.signTypedData(typedData);
+      // The body changes, so the signed retry gets its own idempotency key.
+      const pending = await this.vaults.withdraw(
+        vaultId,
+        {
+          ...body,
+          owner_authorization: {
+            signer: owner.address,
+            signature,
+            issued_at: Math.floor(Date.now() / 1000),
+            expires_at: Number(typedData.message.deadline),
+          },
+        },
+        writeOptions(options, "withdraw-signed"),
+      );
+      if (!pending.pending_operation_id) return pending;
+      await this.#signFollowUp(pending.pending_operation_id, options, {
+        purpose: "vault.withdraw",
+        subjectId: vaultId,
+      });
+      return options.waitForInstall ? this.vaults.retrieve(vaultId, readOptions(options)) : pending;
+    }
   }
 
   /**
@@ -609,14 +646,35 @@ export class PrincipalClient extends AgentBankClient {
   ): Promise<Session> {
     const session = await this.sessions.revoke(sessionId, readOptions(options));
     if (options.onchain === false || !session.revoke_operation_id) return session;
-    await this.#signFollowUp(session.revoke_operation_id, options);
+    await this.#signFollowUp(session.revoke_operation_id, options, {
+      purpose: "session.revoke",
+      subjectId: sessionId,
+    });
     return options.waitForInstall ? this.sessions.retrieve(sessionId, readOptions(options)) : session;
   }
 
-  /** Sign the owner operation a helper's request produced (install, withdrawal, revocation). */
-  async #signFollowUp(operationId: string, options: OwnerFlowOptions): Promise<OwnerOperation> {
+  /**
+   * Sign the owner operation a helper's request produced (install, withdrawal,
+   * revocation), after checking it is the kind of operation that request
+   * prepares, so an unrelated pending operation is never signed by accident.
+   */
+  async #signFollowUp(
+    operationId: string,
+    options: OwnerFlowOptions,
+    expected: { purpose: OwnerOperation["purpose"]; subjectId?: string },
+  ): Promise<OwnerOperation> {
+    const operation = await this.ownerOperations.retrieve(operationId, readOptions(options));
+    if (
+      operation.purpose !== expected.purpose ||
+      (expected.subjectId !== undefined && operation.subject_id !== expected.subjectId)
+    ) {
+      throw new PermissionDeniedError(
+        "forbidden",
+        `Refusing to sign owner operation ${operation.id}: expected ${expected.purpose}, got ${operation.purpose}`,
+      );
+    }
     const wait = options.waitForInstall;
-    return this.signOwnerOperation(operationId, {
+    return this.signOwnerOperation(operation, {
       ...writeOptions(options, "sign"),
       ...(options.owner ? { owner: options.owner } : {}),
       ...(wait ? { wait } : {}),

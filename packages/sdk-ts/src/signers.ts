@@ -1,6 +1,6 @@
 import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import type { Address, Hex } from "viem";
-import { OPERATION_HASH_SIGNING, type OwnerAuthorizationTypedData } from "@agentbank/core";
+import { OPERATION_HASH_SIGNING } from "@agentbank/core";
 import { InvalidRequestError } from "./errors";
 
 /**
@@ -55,22 +55,24 @@ export interface SpendSigner {
 }
 
 /**
- * The principal's owner key. Signs EIP-712 `OwnerAuthorization` messages and
- * owner operations (`user_op_hash` as an EIP-191 personal message over the
- * raw 32 bytes).
+ * The principal's owner key. Signs EIP-712 typed data (Agent Bank's
+ * `OwnerAuthorization`, and the TimeLockVaults `EarlyWithdrawal` for early
+ * withdrawals from locked vaults) and owner operations (`user_op_hash` as an
+ * EIP-191 personal message over the raw 32 bytes).
  *
  * @example Adapting a viem WalletClient (browser wallet)
  * ```ts
  * const owner: OwnerSigner = {
  *   address: account.address,
- *   signTypedData: (typedData) => walletClient.signTypedData({ account, ...typedData }),
+ *   signTypedData: (typedData) => walletClient.signTypedData({ account, ...typedData } as never),
  *   signMessage: ({ message }) => walletClient.signMessage({ account, message }),
  * };
  * ```
  */
 export interface OwnerSigner {
   readonly address: Address;
-  signTypedData(typedData: OwnerAuthorizationTypedData): Promise<Hex>;
+  /** Sign EIP-712 typed data, e.g. core's `OwnerAuthorizationTypedData`. */
+  signTypedData(typedData: TypedDataPayload): Promise<Hex>;
   signMessage(args: { message: { raw: Hex } }): Promise<Hex>;
 }
 

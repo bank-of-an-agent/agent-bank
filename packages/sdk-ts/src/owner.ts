@@ -98,5 +98,10 @@ export async function ownerAuthorize(
  * the subject is the id of the resource the action applies to, and the
  * payload is the request body without `owner_authorization`, after the
  * schema's defaults are applied. Spread the result into {@link ownerAuthorize}.
+ *
+ * Note: `ownerPayloads.vaultWithdraw` is **not** what an early withdrawal
+ * from a locked vault needs; that is signed over the TimeLockVaults contract's
+ * own EIP-712 `EarlyWithdrawal` (see `PrincipalClient.withdrawVault` and
+ * `earlyWithdrawalTypedData`).
  */
 export { ownerPayloads, type OwnerActionPayload } from "@agentbank/core";

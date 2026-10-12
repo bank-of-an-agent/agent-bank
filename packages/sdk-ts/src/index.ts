@@ -65,6 +65,15 @@ export {
 } from "./principal";
 
 export {
+  EARLY_WITHDRAWAL_TYPES,
+  earlyWithdrawalTypedData,
+  MAX_EARLY_WITHDRAWAL_DEADLINE_SECONDS,
+  TIME_LOCK_VAULTS_EIP712,
+  type EarlyWithdrawalTypedData,
+  type ExpectedEarlyWithdrawal,
+} from "./vaults";
+
+export {
   EIP2612_NONCES_ABI,
   EIP2612_PERMIT_TYPES,
   signSpendKeyPermit,

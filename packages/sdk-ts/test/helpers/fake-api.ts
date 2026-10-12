@@ -21,6 +21,7 @@ import {
   getAddress,
   keccak256,
   recoverMessageAddress,
+  recoverTypedDataAddress,
   stringToBytes,
   toHex,
   verifyTypedData,
@@ -46,6 +47,7 @@ type Session = z.output<typeof R.Session>;
 type OwnerOperation = z.output<typeof R.OwnerOperation>;
 type Account = z.output<typeof R.Account>;
 type Decision = NonNullable<Payment["decision"]>;
+type Vault = z.output<typeof R.Vault>;
 
 export interface RecordedRequest {
   method: string;
@@ -74,7 +76,14 @@ export interface FakeApiConfig {
   spendAddress?: Address;
   /** `owner_authorization_chain_id` served by `GET /v1/meta` (default 84532). */
   ownerAuthorizationChainId?: number;
+  /** Vaults known to the API. */
+  vaults?: Partial<Vault>[];
+  /** Make the early-withdrawal challenge lie about one field (to test the SDK refuses to sign). */
+  tamperEarlyWithdrawal?: "contract" | "amount" | "chain" | "deadline" | "domain" | "vault";
 }
+
+/** Address of the fake deployment's TimeLockVaults contract (`meta.contracts.vaults`). */
+export const FAKE_VAULTS_CONTRACT = "0x4444444444444444444444444444444444444444";
 
 interface Injected {
   status: number;
@@ -617,7 +626,7 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
       eip712_name: "USDC",
       eip712_version: "2",
     },
-    contracts: {},
+    contracts: { vaults: FAKE_VAULTS_CONTRACT },
     cosigner_address: null,
     revenue_address: null,
     facilitator_url: null,
@@ -804,6 +813,100 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
   });
 
   on("getAutoTopUp", (request) => topUpRules.get(params(request).id) ?? null);
+
+  const vaults = new Map<string, Vault>(
+    (config.vaults ?? []).map((v) => {
+      const vault: Vault = {
+        id: newId("vault"),
+        object: "vault",
+        account_id: newId("account"),
+        kind: "locked",
+        name: "Rainy day",
+        target: null,
+        unlock_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+        balance: { amount: "100.00", asset: "USDC" },
+        contract_address: FAKE_VAULTS_CONTRACT,
+        onchain_id: "7",
+        pending_operation_id: null,
+        created_at: NOW(),
+        ...v,
+      };
+      return [vault.id, vault];
+    }),
+  );
+  const EARLY_WITHDRAWAL_TYPES = {
+    EarlyWithdrawal: [
+      { name: "vaultId", type: "uint256" },
+      { name: "amount", type: "uint256" },
+      { name: "nonce", type: "uint256" },
+      { name: "deadline", type: "uint256" },
+    ],
+  } as const;
+
+  on("getVault", (request, reply) => {
+    const vault = vaults.get(params(request).id);
+    if (!vault) return sendProblem(reply, "not_found", "No such vault");
+    return vault;
+  });
+
+  // Mirrors apps/api withdrawVault: goal and unlocked vaults need nothing; an early withdrawal
+  // is a challenge–response over TimeLockVaults' EIP-712 EarlyWithdrawal, then an owner operation.
+  on("withdrawVault", async (request, reply) => {
+    const vault = vaults.get(params(request).id);
+    if (!vault) return sendProblem(reply, "not_found", "No such vault");
+    const input = body<z.output<typeof R.VaultTransferRequest>>(request);
+    const amount = parseAmount(input.amount.amount, 6);
+    if (vault.kind === "goal") return vault;
+    if (vault.unlock_at && Date.now() >= Date.parse(vault.unlock_at)) return vault;
+    const now = Math.floor(Date.now() / 1000);
+    const deadline = BigInt(input.owner_authorization?.expires_at ?? now + 900);
+    const typedData = {
+      domain: {
+        name: "AgentBank TimeLockVaults",
+        version: "1",
+        chainId: ownerChainId,
+        verifyingContract: getAddress(vault.contract_address as string),
+      },
+      types: EARLY_WITHDRAWAL_TYPES,
+      primaryType: "EarlyWithdrawal" as const,
+      message: { vaultId: BigInt(vault.onchain_id as string), amount, nonce: 0n, deadline },
+    };
+    const tamper = config.tamperEarlyWithdrawal;
+    const describe = {
+      domain: {
+        ...typedData.domain,
+        ...(tamper === "contract" ? { verifyingContract: "0x9999999999999999999999999999999999999999" } : {}),
+        ...(tamper === "chain" ? { chainId: 11155111 } : {}),
+        ...(tamper === "domain" ? { name: "Totally Legit Vaults" } : {}),
+      },
+      types: typedData.types,
+      primaryType: typedData.primaryType,
+      message: {
+        vaultId: tamper === "vault" ? "8" : typedData.message.vaultId.toString(),
+        amount: tamper === "amount" ? (amount * 10n).toString() : amount.toString(),
+        nonce: "0",
+        deadline: tamper === "deadline" ? String(now + 30 * 86_400) : deadline.toString(),
+      },
+    };
+    const oa = input.owner_authorization;
+    if (!oa) {
+      return sendProblem(reply, "owner_signature_required", "Sign the EarlyWithdrawal typed_data", {
+        typed_data: describe,
+      });
+    }
+    let signer: string;
+    try {
+      signer = await recoverTypedDataAddress({ ...typedData, signature: oa.signature as Hex });
+    } catch {
+      return sendProblem(reply, "signature_invalid", "Unrecoverable early-withdrawal signature");
+    }
+    if (signer.toLowerCase() !== ownerAddress.toLowerCase()) {
+      return sendProblem(reply, "owner_signature_required", "Not the owner key", { typed_data: describe });
+    }
+    if (deadline <= BigInt(now)) return sendProblem(reply, "signature_invalid", "Deadline passed");
+    vault.pending_operation_id = ownerOperation(vault.account_id, "vault.withdraw", vault.id).id;
+    return vault;
+  });
 
   on("installSession", (request, reply) => {
     const session = state.sessions.get(params(request).id);
