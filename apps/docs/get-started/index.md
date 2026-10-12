@@ -60,6 +60,8 @@ A payment moves through `requires_approval` (a human must approve, 15 minutes), 
 
 An agent authenticates with its session key and can check balances, dry-run spends, pay, pay for APIs with x402, request payments, open escrows and streams, and read its ledger. It **cannot** loosen its own policy, unfreeze itself, withdraw to the owner or install sessions: those need the owner key, which the agent never holds. The [MCP server](/guides/mcp-server) exposes money tools only.
 
+With the owner's consent, an agent can also prove facts Agent Bank attests about it, such as "a verified company backs me" or "$500 is reserved for you", without revealing which agent it is. See [Private proofs](/concepts/private-proofs).
+
 ## Fail closed
 
 If the co-signer, the policy store, wallet screening or the database is unavailable, payments stop (`cosigner_unavailable`, `screening_unavailable`, HTTP 503) rather than pass. Owners can still act alone with their key, and the open-source [exit tool](/concepts/exit-tool) withdraws funds without Agent Bank at all.

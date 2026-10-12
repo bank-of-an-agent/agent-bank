@@ -1,5 +1,6 @@
 import {
   AgentClient,
+  type AgentProofOptions,
   generateSessionKey,
   generateSpendKey,
   PrincipalClient,
@@ -36,6 +37,8 @@ export interface AgentWorld {
   sessionKey: PrivateKeyAccount;
   /** Agent client bound to the account, session and spend key (and the paying `fetch`). */
   agent: AgentClient;
+  /** The agent's private-proof secret, when onboarded with one. */
+  proofSecret?: `0x${string}`;
 }
 
 export interface OnboardOptions {
@@ -58,6 +61,12 @@ export interface OnboardOptions {
   maxX402PerCall?: string;
   /** Register the account as an x402 seller for these domains (receive side). */
   x402Domains?: string[];
+  /** The principal behind the agent: a `company` (default) or an `individual`. */
+  kind?: "company" | "individual";
+  /** Private-proof secret for the agent client (`generateProofSecret()`); enroll it separately. */
+  proofSecret?: `0x${string}`;
+  /** Private-proof settings of the agent client (prover, probing guard). */
+  proofs?: AgentProofOptions;
 }
 
 const DEFAULT_POLICY: PolicyDocumentInput = {
@@ -70,6 +79,7 @@ export async function createPrincipal(
   stack: Stack,
   name = "Acme Robotics",
   fetchImpl?: FetchLike,
+  kind: "company" | "individual" = "company",
 ): Promise<{ principal: PrincipalClient; apiKey: string; orgId: string; owner: PrivateKeyAccount }> {
   const owner = privateKeyToAccount(generatePrivateKey());
   const bootstrap = new PrincipalClient({
@@ -81,7 +91,7 @@ export async function createPrincipal(
   });
   const created = await bootstrap.orgs.create({
     legal_name: `${name} ${Math.random().toString(36).slice(2, 8)}`,
-    kind: "company",
+    kind,
     country: "US",
     contact_email: `ops+${Math.random().toString(36).slice(2, 8)}@example.com`,
     owner_address: owner.address,
@@ -125,6 +135,7 @@ export async function onboardAgent(stack: Stack, options: OnboardOptions = {}): 
     stack,
     options.name ?? "World",
     fetchImpl,
+    options.kind,
   );
   const ownerSigner: OwnerSigner = owner;
 
@@ -176,6 +187,8 @@ export async function onboardAgent(stack: Stack, options: OnboardOptions = {}): 
       maxAmountPerRequest: options.maxX402PerCall ?? "1.00",
       ...(fetchImpl ? { fetch: fetchImpl } : {}),
     },
+    ...(options.proofSecret ? { proofSecret: options.proofSecret } : {}),
+    ...(options.proofs ? { proofs: options.proofs } : {}),
   });
 
   return {
@@ -192,6 +205,7 @@ export async function onboardAgent(stack: Stack, options: OnboardOptions = {}): 
     sessionId: setup.session?.id ?? "",
     sessionKey: sessionKey.account,
     agent: agentClient,
+    ...(options.proofSecret ? { proofSecret: options.proofSecret } : {}),
   };
 }
 

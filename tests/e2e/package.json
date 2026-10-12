@@ -11,7 +11,8 @@
     "sandbox": "tsx src/sandbox.ts",
     "gate:phase2": "E2E_GATE=phase2 vitest run test/redteam.test.ts",
     "gate:phase3": "E2E_CHAIN=base-sepolia vitest run test/base-sepolia.test.ts",
-    "gate:phase5": "E2E_GATE=phase5 vitest run test/exit-drill.test.ts"
+    "gate:phase5": "E2E_GATE=phase5 vitest run test/exit-drill.test.ts",
+    "gate:proofs": "E2E_GATE=proofs vitest run test/private-proofs.test.ts"
   },
   "dependencies": {
     "@agentbank/api": "workspace:*",

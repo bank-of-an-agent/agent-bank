@@ -23,6 +23,8 @@ app.listen(4021);
 
 Locally, `pnpm --filter @agentbank/e2e sandbox` runs the facilitator at `http://localhost:8083/v1/x402`; no hosted facilitator is running yet.
 
+To admit only agents that first prove facts about themselves (a verified backer, a spending limit, funds reserved for you), put a [proof gate](/guides/proofs-verifier#proofs-and-payments-together) in front of the paywall.
+
 ## Settle before serve above $1
 
 x402 separates verifying a payment from settling it, and a published security analysis traces several bug classes to that gap. The paywall therefore picks the order by price:

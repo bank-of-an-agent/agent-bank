@@ -55,7 +55,7 @@ console.log(result.paid, result.amount, result.payment?.id, result.settlement?.t
 const paidFetch = agent.wrapFetch(fetch);
 ```
 
-Set `x402.mandateId` to run every x402 payment under an AP2 [mandate](/concepts/mandates). A per-call `maxAmountPerRequest` override can only lower the configured cap. Request bodies are buffered so the paid retry can resend them. `readPaymentResponse(response)` decodes the settlement header.
+With a `proofSecret`, the same calls first answer a [private-proof](/guides/proofs-agent) challenge (HTTP 401) from a seller that requires one. Set `x402.mandateId` to run every x402 payment under an AP2 [mandate](/concepts/mandates). A per-call `maxAmountPerRequest` override can only lower the configured cap. Request bodies are buffered so the paid retry can resend them. `readPaymentResponse(response)` decodes the settlement header.
 
 Lower-level pieces are exported for custom payers: `wrapFetch(fetch, { payer })`, `fetchWithX402`, `parseChallenge`, `selectRequirement`, `createAgentBankPayer` and `transferWithAuthorizationTypedData`.
 

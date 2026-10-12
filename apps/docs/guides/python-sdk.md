@@ -41,7 +41,7 @@ with AgentBank(session_key=SessionKey.load(".agentbank/session.json")) as agent:
 
 ## Resources
 
-Every API operation has a method on a resource namespace: `orgs`, `api_keys`, `members`, `agents`, `accounts`, `sessions`, `owner_operations`, `mandates`, `policies`, `payments`, `payment_requests`, `x402`, `escrows`, `streams`, `approvals`, `ledger`, `vaults`, `treasury`, `webhooks`, `billing`, plus `health()`. Responses are Pydantic models generated from the OpenAPI document (`agentbank.models`). Lists return a page (`data`, `next_cursor`) and have a `list_all()` iterator that follows the cursor.
+Every API operation has a method on a resource namespace: `orgs`, `api_keys`, `members`, `agents`, `accounts`, `sessions`, `owner_operations`, `mandates`, `policies`, `payments`, `payment_requests`, `x402`, `escrows`, `streams`, `approvals`, `ledger`, `vaults`, `treasury`, `webhooks`, `billing`, `proofs`, plus `health()`. Responses are Pydantic models generated from the OpenAPI document (`agentbank.models`). Lists return a page (`data`, `next_cursor`) and have a `list_all()` iterator that follows the cursor.
 
 High-level helpers do the multi-step flows:
 
@@ -91,6 +91,20 @@ with agent.x402.client(max_amount="0.10", allowed_domains={"api.example-data.com
 
 `agent.x402.client()` is an `httpx.Client` whose transport pays 402 challenges; `agent.x402.transport()` gives you the transport for your own client, and `agent.x402.fetch(url, max_amount=…)` fetches one URL. It parses x402 v2 headers and v1 bodies, refuses prices above `max_amount` and domains outside `allowed_domains`, checks the authorization Agent Bank returns against the challenge, and signs it with the spend key. See [x402: pay for APIs](/guides/x402-buyer).
 
+## Private proofs
+
+An agent proves facts Agent Bank attests about it without revealing which agent it is. Python verifies proofs in pure Python and proves through the `agentbank-prove` CLI of the TypeScript monorepo, which needs Node.js:
+
+```python
+# AGENTBANK_PROOF_SECRET=<generate_proof_secret(), kept secret>
+# AGENTBANK_PROVER="node /path/to/agent-bank/packages/proofs/bin/agentbank-prove.mjs"
+agent.proofs.enroll()  # once: registers Poseidon(secret), never the secret
+with agent.x402.client(max_amount="0.10") as http:
+    response = http.get("https://api.seller.example/v1/report")  # answers the 401, then the 402
+```
+
+Owners enable proofs with `bank.proofs.update_settings(agent_id, enabled=True, disclose=[...], owner=owner)`; sellers gate routes with `bank.proofs.gate(...)` (`agentbank.proofs.ProofGate`). See [Prove facts as an agent](/guides/proofs-agent) and [Require proofs as a seller](/guides/proofs-verifier).
+
 ## Errors
 
 API errors map to exceptions by code, all subclasses of `AgentBankError` with `.code`, `.status` and `.detail`:
@@ -109,6 +123,7 @@ API errors map to exceptions by code, all subclasses of `AgentBankError` with `.
 | `APIConnectionError`, `APITimeoutError`                                      | No response arrived                                                        |
 | `PaymentError` (`PaymentDeniedError`, `PaymentFailedError`)                  | A payment that ended `denied` or `failed` while waiting                    |
 | `X402Error`                                                                  | An x402 payment could not be made                                          |
+| `ProofError` (`ProofRefusedError`, `ProverError`, `ProofRequestError`)       | A private proof was not made or was refused (`.reason`)                    |
 
 ## Webhooks
 

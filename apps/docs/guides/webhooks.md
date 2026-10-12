@@ -33,32 +33,36 @@ endpoint = bank.webhooks.create_endpoint(
 
 ## Events
 
-| Event                       | When                                                         |
-| --------------------------- | ------------------------------------------------------------ |
-| `payment.created`           | A payment was created                                        |
-| `payment.requires_approval` | A payment is waiting for an approver                         |
-| `payment.submitted`         | A co-signed payment was sent to the bundler                  |
-| `payment.settled`           | A payment is on-chain and posted in the ledger               |
-| `payment.failed`            | A payment reverted, timed out or expired                     |
-| `payment.denied`            | The policy or the co-signer refused a payment                |
-| `approval.requested`        | An approval was opened (15 minutes to decide)                |
-| `approval.decided`          | An approval was approved or denied                           |
-| `escrow.locked`             | Escrowed funds are locked on-chain                           |
-| `escrow.released`           | An escrow paid its payee                                     |
-| `escrow.refunded`           | An escrow refunded its payer                                 |
-| `escrow.disputed`           | An escrow is in dispute                                      |
-| `stream.created`            | A stream started                                             |
-| `stream.settled`            | Accrued stream payments were paid out                        |
-| `stream.canceled`           | A stream was canceled                                        |
-| `deposit.received`          | USDC arrived at a known address                              |
-| `reconciliation.mismatch`   | A chain movement matched no ledger entry; sessions paused    |
-| `agent.frozen`              | An agent was frozen                                          |
-| `agent.unfrozen`            | An agent was unfrozen                                        |
-| `org.frozen`                | The whole org was frozen                                     |
-| `policy.updated`            | A policy changed (including a loosening that is now pending) |
-| `session.revoked`           | A session key was revoked                                    |
-| `balance.low`               | An account's balance dropped low                             |
-| `statement.ready`           | A monthly statement is available                             |
+| Event                        | When                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `payment.created`            | A payment was created                                        |
+| `payment.requires_approval`  | A payment is waiting for an approver                         |
+| `payment.submitted`          | A co-signed payment was sent to the bundler                  |
+| `payment.settled`            | A payment is on-chain and posted in the ledger               |
+| `payment.failed`             | A payment reverted, timed out or expired                     |
+| `payment.denied`             | The policy or the co-signer refused a payment                |
+| `approval.requested`         | An approval was opened (15 minutes to decide)                |
+| `approval.decided`           | An approval was approved or denied                           |
+| `escrow.locked`              | Escrowed funds are locked on-chain                           |
+| `escrow.released`            | An escrow paid its payee                                     |
+| `escrow.refunded`            | An escrow refunded its payer                                 |
+| `escrow.disputed`            | An escrow is in dispute                                      |
+| `stream.created`             | A stream started                                             |
+| `stream.settled`             | Accrued stream payments were paid out                        |
+| `stream.canceled`            | A stream was canceled                                        |
+| `deposit.received`           | USDC arrived at a known address                              |
+| `reconciliation.mismatch`    | A chain movement matched no ledger entry; sessions paused    |
+| `agent.frozen`               | An agent was frozen                                          |
+| `agent.unfrozen`             | An agent was unfrozen                                        |
+| `org.frozen`                 | The whole org was frozen                                     |
+| `policy.updated`             | A policy changed (including a loosening that is now pending) |
+| `session.revoked`            | A session key was revoked                                    |
+| `balance.low`                | An account's balance dropped low                             |
+| `statement.ready`            | A monthly statement is available                             |
+| `proof_settings.updated`     | What an agent may prove changed (on or off, classes)         |
+| `proof_reservation.created`  | Funds were reserved for one verifier (proof of funds)        |
+| `proof_reservation.released` | The owner released a reservation before it expired           |
+| `proof_reservation.expired`  | A reservation ended and its funds returned to `operating`    |
 
 The body is the event; `data` is the resource it is about (a payment, an approval, an escrow…):
 

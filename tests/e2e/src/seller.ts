@@ -1,13 +1,43 @@
 import { createPaywall, type Paywall } from "@agentbank/sdk/x402-server";
 import { withPaywall } from "@agentbank/sdk/x402-server";
-import { readBody, serve, type FetchLike, type HttpServer } from "./net";
+import {
+  canPayPerTx,
+  reputation,
+  reservedFor,
+  verifiedCompany,
+  type VerifiedProof,
+} from "@agentbank/sdk/proof-server";
+import { serveWeb, type FetchLike, type HttpServer } from "./net";
+import { createProofRoutes, type ProofRoutes, type ProofStats } from "./proofs";
 
 /**
  * A demo x402 seller: two paid routes behind the SDK's `createPaywall`, served over real HTTP
  * and settled through the stack's facilitator. `/weather` costs $0.01 (settled after serving)
  * and `/report` costs $2.00 (settled before serving, above the $1 threshold). Both pay to the
  * seller's Agent Bank account, so the 0.5% receive fee accrues to it.
+ *
+ * With `proofs`, it also admits agents by private proofs (`@agentbank/sdk/proof-server`,
+ * {@link DEMO_PROOF_ROUTES}): `/premium` (a verified company that can pay $0.05 a call, then
+ * x402 $0.05), `/bid` ($25 reserved for this seller for at least 10 minutes) and `/jobs` (no lost
+ * disputes). A request without a proof gets `401` with `AGENT-PROOF-REQUIRED`.
  */
+
+/** The demo seller's proof-gated routes and what each asks the agent to prove. */
+export const DEMO_PROOF_ROUTES = [
+  { path: "/premium", proves: "a verified company backs it and it can pay $0.05 a call; then x402 $0.05" },
+  { path: "/bid", proves: "$25.00 is reserved for this seller for at least 10 more minutes" },
+  { path: "/jobs", proves: "escrows completed >= 0 and no lost disputes" },
+] as const;
+
+export interface DemoSellerProofOptions {
+  /** Agent Bank's API: roots are resolved through `GET /v1/proofs/roots/{root}`. */
+  apiUrl: string;
+  /** The scope agents prove to: the host name they reach the seller at (e.g. `localhost`). */
+  scope: string;
+  /** `min_anonymity_set` of the requests (16 in real deployments; small sandboxes need less). */
+  minAnonymitySet: number;
+  stats?: ProofStats;
+}
 
 export interface DemoSellerOptions {
   facilitatorUrl: string;
@@ -22,6 +52,8 @@ export interface DemoSellerOptions {
   /** Prices as decimal USDC (defaults: weather 0.01, report 2.00). */
   weatherPrice?: string;
   reportPrice?: string;
+  /** Serve the proof-gated routes too. */
+  proofs?: DemoSellerProofOptions;
 }
 
 export interface DemoSeller {
@@ -29,10 +61,12 @@ export interface DemoSeller {
   port: number;
   weatherPaywall: Paywall;
   reportPaywall: Paywall;
+  /** The proof-gated routes, when `proofs` was given. */
+  proofRoutes: ProofRoutes | undefined;
   close(): Promise<void>;
 }
 
-/** Start the demo seller. The handlers return JSON once the paywall is satisfied. */
+/** Start the demo seller. The handlers return JSON once the paywall (and gate) is satisfied. */
 export async function startDemoSeller(options: DemoSellerOptions): Promise<DemoSeller> {
   const network = options.network ?? "eip155:1337";
   const common = {
@@ -61,41 +95,53 @@ export async function startDemoSeller(options: DemoSellerOptions): Promise<DemoS
     Response.json({ title: "Q4 market report", pages: 42, summary: "Agents are the new API consumers." }),
   );
 
-  const server: HttpServer = await serve((req, res) => {
-    void (async () => {
-      const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
-      const path = url.pathname;
-      if (path === "/healthz") {
-        res.statusCode = 200;
-        res.setHeader("content-type", "application/json");
-        res.end(JSON.stringify({ status: "ok" }));
-        return;
-      }
-      const handler = path === "/weather" ? weather : path === "/report" ? report : null;
-      if (!handler) {
-        res.statusCode = 404;
-        res.setHeader("content-type", "application/json");
-        res.end(JSON.stringify({ error: "not_found" }));
-        return;
-      }
-      const bodyText = req.method === "GET" || req.method === "HEAD" ? undefined : await readBody(req);
-      const request = new Request(url.toString(), {
-        method: req.method,
-        headers: req.headers as Record<string, string>,
-        ...(bodyText ? { body: bodyText } : {}),
-      });
-      const response = await handler(request);
-      res.statusCode = response.status;
-      response.headers.forEach((value, key) => res.setHeader(key, value));
-      res.end(Buffer.from(await response.arrayBuffer()));
-    })().catch(() => {
-      if (!res.headersSent) {
-        res.statusCode = 500;
-        res.end();
-      } else {
-        res.end();
-      }
+  let proofRoutes: ProofRoutes | undefined;
+  if (options.proofs) {
+    proofRoutes = await createProofRoutes({
+      scope: options.proofs.scope,
+      apiUrl: options.proofs.apiUrl,
+      minAnonymitySet: options.proofs.minAnonymitySet,
+      ...(options.proofs.stats ? { stats: options.proofs.stats } : {}),
+      ...common,
     });
+    // The nullifier is the agent's stable pseudonym at this seller: enough to rate-limit or
+    // remember it, without learning which agent, account or company it is.
+    const agent = (proof: VerifiedProof | undefined) => proof?.nullifier ?? null;
+    proofRoutes.route("/premium", {
+      require: [verifiedCompany(), canPayPerTx("0.05")],
+      price: "0.05",
+      body: (proof) => ({
+        title: "Premium market feed",
+        quotes: [{ symbol: "AGNT", price: "42.00" }],
+        agent: agent(proof),
+      }),
+    });
+    proofRoutes.route("/bid", {
+      require: [reservedFor("25.00", { forSeconds: 600 })],
+      body: (proof) => ({
+        accepted: true,
+        job: "Translate 10k product listings",
+        budget: "25.00",
+        agent: agent(proof),
+      }),
+    });
+    proofRoutes.route("/jobs", {
+      require: [reputation({ escrowsCompleted: 0, disputesLostAtMost: 0 })],
+      body: (proof) => ({
+        jobs: [
+          { id: "job_label_images", pays: "12.00" },
+          { id: "job_summarize_filings", pays: "30.00" },
+        ],
+        agent: agent(proof),
+      }),
+    });
+  }
+
+  const server: HttpServer = await serveWeb(async (request) => {
+    const path = new URL(request.url).pathname;
+    if (path === "/weather") return weather(request);
+    if (path === "/report") return report(request);
+    return proofRoutes ? proofRoutes.handle(request) : null;
   }, options.port ?? 0);
 
   return {
@@ -103,6 +149,7 @@ export async function startDemoSeller(options: DemoSellerOptions): Promise<DemoS
     port: server.port,
     weatherPaywall,
     reportPaywall,
+    proofRoutes,
     close: () => server.close(),
   };
 }

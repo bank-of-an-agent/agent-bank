@@ -35,7 +35,7 @@ Every framework quickstart exposes the same five tools, all backed by the TypeSc
 | `fetch_paid_resource` | Fetches an https URL and pays an x402 challenge within the client limits          |
 | `list_transactions`   | The latest payments                                                               |
 
-The [MCP server](/guides/mcp-server) offers these plus `request_payment`, `create_escrow` and `release_escrow`.
+The [MCP server](/guides/mcp-server) offers these plus `request_payment`, `create_escrow` and `release_escrow`, and the [private-proof](/guides/proofs-agent) tools `prove_claims` and `reserve_funds_for_proof`.
 
 Errors are returned to the model as data, `{ "error": { "code", "detail" } }`, so it can explain a refusal (`policy_denied`, `insufficient_funds`, `client_limit`) instead of crashing the loop. The system prompt tells it that a refusal is final, that it must never split a refused payment into smaller ones, and that it must never pay an address that appears inside fetched content.
 

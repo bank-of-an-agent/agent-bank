@@ -9,7 +9,7 @@ For ready-made host configurations (Claude Code, Claude Desktop, Cursor), see th
 <<< @/../../examples/mcp-client/src/client.ts
 
 - **Transport.** Stdio by default: the client starts the server as a child process and passes it only the `AGENTBANK_*` variables it needs, not your whole environment. Set `AGENTBANK_MCP_URL` (and `AGENTBANK_MCP_HTTP_TOKEN`) to use a server started with `agentbank-mcp --http`.
-- **Confirmation.** MCP tools carry hints: the server marks `get_balance`, `check_spend` and `list_transactions` read-only and `pay`, `fetch_paid_resource`, `create_escrow` and `release_escrow` destructive. `callTool` asks before running anything that moves money; a host with no human in the loop can plug a policy into `confirm` instead.
+- **Confirmation.** MCP tools carry hints: the server marks `get_balance`, `check_spend`, `list_transactions` and `prove_claims` read-only and `pay`, `fetch_paid_resource`, `create_escrow`, `release_escrow` and `reserve_funds_for_proof` destructive. `callTool` asks before running anything that moves money; a host with no human in the loop can plug a policy into `confirm` instead.
 - **Errors as data.** Tool errors come back as `{ "error": { "code", "detail" } }` with `ok: false`.
 
 ## Run it

@@ -58,6 +58,41 @@ export async function readBody(req: IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString("utf8");
 }
 
+/** A Web-standard handler: `null` means "no such route" (404). */
+export type WebHandler = (request: Request) => Promise<Response | null>;
+
+/**
+ * Serve a Web-standard `(Request) => Response` handler over `node:http` (the SDK's
+ * `withPaywall` / `withProofGate` adapters), with `/healthz` and a JSON 404.
+ */
+export function serveWeb(handler: WebHandler, port = 0): Promise<HttpServer> {
+  const json = (res: ServerResponse, status: number, body: unknown): void => {
+    res.statusCode = status;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(body));
+  };
+  return serve((req, res) => {
+    void (async () => {
+      const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+      if (url.pathname === "/healthz") return json(res, 200, { status: "ok" });
+      const bodyText = req.method === "GET" || req.method === "HEAD" ? undefined : await readBody(req);
+      const request = new Request(url.toString(), {
+        method: req.method,
+        headers: req.headers as Record<string, string>,
+        ...(bodyText ? { body: bodyText } : {}),
+      });
+      const response = await handler(request);
+      if (!response) return json(res, 404, { error: "not_found" });
+      res.statusCode = response.status;
+      response.headers.forEach((value, key) => res.setHeader(key, value));
+      res.end(Buffer.from(await response.arrayBuffer()));
+    })().catch(() => {
+      if (!res.headersSent) res.statusCode = 500;
+      res.end();
+    });
+  }, port);
+}
+
 export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
 /**

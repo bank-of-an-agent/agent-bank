@@ -37,7 +37,7 @@ private reputation and proof of funds.
   an owner signature; narrowing is immediate and revokes older roots.
 - Proof of funds for a specific verifier uses a ledger hold bound to that verifier's scope tag,
   which prevents pledging the same funds to several verifiers.
-- Base hosts the registry and the optional on-chain verifier (about 390,000 gas); off-chain
+- Base hosts the registry and the optional on-chain verifier (about 410,000 gas); off-chain
   verification needs no chain access beyond reading the registry.
 - A dedicated attester key publishes roots. It can move no funds, which keeps the
   non-custodial rule intact.

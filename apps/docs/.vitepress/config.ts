@@ -70,6 +70,8 @@ const mainSidebar: DefaultTheme.SidebarItem[] = [
       { text: "MCP server", link: "/guides/mcp-server" },
       { text: "x402: pay for APIs", link: "/guides/x402-buyer" },
       { text: "x402: charge for APIs", link: "/guides/x402-seller" },
+      { text: "Proofs: prove as an agent", link: "/guides/proofs-agent" },
+      { text: "Proofs: require as a seller", link: "/guides/proofs-verifier" },
       { text: "Webhooks", link: "/guides/webhooks" },
       { text: "Idempotency and errors", link: "/guides/idempotency-and-errors" },
       { text: "Request signing", link: "/guides/request-signing" },

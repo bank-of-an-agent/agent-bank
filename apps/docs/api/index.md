@@ -44,7 +44,7 @@ An org API key can create agents and change (tighten) policies. Agents authentic
 
 USDC is the only asset in v1 and has 6 decimals, so amounts carry at most 6 fraction digits. Internally every amount is an integer number of minor units (`25.00` USDC is `25000000`). x402 messages are the exception: they follow the x402 protocol and carry atomic units as integer strings (`"10000"` for 0.01 USDC).
 
-**Ids.** Ids are a prefix and a 26-character ULID (Crockford base32), so they sort by creation time and are safe to expose: `org_`, `mem_` (member), `key_` (API key), `agt_`, `acct_`, `ses_` (session), `mdt_` (mandate), `pol_` (policy version), `pay_`, `preq_` (payment request), `dec_` (policy decision), `apr_` (approval), `esc_`, `str_` (stream), `ent_` (ledger entry), `evt_`, `whe_` (webhook endpoint), `vlt_` (vault), `atu_` (auto top-up rule), `swp_` (sweep rule), `fnd_` (fund), `oop_` (owner operation).
+**Ids.** Ids are a prefix and a 26-character ULID (Crockford base32), so they sort by creation time and are safe to expose: `org_`, `mem_` (member), `key_` (API key), `agt_`, `acct_`, `ses_` (session), `mdt_` (mandate), `pol_` (policy version), `pay_`, `preq_` (payment request), `dec_` (policy decision), `apr_` (approval), `esc_`, `str_` (stream), `ent_` (ledger entry), `evt_`, `whe_` (webhook endpoint), `vlt_` (vault), `atu_` (auto top-up rule), `swp_` (sweep rule), `fnd_` (fund), `oop_` (owner operation), `prv_` (proof reservation).
 
 **Timestamps.** ISO 8601 with an offset, for example `2026-10-11T12:00:00.000Z`. Owner authorizations are the exception: `issued_at` and `expires_at` are Unix seconds because they are signed as EIP-712 integers.
 

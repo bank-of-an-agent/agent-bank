@@ -68,7 +68,7 @@ sequenceDiagram
 5. **Verifying.** The verifier recomputes the public inputs from its own request, checks the
    root in the registry (published, not revoked, fresh enough, enough leaves) and verifies the
    proof: off-chain in about 15 ms with the SDKs, or on-chain with `AgentClaimsVerifier` for
-   about 390,000 gas (around a cent on Base).
+   about 410,000 gas (around a cent on Base).
 
 ## Attested facts
 

@@ -65,6 +65,13 @@ export interface StartStackOptions {
   /** Driver interval in ms (default 20; higher for the sandbox to spare the CPU). */
   driverIntervalMs?: number;
   /**
+   * Mine an idle block only once the world clock has passed the head's timestamp, so the world
+   * keeps wall-clock time (the long-running sandbox, used by clients in other processes whose
+   * signatures carry real time). Default false: tests mine a block every driver step, each a
+   * second after its parent, so finality and time-based jobs run far faster than real time.
+   */
+  realTimeBlocks?: boolean;
+  /**
    * Use the raw `DATABASE_URL` as the bank database (the long-running sandbox, which persists).
    * Tests leave this off: each gets an isolated schema (on CI's Postgres) or a fresh PGlite.
    */
@@ -252,9 +259,10 @@ export async function startStack(options: StartStackOptions = {}): Promise<Stack
   });
 
   let stepInFlight: Promise<void> | null = null;
+  const realTimeBlocks = options.realTimeBlocks ?? false;
   const step = async (): Promise<void> => {
     // One block advances finality; automine already mined any submitted operations.
-    sim.mine(1);
+    if (!realTimeBlocks || sim.head.timestamp < clock.nowSeconds()) sim.mine(1);
     clock.raiseTo(sim.head.timestamp * 1000);
     await indexer.tick();
     await runJobsOnce(deps);

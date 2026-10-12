@@ -1,40 +1,49 @@
 # MCP server
 
-`agentbank-mcp` (package `@agentbank/mcp`) gives any [Model Context Protocol](https://modelcontextprotocol.io) host the agent's **money tools**, over stdio for local agents or streamable HTTP for hosted ones. It holds only the agent's session key and, optionally, its x402 spend key. **Nothing it exposes can loosen a limit, change a policy, unfreeze an agent or withdraw to the owner**, and every payment is still checked by the owner's policy and co-signed by Agent Bank.
+`agentbank-mcp` (package `@agentbank/mcp`) gives any [Model Context Protocol](https://modelcontextprotocol.io) host the agent's **money tools**, over stdio for local agents or streamable HTTP for hosted ones. It holds only the agent's session key and, optionally, its x402 spend key and its [private-proof](/guides/proofs-agent) secret. **Nothing it exposes can loosen a limit, change a policy, unfreeze an agent or withdraw to the owner**, and every payment is still checked by the owner's policy and co-signed by Agent Bank.
 
 ## Tools
 
-| Tool                  | What it does                                                                                                       | Hints           |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------- |
-| `get_balance`         | Available, reserved, escrow, savings, spend float, fees and total, as decimal strings                              | read-only       |
-| `check_spend`         | Dry-runs a payment against the policy: `allowed`, `outcome`, `approvers_required`, `rule_hits`                     | read-only       |
-| `pay`                 | Pays exactly one of `to_address`, `to_agent_id`, `to_account_id`; waits briefly for settlement; returns the status | destructive     |
-| `fetch_paid_resource` | Fetches a URL and pays an x402 challenge automatically, at most the per-call cap; returns status, body and payment | destructive     |
-| `request_payment`     | Creates a payment request with a `pay_link` to share                                                               | not destructive |
-| `create_escrow`       | Locks funds for a task (`payee_address` or `payee_agent_id`, expiry in hours, terms, optional arbiter)             | destructive     |
-| `release_escrow`      | Releases a locked escrow to its payee                                                                              | destructive     |
-| `list_transactions`   | The agent's payments, newest first, with `next_cursor`                                                             | read-only       |
+| Tool                      | What it does                                                                                                                                           | Hints           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| `get_balance`             | Available, reserved, escrow, savings, spend float, fees and total, as decimal strings                                                                  | read-only       |
+| `check_spend`             | Dry-runs a payment against the policy: `allowed`, `outcome`, `approvers_required`, `rule_hits`                                                         | read-only       |
+| `pay`                     | Pays exactly one of `to_address`, `to_agent_id`, `to_account_id`; waits briefly for settlement; returns the status                                     | destructive     |
+| `fetch_paid_resource`     | Fetches a URL, answers its proof challenge and pays its x402 challenge, at most the per-call cap; returns status, body, payment and `proof_presented`  | destructive     |
+| `request_payment`         | Creates a payment request with a `pay_link` to share                                                                                                   | not destructive |
+| `create_escrow`           | Locks funds for a task (`payee_address` or `payee_agent_id`, expiry in hours, terms, optional arbiter)                                                 | destructive     |
+| `release_escrow`          | Releases a locked escrow to its payee                                                                                                                  | destructive     |
+| `list_transactions`       | The agent's payments, newest first, with `next_cursor`                                                                                                 | read-only       |
+| `prove_claims`            | Answers a verifier's proof request privately; returns the `AGENT-PROOF` header to send, and sends nothing                                              | read-only       |
+| `reserve_funds_for_proof` | Holds funds for one verifier (`amount`, `scope`, `expires_in_seconds` up to 7 days), so the agent can prove they are reserved for it; cannot be undone | destructive     |
 
-Amounts are decimal strings in USDC (`"2.50"`), validated by pattern; ids are validated by prefix. `pay`, `create_escrow` and `release_escrow` accept an `idempotency_key`: a model that retries after a timeout with the same key never pays twice. The server also sends instructions to the model: amounts are decimal strings, use `check_spend` for large or unusual payments, a `policy_denied` refusal is final and must not be split into smaller payments, and approvals wait for a human.
+Amounts are decimal strings in USDC (`"2.50"`), validated by pattern; ids are validated by prefix. `pay`, `create_escrow`, `release_escrow` and `reserve_funds_for_proof` accept an `idempotency_key`: a model that retries after a timeout with the same key never pays twice. The server also sends instructions to the model: amounts are decimal strings, use `check_spend` for large or unusual payments, a `policy_denied` refusal is final and must not be split into smaller payments, approvals wait for a human, proofs should go only to verifiers it intends to deal with, and a reservation cannot be undone.
 
-Errors come back as tool errors (`isError: true`) whose text is `{"error": {"code", "detail", …}}`. Codes are the API's [problem codes](/guides/idempotency-and-errors#error-codes) (`policy_denied` adds the `rule_hits`; x402 failures add the `reason`), `timeout` and `network_error` for transport failures, and `invalid_request` for bad input. Stack traces and keys never appear.
+Errors come back as tool errors (`isError: true`) whose text is `{"error": {"code", "detail", …}}`. Codes are the API's [problem codes](/guides/idempotency-and-errors#error-codes) (`policy_denied` adds the `rule_hits`; x402 failures and proof refusals add the `reason`), `timeout` and `network_error` for transport failures, and `invalid_request` for bad input. Stack traces and keys never appear.
 
 ## Configuration
 
 The server reads its configuration from the environment and never logs, echoes or returns a key.
 
-| Variable                      | Meaning                                                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `AGENTBANK_API_URL`           | API base URL (default `http://localhost:8080`)                                                                  |
-| `AGENTBANK_ACCOUNT_ID`        | The agent's account (`acct_…`), required                                                                        |
-| `AGENTBANK_SESSION_ID`        | The session (`ses_…`), required                                                                                 |
-| `AGENTBANK_SESSION_KEY`       | The session private key, or use `AGENTBANK_KEYSTORE`                                                            |
-| `AGENTBANK_KEYSTORE`          | Path of a 0600 key file holding `session:<ses_id>` (or `session`) and optionally `spend:<acct_id>` (or `spend`) |
-| `AGENTBANK_SPEND_KEY`         | The x402 spend key; without one, `fetch_paid_resource` cannot pay                                               |
-| `AGENTBANK_MAX_X402_PER_CALL` | Cap per paid request in USDC (default `1.00`); a tool call can only lower it                                    |
-| `AGENTBANK_MCP_HTTP_TOKEN`    | Bearer token for `--http` (at least 16 characters; required when binding beyond loopback)                       |
+| Variable                      | Meaning                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTBANK_API_URL`           | API base URL (default `http://localhost:8080`)                                                                                                     |
+| `AGENTBANK_ACCOUNT_ID`        | The agent's account (`acct_…`), required                                                                                                           |
+| `AGENTBANK_SESSION_ID`        | The session (`ses_…`), required                                                                                                                    |
+| `AGENTBANK_SESSION_KEY`       | The session private key, or use `AGENTBANK_KEYSTORE`                                                                                               |
+| `AGENTBANK_KEYSTORE`          | Path of a 0600 key file holding `session:<ses_id>` (or `session`) and optionally `spend:<acct_id>` (or `spend`) and `proof:<acct_id>` (or `proof`) |
+| `AGENTBANK_SPEND_KEY`         | The x402 spend key; without one, `fetch_paid_resource` cannot pay                                                                                  |
+| `AGENTBANK_PROOF_SECRET`      | The private-proof secret (`0x` and 64 hex digits); without one, `prove_claims` refuses and proof challenges stay unanswered                        |
+| `AGENTBANK_MAX_X402_PER_CALL` | Cap per paid request in USDC (default `1.00`); a tool call can only lower it                                                                       |
+| `AGENTBANK_MCP_HTTP_TOKEN`    | Bearer token for `--http` (at least 16 characters; required when binding beyond loopback)                                                          |
 
 The key file is the one the TypeScript SDK's `FileKeyStore` writes, for example in the [principal setup](/get-started/principal-setup#_7-hand-the-keys-to-the-agent).
+
+## Private proofs
+
+With a proof secret, the agent can prove facts Agent Bank attests about it (a verified backer, its limits, funds reserved for a seller, its track record) without revealing which agent it is. `fetch_paid_resource` answers a `401` proof challenge before paying, but only for the URL's own host, and returns the agent's pseudonym there as `nullifier`. `prove_claims` answers a proof request the model received some other way and returns the header to send. `reserve_funds_for_proof` holds funds for one verifier; the agent cannot spend or release them before they expire, so leave it on "ask".
+
+The server does not enroll the agent: the owner enables proofs and the agent enrolls the same secret once with the SDK (`agent.proofs.enroll()`). Refusals come back as tool errors with a `reason` (`reservation_required`, `undisclosed`, `unsatisfiable`, `rate_limited`, …) and, for a missing reservation, `reservation_needed`. See [Prove facts as an agent](/guides/proofs-agent#with-the-mcp-server).
 
 ## Running it
 
@@ -103,7 +112,7 @@ A project-scoped `.mcp.json` can use environment variables, so no ids or paths a
 }
 ```
 
-For HTTP use `"type": "http"`, `"url": "http://127.0.0.1:8090/mcp"` and `"headers": { "Authorization": "Bearer ${AGENTBANK_MCP_HTTP_TOKEN}" }`. Each person approves a project-scoped server the first time they use it. The tools appear as `mcp__agentbank__pay` and so on; leave `pay`, `fetch_paid_resource`, `create_escrow` and `release_escrow` on "ask" in your permission settings if you want to confirm each payment.
+For HTTP use `"type": "http"`, `"url": "http://127.0.0.1:8090/mcp"` and `"headers": { "Authorization": "Bearer ${AGENTBANK_MCP_HTTP_TOKEN}" }`. Each person approves a project-scoped server the first time they use it. The tools appear as `mcp__agentbank__pay` and so on; leave `pay`, `fetch_paid_resource`, `create_escrow`, `release_escrow` and `reserve_funds_for_proof` on "ask" in your permission settings if you want to confirm each payment and reservation.
 
 ## Claude Desktop
 

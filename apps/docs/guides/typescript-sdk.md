@@ -12,11 +12,12 @@ npm install @agentbank/sdk viem
 
 Inside this repository it is the workspace package `packages/sdk-ts`; its `examples/` folder has runnable scripts for the principal setup, an agent payment, an x402 fetch and a seller paywall.
 
-| Entry point                  | Contents                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `@agentbank/sdk`             | `AgentBankClient`, `AgentClient`, `PrincipalClient`, keys and signers, owner authorizations, errors, the x402 client, webhooks, types |
-| `@agentbank/sdk/x402-server` | `createPaywall` and adapters for Express, Node `http`, Fastify, Hono and Web `Request`/`Response`                                     |
-| `@agentbank/sdk/node`        | `FileKeyStore`, a 0600 key file (Node only)                                                                                           |
+| Entry point                   | Contents                                                                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@agentbank/sdk`              | `AgentBankClient`, `AgentClient`, `PrincipalClient`, keys and signers, owner authorizations, errors, the x402 client, webhooks, types                  |
+| `@agentbank/sdk/x402-server`  | `createPaywall` and adapters for Express, Node `http`, Fastify, Hono and Web `Request`/`Response`                                                      |
+| `@agentbank/sdk/proof-server` | `createProofGate`, the requirement builders, `verifyPresentation`, root resolvers and the same adapters, for [private proofs](/guides/proofs-verifier) |
+| `@agentbank/sdk/node`         | `FileKeyStore`, a 0600 key file (Node only)                                                                                                            |
 
 ## Three clients
 
@@ -42,7 +43,7 @@ const client = new AgentBankClient({
 
 ### Resource namespaces
 
-Every API operation has a method, grouped like the API tags: `orgs`, `apiKeys`, `members`, `agents`, `accounts`, `sessions`, `ownerOperations`, `mandates`, `policies`, `payments`, `paymentRequests`, `x402`, `escrows`, `streams`, `approvals`, `ledger`, `vaults`, `treasury`, `webhooks`, `billing`, plus `client.meta()` and `client.health()`.
+Every API operation has a method, grouped like the API tags: `orgs`, `apiKeys`, `members`, `agents`, `accounts`, `sessions`, `ownerOperations`, `mandates`, `policies`, `payments`, `paymentRequests`, `x402`, `escrows`, `streams`, `approvals`, `ledger`, `vaults`, `treasury`, `webhooks`, `billing`, `proofs`, plus `client.meta()` and `client.health()`.
 
 ```ts
 const agent = await client.agents.create({ name: "research-bot" });
@@ -128,7 +129,8 @@ const agent = new AgentClient({
 | `requestPayment({ amount, memo, reference })`                                                  | Creates a payment request with a `pay_link`                                                                                |
 | `createEscrow`, `releaseEscrow`, `refundEscrow`, `disputeEscrow`, `completeEscrow`             | [Escrow](/concepts/escrow-and-streams) flows                                                                               |
 | `createStream`, `cancelStream`, `completeStream`                                               | [Stream](/concepts/escrow-and-streams#streams) flows                                                                       |
-| `fetch(url)`, `fetchWithPayment(url)`, `wrapFetch(fetch)`                                      | [x402](/guides/x402-buyer)-paying fetch                                                                                    |
+| `fetch(url)`, `fetchWithPayment(url)`, `wrapFetch(fetch)`                                      | [x402](/guides/x402-buyer)-paying fetch; with a `proofSecret`, it answers proof challenges first                           |
+| `proofs.enroll()`, `proofs.prove(request)`, `proofs.answer(challenge)`, `proofs.reserve(…)`    | [Private proofs](/guides/proofs-agent): enroll the secret's commitment, prove a request, hold funds for one verifier       |
 | `listTransactions()`, `listEntries()`                                                          | Payments and ledger entries of the account                                                                                 |
 
 Every agent request is signed with RFC 9421 over the exact bytes sent and re-signed with a fresh nonce on every retry. Before signing an operation, the SDK checks that what the API prepared matches what you asked for (amount, counterparty; for x402 the payee, amount, token, chain and validity window), and it refuses to sign anything that is not a 32-byte hash, so a compromised API cannot make the session key sign arbitrary data.
@@ -169,8 +171,26 @@ Every error is an `AgentBankError` with a stable `code` from the [error catalog]
 | `ChainError`, `PaymentFailedError` | `chain_error`; a payment, escrow or stream that `failed` on-chain                                          |
 | `ConnectionError`, `TimeoutError`  | No response arrived                                                                                        |
 | `X402Error`                        | An x402 payment could not be made (`reason`)                                                               |
+| `ProofError`                       | A private proof was not made or was refused (`reason`)                                                     |
 
 Errors carry `httpStatus`, the raw `problem` document, the `operationId` and the `requestId` to quote in support requests.
+
+## Private proofs
+
+An agent proves facts Agent Bank attests about it without revealing which agent it is. The owner enables it (`principal.proofs.configure(agentId, { enabled, disclose })`, owner-signed when it widens disclosure), the agent enrolls once, and `fetchWithPayment` answers proof challenges before paying:
+
+```ts
+import { AgentClient, generateProofSecret } from "@agentbank/sdk";
+
+const proofSecret = generateProofSecret(); // once: store it like a key and reuse it
+const agent = new AgentClient({ baseUrl, accountId, session, spendKey, proofSecret });
+await agent.proofs.enroll(); // registers Poseidon(secret), never the secret
+const { response, proofPresented, nullifier } = await agent.fetchWithPayment(
+  "https://api.seller.example/report",
+);
+```
+
+Sellers gate routes with `@agentbank/sdk/proof-server`. See [Prove facts as an agent](/guides/proofs-agent) and [Require proofs as a seller](/guides/proofs-verifier).
 
 ## Webhooks
 

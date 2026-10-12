@@ -33,7 +33,7 @@ const FRONTMATTER = "---\neditLink: false\noutline: 2\n---";
 
 /** Sidebar groups for the tag pages. Tags not listed here appear under "Other". */
 export const TAG_GROUPS: readonly { text: string; tags: readonly string[] }[] = [
-  { text: "Identity", tags: ["Orgs", "Agents", "Accounts", "Sessions", "Owner operations"] },
+  { text: "Identity", tags: ["Orgs", "Agents", "Accounts", "Sessions", "Owner operations", "Proofs"] },
   { text: "Authority", tags: ["Policies", "Mandates", "Approvals"] },
   { text: "Money movement", tags: ["Payments", "x402", "Escrow", "Streams"] },
   { text: "Ledger and savings", tags: ["Ledger", "Savings", "Treasury"] },
