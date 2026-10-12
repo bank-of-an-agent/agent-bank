@@ -10,9 +10,13 @@ ALTER TABLE api_key ADD COLUMN member_id text REFERENCES member (id);
 CREATE INDEX api_key_org_idx ON api_key (org_id, created_at DESC);
 
 -- EIP-2612 permit signed by the agent's x402 spend key granting the smart account an allowance
--- (ADR 0001: the owner can always sweep the float back). `{value, deadline, signature}`; it is
--- submitted in the account's setup owner operation.
+-- (ADR 0001: the owner can always sweep the float back), `{value, deadline, nonce, signature}`.
+-- It is executed in the account's next owner operation (the setup operation that deploys it);
+-- `spend_key_permit_op_id` is the operation carrying it.
 ALTER TABLE account ADD COLUMN spend_key_permit jsonb;
+ALTER TABLE account ADD COLUMN spend_key_permit_status text NOT NULL DEFAULT 'none'
+  CHECK (spend_key_permit_status IN ('none', 'pending', 'executed'));
+ALTER TABLE account ADD COLUMN spend_key_permit_op_id text;
 
 -- Smart Sessions permission id of an installed session (bytes32 hex).
 ALTER TABLE session_key ADD COLUMN permission_id text;

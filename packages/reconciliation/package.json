@@ -1,0 +1,29 @@
+{
+  "name": "@agentbank/reconciliation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ledger reconciliation for Agent Bank, mounted inside the API: matches chain events pushed by the indexer to expected movements, posts ledger entries, settles payments, escrows and streams, raises suspense and mismatch events, reverses entries on reorgs and computes expected balances.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "gate": "GATE_EVIDENCE=1 vitest run test/gate-phase1.test.ts"
+  },
+  "dependencies": {
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@agentbank/ledger": "workspace:*",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@agentbank/chain": "workspace:*",
+    "@electric-sql/pglite": "^0.5.8",
+    "fast-check": "^4.10.2"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "@agentbank/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Bank chain indexer: polls the chain through ChainGateway, detects reorgs from block hashes, normalizes USDC, EIP-3009, EntryPoint and Agent Bank contract logs, pushes them to the API's reconciler and runs the nightly on-chain balance check. Own AWS account, own database.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentbank/chain": "workspace:*",
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@electric-sql/pglite": "^0.5.8",
+    "@noble/curves": "1.9.1",
+    "@noble/hashes": "^2.4.0",
+    "@rhinestone/module-sdk": "^0.4.0",
+    "fastify": "^5.12.5",
+    "permissionless": "^0.4.1",
+    "pg": "^8.23.1",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@agentbank/ledger": "workspace:*",
+    "@agentbank/reconciliation": "workspace:*",
+    "tsup": "^8.5.1"
+  }
+}
