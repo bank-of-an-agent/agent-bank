@@ -112,6 +112,7 @@ CREATE TABLE session_key (
   revoked_at          timestamptz,
   onchain_tx           text,
   install_operation_id text,
+  revoke_operation_id  text,
   created_at           timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX session_key_account_idx ON session_key (account_id);
@@ -122,7 +123,7 @@ CREATE TABLE owner_operation (
   account_id   text NOT NULL REFERENCES account (id),
   purpose      text NOT NULL CHECK (purpose IN (
                  'session.install', 'session.revoke', 'topup.configure', 'sweep.configure',
-                 'vault.withdraw', 'payment', 'account.deploy')),
+                 'vault.withdraw', 'payment', 'account.deploy', 'owner.swap')),
   subject_id   text NOT NULL,
   status       text NOT NULL DEFAULT 'requires_signature'
                CHECK (status IN ('requires_signature', 'submitted', 'succeeded', 'failed', 'expired')),
@@ -203,6 +204,8 @@ CREATE TABLE payment (
   decision_id              text,
   approval_id              text,
   owner_operation_id       text,
+  escrow_id                text,
+  stream_id                text,
   hold_id                  text,
   session_id               text,
   user_op                  jsonb,

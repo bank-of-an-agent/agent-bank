@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PolicyDecisionSchema } from "../policy-schema";
+import { PAYMENT_KINDS, PolicyDecisionSchema } from "../policy-schema";
 import { DomainSchema, idSchema, page, PaginationQuery } from "../schemas";
 import * as R from "./resources";
 
@@ -472,6 +472,8 @@ export const routes = {
     auth: ["principal", "agent"],
     query: ListQuery.extend({
       account_id: idSchema("account").optional(),
+      agent_id: idSchema("agent").optional(),
+      kind: z.enum(PAYMENT_KINDS).optional(),
       status: R.PaymentStatus.optional(),
     }),
     response: page(R.Payment),
@@ -751,7 +753,7 @@ export const routes = {
     tags: ["Ledger"],
     auth: ["principal", "agent"],
     params: Id("account"),
-    query: ListQuery,
+    query: ListQuery.extend({ payment_id: idSchema("payment").optional() }),
     response: page(R.LedgerEntry),
   }),
   getStatement: route({
@@ -964,6 +966,107 @@ export const routes = {
     auth: ["staff"],
     query: z.object({ period: z.string().regex(/^[0-9]{4}-(0[1-9]|1[0-2])$/) }),
     response: R.RevenueReport,
+  }),
+  listSessions: route({
+    operationId: "listSessions",
+    method: "GET",
+    path: "/v1/sessions",
+    summary: "List sessions",
+    tags: ["Sessions"],
+    auth: ["principal"],
+    query: ListQuery.extend({
+      account_id: idSchema("account").optional(),
+      agent_id: idSchema("agent").optional(),
+      status: z.enum(["pending_install", "active", "expired", "revoked"]).optional(),
+    }),
+    response: page(R.Session),
+  }),
+  listMandates: route({
+    operationId: "listMandates",
+    method: "GET",
+    path: "/v1/mandates",
+    summary: "List mandates",
+    tags: ["Mandates"],
+    auth: ["principal"],
+    query: ListQuery.extend({
+      agent_id: idSchema("agent").optional(),
+      status: z.enum(["active", "expired", "revoked"]).optional(),
+    }),
+    response: page(R.Mandate),
+  }),
+  listOwnerOperations: route({
+    operationId: "listOwnerOperations",
+    method: "GET",
+    path: "/v1/owner-operations",
+    summary: "List owner operations",
+    tags: ["Owner operations"],
+    auth: ["principal"],
+    query: ListQuery.extend({
+      account_id: idSchema("account").optional(),
+      status: z.enum(["requires_signature", "submitted", "succeeded", "failed", "expired"]).optional(),
+    }),
+    response: page(R.OwnerOperation),
+  }),
+  prepareOwnerSwap: route({
+    operationId: "prepareOwnerSwap",
+    method: "POST",
+    path: "/v1/accounts/{id}/owner-swap",
+    summary: "Prepare the owner operation that swaps the Safe owner on an account",
+    description:
+      "Part of owner-key rotation: sign the returned operation with the current owner key for every account, then call rotateOwner.",
+    tags: ["Owner operations", "Orgs"],
+    auth: ["principal"],
+    idempotent: true,
+    params: Id("account"),
+    body: R.PrepareOwnerSwapRequest,
+    response: R.OwnerOperation,
+    status: 201,
+  }),
+  listEscrows: route({
+    operationId: "listEscrows",
+    method: "GET",
+    path: "/v1/escrows",
+    summary: "List escrows",
+    tags: ["Escrow"],
+    auth: ["principal", "agent"],
+    query: ListQuery.extend({
+      account_id: idSchema("account").optional(),
+      status: R.EscrowStatus.optional(),
+    }),
+    response: page(R.Escrow),
+  }),
+  listStreams: route({
+    operationId: "listStreams",
+    method: "GET",
+    path: "/v1/streams",
+    summary: "List streams",
+    tags: ["Streams"],
+    auth: ["principal", "agent"],
+    query: ListQuery.extend({
+      account_id: idSchema("account").optional(),
+      status: R.StreamStatus.optional(),
+    }),
+    response: page(R.Stream),
+  }),
+  listAutoTopUpRules: route({
+    operationId: "listAutoTopUpRules",
+    method: "GET",
+    path: "/v1/auto-topup-rules",
+    summary: "List auto top-up rules",
+    tags: ["Treasury"],
+    auth: ["principal"],
+    query: ListQuery,
+    response: page(R.AutoTopUpRule),
+  }),
+  getSweepRule: route({
+    operationId: "getSweepRule",
+    method: "GET",
+    path: "/v1/accounts/{id}/sweep-rule",
+    summary: "Get the account's treasury sweep rule",
+    tags: ["Treasury"],
+    auth: ["principal"],
+    params: Id("account"),
+    response: R.SweepRule.nullable(),
   }),
   getMeta: route({
     operationId: "getMeta",

@@ -1474,6 +1474,96 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "listSessions",
+        "summary": "List sessions",
+        "tags": [
+          "Sessions"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "agent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending_install",
+                "active",
+                "expired",
+                "revoked"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSessionsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/sessions/{id}": {
@@ -1808,6 +1898,86 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Mandate"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listMandates",
+        "summary": "List mandates",
+        "tags": [
+          "Mandates"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "agent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "expired",
+                "revoked"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMandatesResponse"
                 }
               }
             }
@@ -2211,6 +2381,31 @@
             "schema": {
               "type": "string",
               "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "agent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^agt_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "transfer",
+                "x402",
+                "escrow",
+                "stream",
+                "payout",
+                "refill"
+              ]
             }
           },
           {
@@ -2885,6 +3080,96 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "listEscrows",
+        "summary": "List escrows",
+        "tags": [
+          "Escrow"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "sessionSignature": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal",
+          "agent"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "requires_signature",
+                "locking",
+                "locked",
+                "released",
+                "refunded",
+                "disputed",
+                "resolved",
+                "failed",
+                "canceled"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEscrowsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/escrows/{id}": {
@@ -3262,6 +3547,93 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Stream"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listStreams",
+        "summary": "List streams",
+        "tags": [
+          "Streams"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "sessionSignature": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal",
+          "agent"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "requires_signature",
+                "active",
+                "paused",
+                "completed",
+                "canceled",
+                "failed"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStreamsResponse"
                 }
               }
             }
@@ -3718,6 +4090,15 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 200
+            }
+          },
+          {
+            "name": "payment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^pay_[0-9A-HJKMNP-TV-Z]{26}$"
             }
           }
         ],
@@ -4394,6 +4775,54 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "getSweepRule",
+        "summary": "Get the account's treasury sweep rule",
+        "tags": [
+          "Treasury"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSweepRuleResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/webhook-endpoints": {
@@ -4879,6 +5308,223 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevenueReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner-operations": {
+      "get": {
+        "operationId": "listOwnerOperations",
+        "summary": "List owner operations",
+        "tags": [
+          "Owner operations"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "requires_signature",
+                "submitted",
+                "succeeded",
+                "failed",
+                "expired"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOwnerOperationsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/accounts/{id}/owner-swap": {
+      "post": {
+        "operationId": "prepareOwnerSwap",
+        "summary": "Prepare the owner operation that swaps the Safe owner on an account",
+        "description": "Part of owner-key rotation: sign the returned operation with the current owner key for every account, then call rotateOwner.",
+        "tags": [
+          "Owner operations",
+          "Orgs"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical operation. Retries with the same key return the original result.",
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareOwnerSwapRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerOperation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auto-topup-rules": {
+      "get": {
+        "operationId": "listAutoTopUpRules",
+        "summary": "List auto top-up rules",
+        "tags": [
+          "Treasury"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAutoTopUpRulesResponse"
                 }
               }
             }
@@ -6465,6 +7111,26 @@
               "frozen"
             ]
           },
+          "frozen_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pending_unfreeze_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "description": "ISO 8601 timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When a pending owner-signed unfreeze takes effect"
+          },
           "owner_address": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
@@ -6498,6 +7164,8 @@
           "kyc_status",
           "tier",
           "status",
+          "frozen_reason",
+          "pending_unfreeze_at",
           "owner_address",
           "treasury_account_id",
           "created_at"
@@ -6790,6 +7458,21 @@
           "owner_authorization"
         ],
         "description": "Voluntary rotation signed by the current owner key (action owner.rotate). The on-chain Safe owner must be changed with an owner operation as well."
+      },
+      "PrepareOwnerSwapRequest": {
+        "type": "object",
+        "properties": {
+          "new_owner_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM address",
+            "example": "0x1111111111111111111111111111111111111111"
+          }
+        },
+        "required": [
+          "new_owner_address"
+        ],
+        "description": "Prepare the owner operation that swaps the Safe owner on one account (signed by the current owner key)."
       },
       "SetTreasuryRequest": {
         "type": "object",
@@ -7301,7 +7984,8 @@
               "sweep.configure",
               "vault.withdraw",
               "payment",
-              "account.deploy"
+              "account.deploy",
+              "owner.swap"
             ]
           },
           "subject_id": {
@@ -7455,6 +8139,18 @@
             ],
             "description": "Owner operation that installs the session on-chain (Smart Sessions)"
           },
+          "revoke_operation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^oop_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Owner operation that revokes the session on-chain (the hard backstop)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -7473,6 +8169,7 @@
           "revoked_at",
           "onchain_tx",
           "install_operation_id",
+          "revoke_operation_id",
           "created_at"
         ],
         "description": "A short-lived, scoped agent key. Useless without the co-signer."
@@ -7974,6 +8671,28 @@
               }
             ]
           },
+          "escrow_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^esc_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stream_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^str_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "signing_request": {
             "anyOf": [
               {
@@ -8076,6 +8795,8 @@
           "payment_request_id",
           "decision",
           "approval_id",
+          "escrow_id",
+          "stream_id",
           "signing_request",
           "owner_operation_id",
           "user_op_hash",
@@ -9268,6 +9989,17 @@
             "minimum": 1,
             "maximum": 9007199254740991
           },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PolicyDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The policy decision that required approval (rule hits)"
+          },
           "decisions": {
             "type": "array",
             "items": {
@@ -9329,6 +10061,7 @@
           "amount",
           "counterparty",
           "required_approvers",
+          "decision",
           "decisions",
           "status",
           "expires_at",
@@ -9713,6 +10446,17 @@
               "null"
             ]
           },
+          "pending_operation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^oop_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -9731,6 +10475,7 @@
           "balance",
           "contract_address",
           "onchain_id",
+          "pending_operation_id",
           "created_at"
         ],
         "description": "Goal vaults are ledger-only; locked vaults use the TimeLockVaults contract."
@@ -9815,8 +10560,20 @@
           "status": {
             "type": "string",
             "enum": [
+              "pending_install",
               "active",
               "disabled"
+            ]
+          },
+          "install_operation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^oop_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "created_at": {
@@ -9835,6 +10592,7 @@
           "when_below",
           "max_per_day",
           "status",
+          "install_operation_id",
           "created_at"
         ],
         "description": "Refill an agent from the org treasury when its balance drops."
@@ -10944,6 +11702,142 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "ListSessionsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Session"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "ListMandatesResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Mandate"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "ListOwnerOperationsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerOperation"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "ListEscrowsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Escrow"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "ListStreamsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Stream"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "ListAutoTopUpRulesResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoTopUpRule"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "next_cursor"
+        ]
+      },
+      "GetSweepRuleResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SweepRule"
+          },
+          {
+            "type": "null"
+          }
         ]
       },
       "HealthResponse": {

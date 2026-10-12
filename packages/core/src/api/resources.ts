@@ -49,6 +49,10 @@ export const Org = z
     kyc_status: KycStatus,
     tier: OrgTier,
     status: z.enum(["active", "frozen"]),
+    frozen_reason: z.string().nullable(),
+    pending_unfreeze_at: TimestampSchema.nullable().meta({
+      description: "When a pending owner-signed unfreeze takes effect",
+    }),
     owner_address: AddressSchema.meta({
       description: "The principal's owner key. Can always exit; never held by Agent Bank.",
     }),
@@ -131,6 +135,12 @@ export const RotateOwnerRequest = z
     description:
       "Voluntary rotation signed by the current owner key (action owner.rotate). The on-chain Safe owner must be changed with an owner operation as well.",
   });
+
+export const PrepareOwnerSwapRequest = z.object({ new_owner_address: AddressSchema }).meta({
+  id: "PrepareOwnerSwapRequest",
+  description:
+    "Prepare the owner operation that swaps the Safe owner on one account (signed by the current owner key).",
+});
 
 export const SetTreasuryRequest = z
   .object({ account_id: idSchema("account"), owner_authorization: OwnerAuthorizationSchema })
@@ -260,6 +270,7 @@ export const OwnerOperation = z
       "vault.withdraw",
       "payment",
       "account.deploy",
+      "owner.swap",
     ]),
     subject_id: z
       .string()
@@ -299,6 +310,9 @@ export const Session = z
     install_operation_id: idSchema("ownerOperation")
       .nullable()
       .meta({ description: "Owner operation that installs the session on-chain (Smart Sessions)" }),
+    revoke_operation_id: idSchema("ownerOperation")
+      .nullable()
+      .meta({ description: "Owner operation that revokes the session on-chain (the hard backstop)" }),
     created_at: TimestampSchema,
   })
   .meta({ id: "Session", description: "A short-lived, scoped agent key. Useless without the co-signer." });
@@ -447,6 +461,8 @@ export const Payment = z
     payment_request_id: idSchema("paymentRequest").nullable(),
     decision: PolicyDecisionSchema.nullable(),
     approval_id: idSchema("approval").nullable(),
+    escrow_id: idSchema("escrow").nullable(),
+    stream_id: idSchema("stream").nullable(),
     signing_request: SigningRequest.nullable(),
     owner_operation_id: idSchema("ownerOperation")
       .nullable()
@@ -801,6 +817,9 @@ export const Approval = z
     amount: MoneySchema,
     counterparty: Counterparty,
     required_approvers: z.number().int().min(1),
+    decision: PolicyDecisionSchema.nullable().meta({
+      description: "The policy decision that required approval (rule hits)",
+    }),
     decisions: z.array(
       z.object({
         member_id: idSchema("member"),
@@ -905,6 +924,7 @@ export const Vault = z
     balance: MoneySchema,
     contract_address: AddressSchema.nullable(),
     onchain_id: z.string().nullable(),
+    pending_operation_id: idSchema("ownerOperation").nullable(),
     created_at: TimestampSchema,
   })
   .meta({
@@ -935,7 +955,8 @@ export const AutoTopUpRule = z
     refill_to: MoneySchema,
     when_below: MoneySchema,
     max_per_day: MoneySchema,
-    status: z.enum(["active", "disabled"]),
+    status: z.enum(["pending_install", "active", "disabled"]),
+    install_operation_id: idSchema("ownerOperation").nullable(),
     created_at: TimestampSchema,
   })
   .meta({

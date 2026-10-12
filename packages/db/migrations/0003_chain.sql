@@ -61,6 +61,9 @@ CREATE INDEX chain_tx_deferred_idx ON chain_tx (chain_id, block_number) WHERE st
 
 CREATE TABLE chain_event (
   id               text PRIMARY KEY,                         -- `${chain_id}:${block_hash}:${tx_hash}:${log_index}`
+  -- The same identity in the ledger's id format (journal_entry.chain_event_id): `cev_` + the
+  -- block time and 80 bits of sha256(id), so it is deterministic and sorts by time.
+  ledger_ref       text NOT NULL,
   chain_tx_id      text NOT NULL REFERENCES chain_tx (id),
   chain_id         integer NOT NULL CHECK (chain_id NOT IN (1, 8453, 10, 42161, 137)),
   block_number     bigint NOT NULL CHECK (block_number >= 0),
@@ -84,6 +87,8 @@ CREATE TABLE chain_event (
   created_at       timestamptz NOT NULL,
   updated_at       timestamptz NOT NULL,
   CONSTRAINT chain_event_matched_entry_id_key UNIQUE (matched_entry_id),
+  CONSTRAINT chain_event_ledger_ref_key UNIQUE (ledger_ref),
+  CONSTRAINT chain_event_ledger_ref_format CHECK (ledger_ref ~ '^cev_[0-9A-HJKMNP-TV-Z]{26}$'),
   CONSTRAINT chain_event_matched_is_entry CHECK (matched_entry_id IS NULL OR matched_entry_id = entry_id),
   CONSTRAINT chain_event_args_object CHECK (jsonb_typeof(args) = 'object'),
   CONSTRAINT chain_event_detail_object CHECK (jsonb_typeof(detail) = 'object')
