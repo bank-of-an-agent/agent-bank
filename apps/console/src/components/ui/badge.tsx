@@ -19,16 +19,20 @@ export function Badge({
   children,
   className,
   icon,
+  wrap = false,
 }: {
   tone?: Tone;
   children: ReactNode;
   className?: string;
   icon?: ReactNode;
+  /** Let long text wrap (e.g. a sentence in a narrow column) instead of staying on one line. */
+  wrap?: boolean;
 }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium",
+        wrap ? "rounded-lg whitespace-normal" : "rounded-full whitespace-nowrap",
         tones[tone],
         className,
       )}
@@ -61,10 +65,14 @@ const STATUS_TONES: Record<string, Tone> = {
   disabled: "neutral",
   enabled: "teal",
   // escrow / streams
+  locking: "blue",
   locked: "violet",
   released: "teal",
   refunded: "neutral",
   disputed: "warn",
+  resolved: "teal",
+  completed: "teal",
+  paused: "neutral",
   // kyb
   in_review: "blue",
   rejected: "danger",

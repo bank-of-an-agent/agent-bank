@@ -14,6 +14,7 @@ import { IconClose, IconFreeze, IconKey, IconMenu, IconSignOut } from "@/compone
 import { consolePost } from "@/lib/api/client";
 import { useApi } from "@/lib/api/hooks";
 import { cn } from "@/lib/cn";
+import { formatTime } from "@/lib/format";
 import { shortHex } from "@/lib/format";
 import { BrandLockup } from "./brand";
 import { NavLinks } from "./nav";
@@ -100,10 +101,14 @@ function SignOutButton({ compact = false }: { compact?: boolean }) {
 function FrozenBanner() {
   const org = useApi("getCurrentOrg");
   if (org.data?.status !== "frozen") return null;
+  const { frozen_reason: reason, pending_unfreeze_at: unfreezesAt } = org.data;
   return (
     <div role="alert" className="border-b border-danger/50 bg-danger-bg px-4 py-2.5 text-sm text-fg sm:px-6">
-      <span className="font-semibold">The organization is frozen.</span> The co-signer refuses every payment
-      for every agent until the owner unfreezes it.{" "}
+      <span className="font-semibold">The organization is frozen.</span>{" "}
+      {unfreezesAt
+        ? `The owner signed an unfreeze; it takes effect at ${formatTime(unfreezesAt)}.`
+        : "The co-signer refuses every payment for every agent until the owner unfreezes it."}
+      {reason ? <span className="text-muted"> Reason: {reason}.</span> : null}{" "}
       <Link href="/settings#freeze" className="font-medium text-danger-fg underline underline-offset-2">
         Review
       </Link>

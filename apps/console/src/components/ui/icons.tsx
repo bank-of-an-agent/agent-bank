@@ -239,3 +239,16 @@ export const IconClock = (p: IconProps) => (
     <path d="M12 7v5l3 2" />
   </Icon>
 );
+
+export const IconSignature = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14.5 4.5l5 5L9 20H4v-5L14.5 4.5z" />
+    <path d="M12.5 6.5l5 5" />
+  </Icon>
+);
+
+export const IconDroplet = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3s-6 6.4-6 11a6 6 0 0 0 12 0c0-4.6-6-11-6-11z" />
+  </Icon>
+);

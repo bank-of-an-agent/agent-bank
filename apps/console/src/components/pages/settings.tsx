@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore, type FormEvent } from "react";
-import { FreezeOrgButton, UnfreezeOrgButton } from "@/components/agents/freeze-controls";
+import { FreezeOrgButton, OrgFreezeDetails, UnfreezeOrgButton } from "@/components/agents/freeze-controls";
 import { OwnerSignerPanel } from "@/components/owner/owner-signer-panel";
 import { RotateOwnerKey } from "@/components/owner/rotate-owner";
 import { SandboxKeyManager } from "@/components/owner/sandbox-key-manager";
@@ -143,8 +143,17 @@ function FreezeSection() {
         description="Freeze every agent at once. The co-signer then refuses every operation. Unfreezing needs the owner key and waits 1 hour."
         actions={org.data ? <StatusBadge status={org.data.status} /> : null}
       />
-      <CardBody>
-        {org.data?.status === "frozen" ? <UnfreezeOrgButton orgId={org.data.id} /> : <FreezeOrgButton />}
+      <CardBody className="space-y-3">
+        {org.data?.status === "frozen" ? (
+          <>
+            <div className="text-sm">
+              <OrgFreezeDetails org={org.data} />
+            </div>
+            <UnfreezeOrgButton org={org.data} />
+          </>
+        ) : (
+          <FreezeOrgButton />
+        )}
       </CardBody>
     </Card>
   );

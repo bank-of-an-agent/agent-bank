@@ -13,6 +13,8 @@ export interface ConsoleConfig {
   chainId: number;
   /** Feature flags from `GET /v1/meta`, e.g. `treasury_sweep`. */
   features: Record<string, boolean>;
+  /** USDC's address and EIP-712 domain (`GET /v1/meta`); `null` when the API was unreachable. */
+  usdc: { address: string; name: string; version: string } | null;
 }
 
 /** What the browser may know about the signed-in principal (never the credential). */
@@ -29,6 +31,7 @@ const ConfigContext = createContext<ConsoleConfig>({
   chain: "base-sepolia",
   chainId: 84532,
   features: {},
+  usdc: null,
 });
 
 const SessionContext = createContext<SessionInfo | null>(null);

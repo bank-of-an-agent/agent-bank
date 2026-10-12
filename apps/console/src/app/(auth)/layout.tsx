@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     throw error;
   }
   return (
-    <ConfigProvider value={{ ...config, chainId: CHAINS[config.chain].id, features: {} }}>
+    <ConfigProvider value={{ ...config, chainId: CHAINS[config.chain].id, features: {}, usdc: null }}>
       <AppProviders>
         <div className="flex min-h-dvh flex-col">
           <header className="flex items-center justify-between px-4 py-4 sm:px-8">

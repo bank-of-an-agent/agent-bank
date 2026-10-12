@@ -1,18 +1,26 @@
-import { assertTestnet, type OwnerAuthorizationTypedData } from "@agentbank/core";
-import { createWalletClient, custom, type Address, type EIP1193Provider, type Hex } from "viem";
+import { assertTestnet } from "@agentbank/core";
+import {
+  createWalletClient,
+  custom,
+  type Address,
+  type EIP1193Provider,
+  type Hex,
+  type TypedDataDefinition,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { anvil, baseSepolia } from "viem/chains";
 
 /**
- * The principal's owner key, as the console uses it: sign EIP-712
- * `OwnerAuthorization` typed data and EIP-191 personal signatures over
- * owner-operation `user_op_hash`es. The key never leaves the wallet (or, for
- * the sandbox key, the browser); the console only ever sees signatures.
+ * The principal's owner key, as the console uses it: sign EIP-712 typed data
+ * (`OwnerAuthorization`, and TimeLockVaults' `EarlyWithdrawal`) and EIP-191
+ * personal signatures over owner-operation `user_op_hash`es. The key never
+ * leaves the wallet (or, for the sandbox key, the browser); the console only
+ * ever sees signatures. Typed data must name a testnet chain id.
  */
 export interface OwnerSigner {
   kind: "injected" | "sandbox";
   address: Address;
-  signTypedData(typedData: OwnerAuthorizationTypedData): Promise<Hex>;
+  signTypedData(typedData: TypedDataDefinition): Promise<Hex>;
   /** EIP-191 personal signature over raw 32 bytes (the owner validator's format). */
   signHash(hash: Hex): Promise<Hex>;
 }
@@ -91,7 +99,7 @@ export async function connectInjected(options: { prompt: boolean }): Promise<Own
     kind: "injected",
     address,
     async signTypedData(typedData) {
-      await ensureChain(client, Number(typedData.domain.chainId));
+      await ensureChain(client, Number(typedData.domain?.chainId));
       try {
         return await client.signTypedData({ account: address, ...typedData });
       } catch (error) {
@@ -124,7 +132,7 @@ export function sandboxSigner(privateKey: Hex): OwnerSigner {
     kind: "sandbox",
     address: account.address,
     async signTypedData(typedData) {
-      assertTestnet(Number(typedData.domain.chainId));
+      assertTestnet(Number(typedData.domain?.chainId));
       return account.signTypedData(typedData);
     },
     async signHash(hash) {

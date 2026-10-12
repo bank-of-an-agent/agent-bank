@@ -14,10 +14,12 @@ import {
   IconOverview,
   IconPayments,
   IconSettings,
+  IconSignature,
   IconTreasury,
   IconWebhook,
 } from "@/components/ui/icons";
 import { useApi } from "@/lib/api/hooks";
+import { useOwnerInbox } from "@/lib/api/queries";
 import { cn } from "@/lib/cn";
 
 interface NavItem {
@@ -30,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Overview", icon: IconOverview },
   { href: "/agents", label: "Agents", icon: IconAgents },
   { href: "/approvals", label: "Approvals", icon: IconApprovals },
+  { href: "/owner-operations", label: "Owner operations", icon: IconSignature },
   { href: "/payments", label: "Payments", icon: IconPayments },
   { href: "/treasury", label: "Treasury", icon: IconTreasury },
   { href: "/ledger", label: "Ledger & statements", icon: IconLedger },
@@ -43,20 +46,29 @@ export function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function CountBadge({ count, more, label }: { count: number; more: boolean; label: string }) {
+  if (count === 0) return null;
+  return (
+    <span className="ml-auto rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold text-warn-fg">
+      {more ? `${count}+` : count}
+      <span className="sr-only"> {label}</span>
+    </span>
+  );
+}
+
 function PendingApprovalsBadge() {
   const { data } = useApi(
     "listApprovals",
     { query: { status: "pending", limit: 50 } },
     { refreshInterval: 15_000 },
   );
-  const count = data?.data.length ?? 0;
-  if (count === 0) return null;
-  const label = data?.next_cursor ? `${count}+` : String(count);
+  return <CountBadge count={data?.data.length ?? 0} more={Boolean(data?.next_cursor)} label="pending" />;
+}
+
+function OwnerInboxBadge() {
+  const inbox = useOwnerInbox();
   return (
-    <span className="ml-auto rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold text-warn-fg">
-      {label}
-      <span className="sr-only"> pending</span>
-    </span>
+    <CountBadge count={inbox.operations.length} more={inbox.truncated} label="waiting for your signature" />
   );
 }
 
@@ -82,6 +94,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             <Icon size={18} className="shrink-0" />
             <span>{item.label}</span>
             {item.href === "/approvals" ? <PendingApprovalsBadge /> : null}
+            {item.href === "/owner-operations" ? <OwnerInboxBadge /> : null}
           </Link>
         );
       })}

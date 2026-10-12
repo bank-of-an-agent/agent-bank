@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
+import { OwnerOperationDialog, PendingOperationButton } from "@/components/owner/owner-operation";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
@@ -13,7 +14,7 @@ import { useToast } from "@/components/ui/toast";
 import { MoneyValue } from "@/components/ui/values";
 import { apiFetch, useApi, useIdempotencyKey, useInvalidate } from "@/lib/api/hooks";
 import { ApiProblem } from "@/lib/api/problem";
-import type { Agent } from "@/lib/api/queries";
+import { useOwnerInbox, type Agent, type AutoTopUpRule } from "@/lib/api/queries";
 import { amountError, compareDecimal } from "@/lib/money";
 import { ownerPayloads } from "@/lib/owner/authorize";
 
@@ -24,11 +25,14 @@ export function AutoTopUpEditor({
   initial,
   open,
   onClose,
+  onSaved,
 }: {
   agent: Agent;
   initial?: { refill_to: string; when_below: string; max_per_day: string };
   open: boolean;
   onClose: () => void;
+  /** Receives the saved rule; its `install_operation_id` still needs the owner's signature. */
+  onSaved?: (rule: AutoTopUpRule) => void;
 }) {
   const toast = useToast();
   const invalidate = useInvalidate();
@@ -65,7 +69,7 @@ export function AutoTopUpEditor({
       submitLabel="Sign and save rule"
       onSubmit={async (authorization) => {
         try {
-          await apiFetch("putAutoTopUp", {
+          const rule = await apiFetch("putAutoTopUp", {
             params: { id: agent.id },
             body: {
               refill_to: money(refillTo),
@@ -76,8 +80,12 @@ export function AutoTopUpEditor({
             idempotencyKey: key,
           });
           rotate();
-          void invalidate("getAutoTopUp");
-          toast({ title: "Auto top-up saved" });
+          void invalidate("getAutoTopUp", "listAutoTopUpRules", "listOwnerOperations");
+          toast({
+            title: "Auto top-up saved",
+            description: "Next, sign the executor install on the treasury with the owner key.",
+          });
+          if (rule) onSaved?.(rule);
           return { ok: true };
         } catch (error) {
           return { ok: false, problem: ApiProblem.from(error) };
@@ -111,6 +119,20 @@ export function AutoTopUpEditor({
   );
 }
 
+/** Rule state in words, including the on-chain install the owner still has to sign. */
+export function RuleStatus({ rule, waiting }: { rule: AutoTopUpRule; waiting: boolean }) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <StatusBadge status={rule.status} />
+      {rule.status === "pending_install" ? (
+        <span className="text-xs text-muted">
+          {waiting ? "Waiting for the owner's signature" : "Installing on-chain"}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function AutoTopUpSummary({
   agent,
   treasuryAccountId,
@@ -119,13 +141,16 @@ export function AutoTopUpSummary({
   treasuryAccountId: string | null;
 }) {
   const rule = useApi("getAutoTopUp", { params: { id: agent.id } });
+  const inbox = useOwnerInbox();
   const [editing, setEditing] = useState(false);
+  const [installId, setInstallId] = useState<string | null>(null);
   // No rule is either `null` or a 404, depending on the API version.
   if (rule.error && rule.error.code !== "not_found") {
     return <ProblemAlert problem={rule.error} onRetry={() => void rule.mutate()} />;
   }
   if (rule.isLoading) return <LoadingState label="Loading top-up rule" rows={1} className="px-0 py-0" />;
   const current = rule.error ? null : (rule.data ?? null);
+  const waiting = Boolean(current?.install_operation_id && inbox.byId.has(current.install_operation_id));
   return (
     <div className="space-y-3">
       {current ? (
@@ -135,16 +160,25 @@ export function AutoTopUpSummary({
             { term: "When below", detail: <MoneyValue money={current.when_below} /> },
             { term: "Refill to", detail: <MoneyValue money={current.refill_to} /> },
             { term: "Max per day", detail: <MoneyValue money={current.max_per_day} /> },
-            { term: "Status", detail: <StatusBadge status={current.status} /> },
+            { term: "Status", detail: <RuleStatus rule={current} waiting={waiting} /> },
           ]}
         />
       ) : (
         <p className="text-sm text-muted">No auto top-up rule. The agent is only funded by deposits.</p>
       )}
       {treasuryAccountId ? (
-        <Button size="sm" variant="owner" onClick={() => setEditing(true)}>
-          {current ? "Change rule…" : "Set up auto top-up…"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {current?.status === "pending_install" ? (
+            <PendingOperationButton
+              operationId={current.install_operation_id}
+              title="Install the auto top-up executor"
+              label="Sign install…"
+            />
+          ) : null}
+          <Button size="sm" variant="owner" onClick={() => setEditing(true)}>
+            {current ? "Change rule…" : "Set up auto top-up…"}
+          </Button>
+        </div>
       ) : (
         <Callout tone="info">
           Set an org treasury account first on the{" "}
@@ -168,8 +202,16 @@ export function AutoTopUpSummary({
           }
           open={editing}
           onClose={() => setEditing(false)}
+          onSaved={(saved) => setInstallId(saved.install_operation_id)}
         />
       ) : null}
+      <OwnerOperationDialog
+        id={installId}
+        open={installId !== null}
+        onClose={() => setInstallId(null)}
+        title="Install the auto top-up executor"
+        description="The treasury's executor refills this agent; installing or updating it is an owner operation."
+      />
     </div>
   );
 }

@@ -63,6 +63,21 @@ function approval(overrides: Partial<ResponseOf<"getApproval">> = {}): ResponseO
       x402_domain: "api.example-data.com",
     },
     required_approvers: 1,
+    // The policy decision that queued the payment: the card shows its rule hits without fetching the payment.
+    decision: {
+      outcome: "require_approval",
+      rule_hits: [
+        {
+          rule: "approvals",
+          effect: "require_approval",
+          detail: "150.00 USDC is above the 100.00 USDC threshold (1 approver)",
+        },
+        { rule: "limits.per_tx", effect: "allow", detail: "within 250.00 USDC" },
+      ],
+      approvers_required: 1,
+      policy_version: 3,
+      evaluated_at: "2026-10-11T11:55:00.000Z",
+    } as ResponseOf<"getApproval">["decision"],
     decisions: [],
     status: "pending",
     expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
@@ -70,25 +85,6 @@ function approval(overrides: Partial<ResponseOf<"getApproval">> = {}): ResponseO
     ...overrides,
   };
 }
-
-const payment = {
-  id: PAYMENT,
-  memo: "Dataset purchase",
-  decision: {
-    outcome: "require_approval",
-    rule_hits: [
-      {
-        rule: "approvals",
-        effect: "require_approval",
-        detail: "150.00 USDC is above the 100.00 USDC threshold (1 approver)",
-      },
-      { rule: "limits.per_tx", effect: "allow", detail: "within 250.00 USDC" },
-    ],
-    approvers_required: 1,
-    policy_version: 3,
-    evaluated_at: "2026-10-11T11:55:00.000Z",
-  },
-} as unknown as ResponseOf<"getPayment">;
 
 describe("ProblemAlert", () => {
   it("shows the problem code, detail and field errors", () => {
@@ -149,9 +145,7 @@ describe("ApprovalCard", () => {
   });
 
   it("shows amount, counterparty, countdown and the rule hits behind the approval", () => {
-    renderWithProviders(
-      <ApprovalCard approval={approval()} payment={payment} paymentLoading={false} agents={AGENTS} />,
-    );
+    renderWithProviders(<ApprovalCard approval={approval()} agents={AGENTS} />);
     const card = screen.getByRole("article");
     expect(within(card).getByRole("heading", { level: 2 })).toHaveTextContent("150.00USDC payment");
     expect(within(card).getByText("research-bot")).toBeInTheDocument();
@@ -159,14 +153,13 @@ describe("ApprovalCard", () => {
     expect(within(card).getByRole("timer")).toBeInTheDocument();
     expect(within(card).getByText("approvals")).toBeInTheDocument();
     expect(within(card).getByText(/above the 100.00 USDC threshold/)).toBeInTheDocument();
-    expect(within(card).getByText("Dataset purchase")).toBeInTheDocument();
+    // No per-approval payment fetch: the rule hits come with the approval.
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("approves with a passkey assertion bound to this approval and decision", async () => {
     const user = userEvent.setup();
-    renderWithProviders(
-      <ApprovalCard approval={approval()} payment={payment} paymentLoading={false} agents={AGENTS} />,
-    );
+    renderWithProviders(<ApprovalCard approval={approval()} agents={AGENTS} />);
     await user.click(screen.getByRole("button", { name: "Approve 150.00 USDC payment with passkey" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(approvalAssertion).toHaveBeenCalledWith(APPROVAL, "approve");
@@ -181,12 +174,9 @@ describe("ApprovalCard", () => {
 
   it("decides without a passkey in a sandbox API-key session", async () => {
     const user = userEvent.setup();
-    renderWithProviders(
-      <ApprovalCard approval={approval()} payment={payment} paymentLoading={false} agents={AGENTS} />,
-      {
-        session: { kind: "api_key", expiresAt: Date.now() / 1000 + 3600 },
-      },
-    );
+    renderWithProviders(<ApprovalCard approval={approval()} agents={AGENTS} />, {
+      session: { kind: "api_key", expiresAt: Date.now() / 1000 + 3600 },
+    });
     expect(screen.getByText(/Sandbox API-key session/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Deny 150.00 USDC payment" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -208,9 +198,7 @@ describe("ApprovalCard", () => {
         409,
       ),
     );
-    renderWithProviders(
-      <ApprovalCard approval={approval()} payment={payment} paymentLoading={false} agents={AGENTS} />,
-    );
+    renderWithProviders(<ApprovalCard approval={approval()} agents={AGENTS} />);
     await user.click(screen.getByRole("button", { name: /Approve/ }));
     expect(await screen.findByText("approval_expired")).toBeInTheDocument();
     expect(screen.getByText("The approval expired at 12:15")).toBeInTheDocument();
@@ -220,8 +208,6 @@ describe("ApprovalCard", () => {
     renderWithProviders(
       <ApprovalCard
         approval={approval({ expires_at: new Date(Date.now() - 1000).toISOString() })}
-        payment={payment}
-        paymentLoading={false}
         agents={AGENTS}
       />,
     );
@@ -276,6 +262,8 @@ describe("OwnerOperationCard", () => {
 });
 
 describe("RotateOwnerKey", () => {
+  const ACCOUNT = "acct_01J9ZQ3W8K7X5V4T3S2R1Q0P9N";
+  const SWAP = "oop_01J9ZQ3W8K7X5V4T3S2R1Q0P9N";
   const org = (owner: string) => ({
     id: ORG,
     object: "org",
@@ -285,8 +273,26 @@ describe("RotateOwnerKey", () => {
     kyc_status: "approved",
     tier: "pro",
     status: "active",
+    frozen_reason: null,
+    pending_unfreeze_at: null,
     owner_address: owner,
     treasury_account_id: null,
+    created_at: "2026-10-11T10:00:00.000Z",
+  });
+  const account = (owner: string) => ({
+    id: ACCOUNT,
+    object: "account",
+    agent_id: AGENT,
+    org_id: ORG,
+    role: "agent",
+    chain: "base-sepolia",
+    chain_id: 84532,
+    address: "0x3333333333333333333333333333333333333333",
+    deployed: true,
+    owner_address: owner,
+    spend_key_address: null,
+    spend_key_permit: "none",
+    module_versions: {},
     created_at: "2026-10-11T10:00:00.000Z",
   });
 
@@ -301,7 +307,7 @@ describe("RotateOwnerKey", () => {
     expect(parseNewOwner(` ${lower} `, current)).toEqual({ address: getAddress(lower), error: null });
   });
 
-  it("signs owner.rotate with the current owner key and sends the checksummed new address", async () => {
+  it("swaps the owner on every account first, then signs owner.rotate with the current key", async () => {
     // Start without a remembered signer choice from earlier tests.
     localStorage.clear();
     resetApiClient();
@@ -309,12 +315,39 @@ describe("RotateOwnerKey", () => {
     const user = userEvent.setup();
     const key = createSandboxKey();
     const next = privateKeyToAccount(generatePrivateKey()).address;
-    const fetchMock = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
-      if (init?.method === "POST") {
-        const body = JSON.parse(String(init.body)) as { new_owner_address: string };
+    const hash = `0x${"cd".repeat(32)}` as Hex;
+    const op = (status: string) => ({
+      id: SWAP,
+      object: "owner_operation",
+      account_id: ACCOUNT,
+      purpose: "owner.swap",
+      subject_id: next,
+      status,
+      user_op_hash: hash,
+      chain_id: 84532,
+      tx_hash: status === "succeeded" ? `0x${"ef".repeat(32)}` : null,
+      expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+      created_at: new Date().toISOString(),
+    });
+    const page = (data: unknown[]) => ({ data, next_cursor: null });
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(String(input));
+      const path = url.pathname.replace(/^\/api/, "");
+      const method = init?.method ?? "GET";
+      if (method === "POST" && path === `/v1/accounts/${ACCOUNT}/owner-swap`)
+        return jsonResponse(op("requires_signature"), 201);
+      if (method === "POST" && path === `/v1/owner-operations/${SWAP}/signature`)
+        return jsonResponse(op("submitted"));
+      if (method === "POST" && path === "/v1/orgs/me/owner") {
+        const body = JSON.parse(String(init?.body)) as { new_owner_address: string };
         return jsonResponse(org(body.new_owner_address));
       }
-      return jsonResponse(org(key.address));
+      if (path === `/v1/owner-operations/${SWAP}`) return jsonResponse(op("succeeded"));
+      if (path === "/v1/owner-operations") return jsonResponse(page([]));
+      if (path === "/v1/orgs/me") return jsonResponse(org(key.address));
+      if (path === "/v1/accounts") return jsonResponse(page([account(key.address)]));
+      if (path === "/v1/agents") return jsonResponse(page([agent]));
+      return jsonResponse({ title: "Not found", status: 404, code: "not_found" }, 404);
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -324,26 +357,49 @@ describe("RotateOwnerKey", () => {
     const field = within(dialog).getByLabelText(/New owner address/);
     await user.type(field, key.address);
     expect(within(dialog).getByText("That is already the owner key.")).toBeInTheDocument();
-    expect(within(dialog).queryByText("You are authorizing")).not.toBeInTheDocument();
-
     await user.clear(field);
     await user.type(field, next.toLowerCase());
-    expect(within(dialog).getAllByText("owner.rotate").length).toBeGreaterThan(0);
-    await user.click(within(dialog).getByRole("button", { name: "Use sandbox key" }));
-    const sign = within(dialog).getByRole("button", { name: "Sign and rotate" });
-    await waitFor(() => expect(sign).toBeEnabled());
-    await user.click(sign);
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 
-    await waitFor(() => expect(fetchMock.mock.calls.some(([, i]) => i?.method === "POST")).toBe(true));
-    const post = fetchMock.mock.calls.find(([, i]) => i?.method === "POST");
-    expect(String(post?.[0])).toBe("http://localhost:3000/api/v1/orgs/me/owner");
-    const body = JSON.parse(String(post?.[1]?.body)) as {
+    // Step 2 stays locked until every account is swapped.
+    const rotate = within(dialog).getByRole("button", { name: "Sign and rotate" });
+    expect(rotate).toBeDisabled();
+    await user.click(within(dialog).getByRole("button", { name: "Use sandbox key" }));
+    const swap = await within(dialog).findByRole("button", { name: "Sign swaps for 1 account" });
+    await waitFor(() => expect(swap).toBeEnabled());
+    await user.click(swap);
+    await waitFor(() => expect(rotate).toBeEnabled());
+    await user.click(rotate);
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.some(([u]) => String(u).endsWith("/api/v1/orgs/me/owner"))).toBe(true),
+    );
+
+    const calls = fetchMock.mock.calls.map(([u, i]) => [String(u), i?.method ?? "GET"] as const);
+    const prepared = calls.findIndex(([u, m]) => m === "POST" && u.endsWith("/owner-swap"));
+    const signedSwap = calls.findIndex(
+      ([u, m]) => m === "POST" && u.endsWith(`/owner-operations/${SWAP}/signature`),
+    );
+    const rotated = calls.findIndex(([u, m]) => m === "POST" && u.endsWith("/orgs/me/owner"));
+    expect(prepared).toBeGreaterThanOrEqual(0);
+    expect(signedSwap).toBeGreaterThan(prepared);
+    expect(rotated).toBeGreaterThan(signedSwap);
+
+    const swapBody = JSON.parse(String(fetchMock.mock.calls[prepared]?.[1]?.body)) as {
+      new_owner_address: string;
+    };
+    expect(swapBody.new_owner_address).toBe(next);
+    const { signature } = JSON.parse(String(fetchMock.mock.calls[signedSwap]?.[1]?.body)) as {
+      signature: Hex;
+    };
+    // The swap is an owner operation: EIP-191 over the raw hash, by the CURRENT owner.
+    await expect(recoverMessageAddress({ message: { raw: hash }, signature })).resolves.toBe(key.address);
+
+    const body = JSON.parse(String(fetchMock.mock.calls[rotated]?.[1]?.body)) as {
       new_owner_address: string;
       owner_authorization: OwnerAuthorization;
     };
     expect(body.new_owner_address).toBe(next);
     const auth = body.owner_authorization;
-    // What the API verifies: the canonical owner.rotate payload, signed by the CURRENT owner.
     await expect(
       verifyOwnerAuthorization({
         chainId: 84532,

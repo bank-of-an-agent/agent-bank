@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
-import { OwnerOperationCard } from "@/components/owner/owner-operation";
+import { OwnerOperationDialog, PendingOperationButton } from "@/components/owner/owner-operation";
 import { useConsoleConfig } from "@/components/providers/config";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,14 @@ import { ProblemAlert } from "@/components/ui/problem-alert";
 import { Callout, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 import { MoneyValue } from "@/components/ui/values";
-import { apiFetch, useApi, useIdempotencyKey } from "@/lib/api/hooks";
+import { apiFetch, useApi, useIdempotencyKey, useInvalidate } from "@/lib/api/hooks";
 import { ApiProblem } from "@/lib/api/problem";
+import { useOwnerInbox } from "@/lib/api/queries";
 import type { ResponseOf } from "@agentbank/core/api";
 import { amountError, formatBps } from "@/lib/money";
 import { ownerPayloads } from "@/lib/owner/authorize";
 
-type SweepRule = ResponseOf<"putSweepRule">;
+type SweepRule = NonNullable<ResponseOf<"getSweepRule">>;
 
 /** The counsel gate: the treasury sweep stays off until counsel signs off on broker and adviser questions. */
 function CounselGate({ detail }: { detail?: string }) {
@@ -90,7 +91,7 @@ function ConfigureSweep({
             onConfigured(rule);
             toast({
               title: "Sweep rule saved",
-              description: "Install the sweep executor with the owner key to activate it.",
+              description: "Next, sign the sweep executor install with the owner key.",
             });
             return { ok: true };
           } catch (error) {
@@ -142,9 +143,14 @@ export function TreasurySweepCard() {
   const org = useApi("getCurrentOrg");
   const enabled = features.treasury_sweep === true;
   const funds = useApi(enabled ? "listFunds" : null);
-  const [rule, setRule] = useState<SweepRule | null>(null);
   const treasuryId = org.data?.treasury_account_id ?? null;
+  const current = useApi(enabled && treasuryId ? "getSweepRule" : null, { params: { id: treasuryId ?? "" } });
+  const inbox = useOwnerInbox();
+  const invalidate = useInvalidate();
+  const [installId, setInstallId] = useState<string | null>(null);
   const gated = !enabled || funds.error?.code === "feature_gated";
+  const rule = current.data ?? null;
+  const waiting = Boolean(rule?.install_operation_id && inbox.byId.has(rule.install_operation_id));
 
   return (
     <Card aria-labelledby="sweep-title">
@@ -176,30 +182,69 @@ export function TreasurySweepCard() {
                 </li>
               ))}
             </ul>
+            {current.error ? (
+              <ProblemAlert problem={current.error} onRetry={() => void current.mutate()} />
+            ) : null}
             {rule ? (
               <div className="space-y-3">
                 <DescriptionList
                   columns={3}
                   items={[
-                    { term: "Status", detail: <StatusBadge status={rule.status} /> },
+                    {
+                      term: "Status",
+                      detail: (
+                        <span className="inline-flex flex-wrap items-center gap-2">
+                          <StatusBadge status={rule.status} />
+                          {rule.status === "pending_install" ? (
+                            <span className="text-xs text-muted">
+                              {waiting ? "Waiting for the owner's signature" : "Installing on-chain"}
+                            </span>
+                          ) : null}
+                        </span>
+                      ),
+                    },
+                    {
+                      term: "Fund",
+                      detail: funds.data?.data.find((f) => f.id === rule.fund_id)?.name ?? rule.fund_id,
+                    },
                     { term: "Floor", detail: <MoneyValue money={rule.floor} /> },
                     { term: "Sweep above", detail: <MoneyValue money={rule.threshold} /> },
                     { term: "Max share", detail: formatBps(rule.max_share_bps, 0) },
                   ]}
                 />
-                {rule.install_operation_id ? (
-                  <OwnerOperationCard id={rule.install_operation_id} title="Install the sweep executor" />
+                {rule.status === "pending_install" ? (
+                  <PendingOperationButton
+                    operationId={rule.install_operation_id}
+                    title="Install the sweep executor"
+                    label="Sign install…"
+                  />
                 ) : null}
               </div>
+            ) : current.isLoading ? (
+              <LoadingState label="Loading the sweep rule" rows={1} className="px-0 py-0" />
             ) : null}
             {treasuryId ? (
-              <ConfigureSweep accountId={treasuryId} funds={funds.data?.data ?? []} onConfigured={setRule} />
+              <ConfigureSweep
+                accountId={treasuryId}
+                funds={funds.data?.data ?? []}
+                onConfigured={(saved) => {
+                  void invalidate("getSweepRule", "listOwnerOperations");
+                  setInstallId(saved.install_operation_id);
+                }}
+              />
             ) : (
               <Callout tone="info">Set an org treasury account to configure the sweep.</Callout>
             )}
           </>
         )}
       </CardBody>
+      <OwnerOperationDialog
+        id={installId}
+        open={installId !== null}
+        onClose={() => setInstallId(null)}
+        title="Install the sweep executor"
+        description="The executor moves only the excess above your floor into the fund, inside your treasury account."
+      />
     </Card>
   );
 }

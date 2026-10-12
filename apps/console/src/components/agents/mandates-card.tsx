@@ -8,23 +8,21 @@ import {
   type MandateConstraint,
   type OpenPaymentMandate,
 } from "@agentbank/core";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { IconLedger, IconPlus } from "@/components/ui/icons";
 import { ProblemAlert } from "@/components/ui/problem-alert";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 import { Amount, DateTimeValue, IdValue } from "@/components/ui/values";
-import { apiFetch, useApi, useIdempotencyKey, useMutation } from "@/lib/api/hooks";
+import { apiFetch, useApiList, useIdempotencyKey, useInvalidate, useMutation } from "@/lib/api/hooks";
 import { ApiProblem } from "@/lib/api/problem";
-import type { Agent } from "@/lib/api/queries";
+import type { Agent, Mandate } from "@/lib/api/queries";
 import { formatDateTime } from "@/lib/format";
-import { useKnownIds } from "@/lib/known-ids";
 import { amountError, groupDigits } from "@/lib/money";
 import { ownerPayloads, type OwnerRequest } from "@/lib/owner/authorize";
 
@@ -231,33 +229,11 @@ function IssueMandateDialog({
   );
 }
 
-function MandateItem({ id, onForget }: { id: string; onForget: () => void }) {
-  const mandate = useApi("getMandate", { params: { id } });
+function MandateItem({ mandate: m }: { mandate: Mandate }) {
   const [confirm, setConfirm] = useState(false);
-  const revoke = useMutation(() => apiFetch("revokeMandate", { params: { id } }), {
-    invalidates: ["getMandate"],
+  const revoke = useMutation(() => apiFetch("revokeMandate", { params: { id: m.id } }), {
+    invalidates: ["listMandates", "getMandate"],
   });
-  if (mandate.error) {
-    return (
-      <li className="space-y-2 px-4 py-3 sm:px-5">
-        <div className="flex items-center justify-between gap-2">
-          <IdValue value={id} />
-          <Button size="sm" variant="ghost" onClick={onForget}>
-            Remove from list
-          </Button>
-        </div>
-        <ProblemAlert problem={mandate.error} />
-      </li>
-    );
-  }
-  if (!mandate.data) {
-    return (
-      <li>
-        <LoadingState label="Loading mandate" rows={1} />
-      </li>
-    );
-  }
-  const m = mandate.data;
   return (
     <li className="space-y-2 px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -265,7 +241,8 @@ function MandateItem({ id, onForget }: { id: string; onForget: () => void }) {
           <IdValue value={m.id} />
           <StatusBadge status={m.status} />
           <span className="text-xs text-muted">
-            Expires <DateTimeValue value={m.expires_at} />
+            {m.status === "active" ? "Expires" : m.status === "expired" ? "Expired" : "Was valid until"}{" "}
+            <DateTimeValue value={m.expires_at} />
           </span>
         </div>
         {m.status === "active" ? (
@@ -291,11 +268,7 @@ function MandateItem({ id, onForget }: { id: string; onForget: () => void }) {
               Revoke
             </Button>
           )
-        ) : (
-          <Button size="sm" variant="ghost" onClick={onForget}>
-            Remove from list
-          </Button>
-        )}
+        ) : null}
       </div>
       {m.mandate.description ? <p className="text-sm">{m.mandate.description}</p> : null}
       <ul className="list-disc space-y-0.5 pl-5 text-sm text-muted">
@@ -312,19 +285,9 @@ function MandateItem({ id, onForget }: { id: string; onForget: () => void }) {
 }
 
 export function MandatesCard({ agent }: { agent: Agent }) {
-  const [ids, remember, forget] = useKnownIds(`mandates.${agent.id}`);
+  const list = useApiList("listMandates", { query: { agent_id: agent.id, limit: 25 } });
+  const invalidate = useInvalidate();
   const [issuing, setIssuing] = useState(false);
-  const [lookupOpen, setLookupOpen] = useState(false);
-  const [lookup, setLookup] = useState("");
-  const valid = /^mdt_[0-9A-HJKMNP-TV-Z]{26}$/.test(lookup.trim());
-
-  function submitLookup(event: FormEvent) {
-    event.preventDefault();
-    if (!valid) return;
-    remember(lookup.trim());
-    setLookup("");
-    setLookupOpen(false);
-  }
 
   return (
     <Card aria-labelledby="mandates-title">
@@ -333,58 +296,47 @@ export function MandatesCard({ agent }: { agent: Agent }) {
         title="Mandates"
         description="Signed AP2 payment mandates: cryptographic proof that a human authorized the spend."
         actions={
-          <>
-            <Button size="sm" onClick={() => setLookupOpen(true)}>
-              Look up by id
-            </Button>
-            <Button size="sm" variant="owner" icon={<IconPlus size={16} />} onClick={() => setIssuing(true)}>
-              Issue mandate
-            </Button>
-          </>
+          <Button size="sm" variant="owner" icon={<IconPlus size={16} />} onClick={() => setIssuing(true)}>
+            Issue mandate
+          </Button>
         }
       />
-      {ids.length === 0 ? (
+      {list.error ? (
+        <div className="p-4 sm:px-5">
+          <ProblemAlert problem={list.error} onRetry={() => void list.mutate()} />
+        </div>
+      ) : list.isLoading ? (
+        <LoadingState label="Loading mandates" rows={2} />
+      ) : list.items.length === 0 ? (
         <EmptyState
           icon={<IconLedger size={20} />}
-          title="No mandates in this browser"
-          description="The API cannot list mandates yet. Mandates you issue or look up here are remembered in this browser."
+          title="No mandates yet"
+          description="Issue a mandate to give the agent signed, scoped authority for a purchase or a budget."
         />
       ) : (
-        <ul className="divide-y divide-line">
-          {ids.map((id) => (
-            <MandateItem key={id} id={id} onForget={() => forget(id)} />
-          ))}
-        </ul>
+        <>
+          <ul className="divide-y divide-line">
+            {list.items.map((mandate) => (
+              <MandateItem key={mandate.id} mandate={mandate} />
+            ))}
+          </ul>
+          {list.hasMore ? (
+            <div className="border-t border-line p-3 text-center">
+              <Button size="sm" onClick={list.loadMore} loading={list.isLoadingMore}>
+                Load more
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
       {issuing ? (
         <IssueMandateDialog
           agent={agent}
           open={issuing}
           onClose={() => setIssuing(false)}
-          onIssued={(id) => remember(id)}
+          onIssued={() => void invalidate("listMandates")}
         />
       ) : null}
-      <Dialog open={lookupOpen} onClose={() => setLookupOpen(false)} title="Look up a mandate" size="sm">
-        <form onSubmit={submitLookup} className="space-y-4">
-          <TextField
-            label="Mandate id"
-            value={lookup}
-            onChange={(e) => setLookup(e.target.value)}
-            placeholder="mdt_…"
-            spellCheck={false}
-            inputClassName="font-mono"
-            error={lookup && !valid ? "Mandate ids look like mdt_ followed by 26 characters" : null}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setLookupOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={!valid}>
-              Show mandate
-            </Button>
-          </div>
-        </form>
-      </Dialog>
     </Card>
   );
 }

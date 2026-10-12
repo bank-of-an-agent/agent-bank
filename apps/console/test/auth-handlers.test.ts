@@ -27,6 +27,8 @@ const org = {
   kyc_status: "approved",
   tier: "free",
   status: "active",
+  frozen_reason: null,
+  pending_unfreeze_at: null,
   owner_address: "0x1111111111111111111111111111111111111111",
   treasury_account_id: null,
   created_at: "2026-10-11T12:00:00.000Z",

@@ -2,20 +2,27 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { FreezeOrgButton, UnfreezeOrgButton } from "@/components/agents/freeze-controls";
+import { FreezeOrgButton, OrgFreezeDetails, UnfreezeOrgButton } from "@/components/agents/freeze-controls";
 import { CounterpartyLabel, kindLabel } from "@/components/payments/payment-bits";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Countdown } from "@/components/ui/countdown";
-import { IconAlert, IconApprovals, IconFreeze, IconPayments } from "@/components/ui/icons";
+import { IconAlert, IconApprovals, IconFreeze, IconPayments, IconSignature } from "@/components/ui/icons";
 import { PageHeader, Stat, StatGrid } from "@/components/ui/layout";
 import { ProblemAlert } from "@/components/ui/problem-alert";
 import { Callout, EmptyState, LoadingState, Skeleton } from "@/components/ui/states";
 import { Table, Td, Th, THead, Tr } from "@/components/ui/table";
 import { DateTimeValue, MinorAmount, MoneyValue } from "@/components/ui/values";
 import { useApi } from "@/lib/api/hooks";
-import { isBalances, useAccountsIndex, useAgentsIndex, useBalances, type Agent } from "@/lib/api/queries";
+import {
+  isBalances,
+  useAccountsIndex,
+  useAgentsIndex,
+  useBalances,
+  useOwnerInbox,
+  type Agent,
+} from "@/lib/api/queries";
 import { formatRelative, humanize } from "@/lib/format";
 import { sumDecimals } from "@/lib/money";
 
@@ -101,14 +108,32 @@ function Alerts() {
   const frozen = useApi("listAgents", { query: { status: "frozen", limit: 50 } });
   const mismatches = useApi("listEvents", { query: { type: "reconciliation.mismatch", limit: 5 } });
   const lowBalance = useApi("listEvents", { query: { type: "balance.low", limit: 3 } });
+  const inbox = useOwnerInbox();
 
   const items: React.ReactNode[] = [];
+  if (inbox.operations.length > 0) {
+    const n = inbox.operations.length;
+    items.push(
+      <Callout
+        key="owner-operations"
+        tone="owner"
+        icon={<IconSignature size={16} />}
+        title={`${inbox.truncated ? `${n}+` : n} owner operation${n === 1 ? "" : "s"} waiting for your signature`}
+      >
+        On-chain steps only the owner key can authorize, such as installing a session or an executor.{" "}
+        <Link href="/owner-operations" className="font-medium underline underline-offset-2">
+          Review and sign
+        </Link>
+      </Callout>,
+    );
+  }
   if (org.data?.status === "frozen") {
     items.push(
       <Callout key="org" tone="danger" icon={<IconFreeze size={16} />} title="The organization is frozen">
         <div className="space-y-2">
           <p>The co-signer refuses every operation for every agent.</p>
-          <UnfreezeOrgButton orgId={org.data.id} size="sm" />
+          <OrgFreezeDetails org={org.data} />
+          <UnfreezeOrgButton org={org.data} size="sm" />
         </div>
       </Callout>,
     );
@@ -171,7 +196,7 @@ function Alerts() {
       <CardHeader
         id="alerts-title"
         title="Alerts"
-        description="Frozen agents, reconciliation and verification."
+        description="Owner signatures, frozen agents, reconciliation and verification."
       />
       <CardBody className="space-y-3">
         {errors[0] ? <ProblemAlert problem={errors[0]} /> : null}

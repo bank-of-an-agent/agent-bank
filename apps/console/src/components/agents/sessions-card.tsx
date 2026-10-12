@@ -7,26 +7,32 @@ import {
   type OwnerAuthorization,
   type SessionScope,
 } from "@agentbank/core";
-import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
-import { OwnerOperationCard } from "@/components/owner/owner-operation";
+import { OwnerOperationDialog } from "@/components/owner/owner-operation";
 import { useConsoleConfig } from "@/components/providers/config";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Countdown } from "@/components/ui/countdown";
-import { Dialog } from "@/components/ui/dialog";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { IconKey, IconPlus } from "@/components/ui/icons";
 import { ProblemAlert } from "@/components/ui/problem-alert";
-import { Callout, EmptyState, LoadingState } from "@/components/ui/states";
+import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 import { Amount, HexValue, IdValue } from "@/components/ui/values";
-import { apiFetch, useApi, useIdempotencyKey, useMutation } from "@/lib/api/hooks";
+import { newIdempotencyKey } from "@/lib/api/client";
+import { apiFetch, useApiList, useIdempotencyKey, useInvalidate, useMutation } from "@/lib/api/hooks";
 import { ApiProblem } from "@/lib/api/problem";
-import type { Account, Agent } from "@/lib/api/queries";
+import {
+  useOwnerInbox,
+  type Account,
+  type Agent,
+  type OwnerOperation,
+  type Session,
+} from "@/lib/api/queries";
 import { formatDateTime } from "@/lib/format";
-import { useKnownIds } from "@/lib/known-ids";
 import { amountError } from "@/lib/money";
 import { ownerPayloads, type OwnerRequest } from "@/lib/owner/authorize";
 
@@ -55,7 +61,7 @@ function GrantSessionDialog({
   open: boolean;
   onClose: () => void;
   accounts: Account[];
-  onGranted: (sessionId: string) => void;
+  onGranted: (session: Session) => void;
 }) {
   const toast = useToast();
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
@@ -122,8 +128,11 @@ function GrantSessionDialog({
             idempotencyKey: key,
           });
           rotate();
-          onGranted(session.id);
-          toast({ title: "Session granted", description: "Install it on-chain to activate the scope." });
+          onGranted(session);
+          toast({
+            title: "Session granted",
+            description: "Next, sign its on-chain install with the owner key to activate the scope.",
+          });
           return { ok: true };
         } catch (error) {
           return { ok: false, problem: ApiProblem.from(error) };
@@ -194,44 +203,50 @@ function GrantSessionDialog({
   );
 }
 
-function SessionItem({ id, onForget }: { id: string; onForget: () => void }) {
+type InstallState = { pending: boolean; problem: ApiProblem | null };
+
+/** Prepare (or reuse) the install operation, then hand its id to the signing dialog. */
+function useInstall(onOperation: (id: string) => void) {
+  const invalidate = useInvalidate();
+  const [state, setState] = useState<InstallState>({ pending: false, problem: null });
+  async function install(sessionId: string) {
+    setState({ pending: true, problem: null });
+    try {
+      const session = await apiFetch("installSession", {
+        params: { id: sessionId },
+        idempotencyKey: newIdempotencyKey(),
+      });
+      setState({ pending: false, problem: null });
+      void invalidate("listSessions", "getSession", "listOwnerOperations");
+      if (session.install_operation_id) onOperation(session.install_operation_id);
+    } catch (error) {
+      setState({ pending: false, problem: ApiProblem.from(error) });
+    }
+  }
+  return { ...state, install };
+}
+
+function SessionItem({
+  session: s,
+  waiting,
+  onOperation,
+}: {
+  session: Session;
+  /** Owner operations waiting for a signature, by id. */
+  waiting: Map<string, OwnerOperation>;
+  onOperation: (id: string, title: string) => void;
+}) {
   const { chain } = useConsoleConfig();
   const toast = useToast();
-  const session = useApi("getSession", { params: { id } });
   const [confirmRevoke, setConfirmRevoke] = useState(false);
-  const [installKey, rotateInstall] = useIdempotencyKey();
-  const revoke = useMutation(() => apiFetch("revokeSession", { params: { id } }), {
-    invalidates: ["getSession"],
+  const installer = useInstall((id) => onOperation(id, "Install the session on-chain"));
+  const revoke = useMutation(() => apiFetch("revokeSession", { params: { id: s.id } }), {
+    invalidates: ["listSessions", "getSession", "listOwnerOperations"],
   });
-  const install = useMutation(
-    () => apiFetch("installSession", { params: { id }, idempotencyKey: installKey }),
-    {
-      invalidates: ["getSession"],
-    },
-  );
-
-  if (session.error) {
-    return (
-      <li className="space-y-2 px-4 py-3 sm:px-5">
-        <div className="flex items-center justify-between gap-2">
-          <IdValue value={id} />
-          <Button size="sm" variant="ghost" onClick={onForget}>
-            Remove from list
-          </Button>
-        </div>
-        <ProblemAlert problem={session.error} />
-      </li>
-    );
-  }
-  if (!session.data) {
-    return (
-      <li>
-        <LoadingState label="Loading session" rows={1} />
-      </li>
-    );
-  }
-  const s = session.data;
   const live = s.status === "active" || s.status === "pending_install";
+  const installWaiting = s.install_operation_id ? waiting.get(s.install_operation_id) : undefined;
+  const revokeWaiting = s.revoke_operation_id ? waiting.get(s.revoke_operation_id) : undefined;
+
   return (
     <li className="space-y-3 px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -242,17 +257,33 @@ function SessionItem({ id, onForget }: { id: string; onForget: () => void }) {
           {s.status === "active" ? <Countdown to={s.expires_at} warnBelowMs={60 * 60_000} /> : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          {s.status === "pending_install" && !s.install_operation_id ? (
+          {s.status === "pending_install" ? (
+            installWaiting ? (
+              <Button
+                size="sm"
+                variant="owner"
+                onClick={() => onOperation(installWaiting.id, "Install the session on-chain")}
+              >
+                Sign install…
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="owner"
+                loading={installer.pending}
+                onClick={() => void installer.install(s.id)}
+              >
+                Install on-chain…
+              </Button>
+            )
+          ) : null}
+          {revokeWaiting ? (
             <Button
               size="sm"
               variant="owner"
-              loading={install.pending}
-              onClick={async () => {
-                const result = await install.run();
-                if (result.ok) rotateInstall();
-              }}
+              onClick={() => onOperation(revokeWaiting.id, "Revoke the session on-chain")}
             >
-              Install on-chain
+              Sign on-chain revoke…
             </Button>
           ) : null}
           {live ? (
@@ -264,12 +295,16 @@ function SessionItem({ id, onForget }: { id: string; onForget: () => void }) {
                   loading={revoke.pending}
                   onClick={async () => {
                     const result = await revoke.run();
-                    if (result.ok) {
-                      setConfirmRevoke(false);
-                      toast({
-                        title: "Session revoked",
-                        description: "The co-signer refuses it from now on.",
-                      });
+                    if (!result.ok) return;
+                    setConfirmRevoke(false);
+                    toast({
+                      title: "Session revoked",
+                      description: result.data.revoke_operation_id
+                        ? "The co-signer refuses it now. Sign the on-chain revocation as the hard backstop."
+                        : "The co-signer refuses it from now on.",
+                    });
+                    if (result.data.revoke_operation_id) {
+                      onOperation(result.data.revoke_operation_id, "Revoke the session on-chain");
                     }
                   }}
                 >
@@ -284,11 +319,7 @@ function SessionItem({ id, onForget }: { id: string; onForget: () => void }) {
                 Revoke
               </Button>
             )
-          ) : (
-            <Button size="sm" variant="ghost" onClick={onForget}>
-              Remove from list
-            </Button>
-          )}
+          ) : null}
         </div>
       </div>
       <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
@@ -321,78 +352,100 @@ function SessionItem({ id, onForget }: { id: string; onForget: () => void }) {
         </div>
       </dl>
       {revoke.error ? <ProblemAlert problem={revoke.error} /> : null}
-      {install.error ? <ProblemAlert problem={install.error} /> : null}
+      {installer.problem ? <ProblemAlert problem={installer.problem} /> : null}
       {s.status === "revoked" ? (
-        <Callout tone="info">
-          Revoked off-chain: the co-signer refuses this key. The owner can also revoke the Smart Sessions
-          permission on-chain as the hard backstop.
-        </Callout>
-      ) : null}
-      {s.install_operation_id && s.status === "pending_install" ? (
-        <OwnerOperationCard id={s.install_operation_id} title="Install the session on-chain" />
+        <p className="text-xs text-muted">
+          {s.revoke_operation_id ? (
+            revokeWaiting ? (
+              "Revoked off-chain: the co-signer refuses this key. The on-chain revocation waits for the owner key."
+            ) : (
+              <>
+                Revoked off-chain and on-chain removal prepared:{" "}
+                <Link
+                  href={`/owner-operations/${s.revoke_operation_id}`}
+                  className="text-blue-fg hover:underline"
+                >
+                  view the owner operation
+                </Link>
+                .
+              </>
+            )
+          ) : (
+            "Revoked off-chain: the co-signer refuses this key. It was never installed on-chain."
+          )}
+        </p>
       ) : null}
     </li>
   );
 }
 
 export function SessionsCard({ agent, accounts }: { agent: Agent; accounts: Account[] }) {
-  const [ids, remember, forget] = useKnownIds(`sessions.${agent.id}`);
+  const list = useApiList("listSessions", { query: { agent_id: agent.id, limit: 25 } });
+  const inbox = useOwnerInbox();
+  const invalidate = useInvalidate();
   const [granting, setGranting] = useState(false);
-  const [lookupOpen, setLookupOpen] = useState(false);
-  const [lookup, setLookup] = useState("");
-  const lookupValid = /^ses_[0-9A-HJKMNP-TV-Z]{26}$/.test(lookup.trim());
-
-  function submitLookup(event: FormEvent) {
-    event.preventDefault();
-    if (!lookupValid) return;
-    remember(lookup.trim());
-    setLookup("");
-    setLookupOpen(false);
-  }
+  const [operation, setOperation] = useState<{ id: string; title: string } | null>(null);
+  const installer = useInstall((id) => setOperation({ id, title: "Install the session on-chain" }));
 
   return (
     <Card aria-labelledby="sessions-title">
+      <div id="sessions" />
       <CardHeader
         id="sessions-title"
         title="Session keys"
         description="Short-lived agent keys, useless without the co-signer and bounded by their on-chain scope."
         actions={
-          <>
-            <Button size="sm" onClick={() => setLookupOpen(true)}>
-              Look up by id
-            </Button>
-            <Button
-              size="sm"
-              variant="owner"
-              icon={<IconPlus size={16} />}
-              disabled={accounts.length === 0}
-              onClick={() => setGranting(true)}
-            >
-              Grant session
-            </Button>
-          </>
+          <Button
+            size="sm"
+            variant="owner"
+            icon={<IconPlus size={16} />}
+            disabled={accounts.length === 0}
+            onClick={() => setGranting(true)}
+          >
+            Grant session
+          </Button>
         }
       />
-      {ids.length === 0 ? (
+      {installer.problem ? (
+        <div className="px-4 pt-4 sm:px-5">
+          <ProblemAlert problem={installer.problem} />
+        </div>
+      ) : null}
+      {list.error ? (
+        <div className="p-4 sm:px-5">
+          <ProblemAlert problem={list.error} onRetry={() => void list.mutate()} />
+        </div>
+      ) : list.isLoading ? (
+        <LoadingState label="Loading sessions" rows={2} />
+      ) : list.items.length === 0 ? (
         <EmptyState
           icon={<IconKey size={20} />}
-          title="No sessions in this browser"
+          title="No sessions yet"
           description={
             accounts.length === 0
               ? "Create the agent's smart account first."
-              : "The API cannot list sessions yet. Sessions you grant or look up here are remembered in this browser."
+              : "Grant a session key to let the agent pay within an on-chain scope."
           }
         />
       ) : (
         <>
-          <p className="border-b border-line px-4 py-2 text-xs text-muted sm:px-5">
-            Sessions granted or looked up in this browser (the API has no session list yet).
-          </p>
           <ul className="divide-y divide-line">
-            {ids.map((id) => (
-              <SessionItem key={id} id={id} onForget={() => forget(id)} />
+            {list.items.map((session) => (
+              <SessionItem
+                key={session.id}
+                session={session}
+                waiting={inbox.byId}
+                onOperation={(id, title) => setOperation({ id, title })}
+              />
             ))}
           </ul>
+          {list.hasMore ? (
+            <div className="border-t border-line p-3 text-center">
+              <Button size="sm" onClick={list.loadMore} loading={list.isLoadingMore}>
+                Load more
+              </Button>
+            </div>
+          ) : null}
         </>
       )}
       {granting ? (
@@ -400,30 +453,20 @@ export function SessionsCard({ agent, accounts }: { agent: Agent; accounts: Acco
           open={granting}
           onClose={() => setGranting(false)}
           accounts={accounts}
-          onGranted={(id) => remember(id)}
+          onGranted={(session) => {
+            void invalidate("listSessions");
+            // Step 2: prepare the on-chain install and ask the owner to sign it.
+            void installer.install(session.id);
+          }}
         />
       ) : null}
-      <Dialog open={lookupOpen} onClose={() => setLookupOpen(false)} title="Look up a session" size="sm">
-        <form onSubmit={submitLookup} className="space-y-4">
-          <TextField
-            label="Session id"
-            value={lookup}
-            onChange={(e) => setLookup(e.target.value)}
-            placeholder="ses_…"
-            spellCheck={false}
-            inputClassName="font-mono"
-            error={lookup && !lookupValid ? "Session ids look like ses_ followed by 26 characters" : null}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setLookupOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={!lookupValid}>
-              Show session
-            </Button>
-          </div>
-        </form>
-      </Dialog>
+      <OwnerOperationDialog
+        id={operation?.id ?? null}
+        open={operation !== null}
+        onClose={() => setOperation(null)}
+        title={operation?.title}
+        description="The owner key signs this user operation's hash; Agent Bank submits it."
+      />
     </Card>
   );
 }

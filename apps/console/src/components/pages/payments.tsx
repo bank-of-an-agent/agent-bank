@@ -20,6 +20,7 @@ const STATUSES = PaymentStatus.options;
 
 export function PaymentsPage() {
   const [status, setStatus] = useState("");
+  const [agentId, setAgentId] = useState("");
   const [accountId, setAccountId] = useState("");
   const [kind, setKind] = useState("");
   const [search, setSearch] = useState("");
@@ -29,14 +30,15 @@ export function PaymentsPage() {
     query: {
       limit: 50,
       ...(status ? { status: status as (typeof STATUSES)[number] } : {}),
+      ...(agentId ? { agent_id: agentId } : {}),
       ...(accountId ? { account_id: accountId } : {}),
+      ...(kind ? { kind: kind as (typeof PAYMENT_KINDS)[number] } : {}),
     },
   });
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return list.items.filter((p) => {
-      if (kind && p.kind !== kind) return false;
       if (!needle) return true;
       const agentName = p.counterparty.agent_id ? (agents.byId.get(p.counterparty.agent_id)?.name ?? "") : "";
       return [
@@ -51,9 +53,9 @@ export function PaymentsPage() {
         .toLowerCase()
         .includes(needle);
     });
-  }, [list.items, kind, search, agents.byId]);
+  }, [list.items, search, agents.byId]);
 
-  const filtering = Boolean(status || accountId || kind || search);
+  const filtering = Boolean(status || agentId || accountId || kind || search);
 
   return (
     <>
@@ -63,7 +65,7 @@ export function PaymentsPage() {
       />
       <Card className="mb-4">
         <form
-          className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5"
           aria-label="Filter payments"
           onSubmit={(e) => e.preventDefault()}
         >
@@ -75,6 +77,14 @@ export function PaymentsPage() {
               </option>
             ))}
           </SelectField>
+          <SelectField label="Agent" value={agentId} onChange={(e) => setAgentId(e.target.value)}>
+            <option value="">All agents</option>
+            {agents.agents.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </SelectField>
           <SelectField label="Account" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
             <option value="">All accounts</option>
             {accounts.accounts.map((a) => (
@@ -83,12 +93,7 @@ export function PaymentsPage() {
               </option>
             ))}
           </SelectField>
-          <SelectField
-            label="Kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value)}
-            hint="Filters loaded results"
-          >
+          <SelectField label="Kind" value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">All kinds</option>
             {PAYMENT_KINDS.map((k) => (
               <option key={k} value={k}>
@@ -121,7 +126,7 @@ export function PaymentsPage() {
               filtering
                 ? list.hasMore
                   ? "Load more to search further back."
-                  : "Try another status, account or search."
+                  : "Try another status, agent, account, kind or search."
                 : "Payments your agents make (transfers, x402, escrow, streams) appear here."
             }
             action={

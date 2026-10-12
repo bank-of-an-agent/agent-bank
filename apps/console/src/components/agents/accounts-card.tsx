@@ -14,6 +14,8 @@ import { Amount, DateTimeValue, HexValue } from "@/components/ui/values";
 import { apiFetch, useApi, useIdempotencyKey, useMutation } from "@/lib/api/hooks";
 import type { Account, Agent } from "@/lib/api/queries";
 import { chainLabel } from "@/lib/chains";
+import { TestUsdcButton } from "./faucet";
+import { SpendKeyDetail } from "./spend-key";
 
 /** Balances by ledger pocket. Pockets are ledger-only sub-balances of one smart account. */
 export function BalancesView({ accountId }: { accountId: string }) {
@@ -60,7 +62,7 @@ export function BalancesView({ accountId }: { accountId: string }) {
   );
 }
 
-export function AccountDetails({ account }: { account: Account }) {
+export function AccountDetails({ account, agentName }: { account: Account; agentName?: string }) {
   const versions = Object.entries(account.module_versions);
   return (
     <DescriptionList
@@ -75,7 +77,9 @@ export function AccountDetails({ account }: { account: Account }) {
                 {account.deployed ? (
                   <Badge tone="teal">Deployed</Badge>
                 ) : (
-                  <Badge tone="neutral">Counterfactual: receives funds before deployment</Badge>
+                  <Badge tone="neutral" wrap>
+                    Counterfactual: receives funds before deployment
+                  </Badge>
                 )}
               </div>
             </div>
@@ -87,11 +91,7 @@ export function AccountDetails({ account }: { account: Account }) {
         },
         {
           term: "x402 spend key",
-          detail: account.spend_key_address ? (
-            <HexValue value={account.spend_key_address} chain={account.chain} label="spend key address" />
-          ) : (
-            <span className="text-muted">None</span>
-          ),
+          detail: <SpendKeyDetail account={account} agentName={agentName ?? "the agent"} />,
         },
         {
           term: "Modules",
@@ -182,8 +182,9 @@ export function AccountsCard({
         ) : (
           accounts.map((account) => (
             <div key={account.id} className="space-y-4 border-b border-line pb-6 last:border-b-0 last:pb-0">
-              <AccountDetails account={account} />
+              <AccountDetails account={account} agentName={agent.name} />
               <BalancesView accountId={account.id} />
+              <TestUsdcButton account={account} />
             </div>
           ))
         )}

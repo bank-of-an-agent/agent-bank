@@ -16,6 +16,7 @@ export const testConfig: ConsoleConfig = {
   chain: "base-sepolia",
   chainId: 84532,
   features: {},
+  usdc: { address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", name: "USDC", version: "2" },
 };
 
 export function renderWithProviders(

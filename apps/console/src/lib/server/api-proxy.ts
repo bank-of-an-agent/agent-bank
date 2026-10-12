@@ -37,6 +37,8 @@ const FORWARDED_RESPONSE_HEADERS = [
 ];
 
 const IDEMPOTENCY_KEY = /^[\x21-\x7e]{1,255}$/;
+/** Routes a production console never forwards, whatever the API's own checks. */
+const SANDBOX_ONLY = new Set<string>(["sandboxFaucet"]);
 const SAFE_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 
 function configOrProblem(): ServerConfig | NextResponse {
@@ -76,6 +78,9 @@ async function proxy(request: NextRequest, segments: readonly string[]): Promise
   }
   if (matched.def.params && !matched.def.params.safeParse(matched.params).success) {
     return problems.invalid("The identifier in the path is not valid.");
+  }
+  if (SANDBOX_ONLY.has(matched.def.operationId) && !cfg.sandbox) {
+    return problems.sandboxOnly("Test USDC is only available from a sandbox console.");
   }
 
   const names = cookieNames(cfg.secureCookies);

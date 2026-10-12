@@ -1,28 +1,43 @@
 "use client";
 
-import type { ResponseOf } from "@agentbank/core/api";
 import { useState, type FormEvent } from "react";
-import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
+import {
+  OwnerOperationDialog,
+  OwnerOperationPanel,
+  PendingOperationButton,
+} from "@/components/owner/owner-operation";
+import { useOwnerKey } from "@/components/owner/owner-key-provider";
+import { OwnerSignerPanel, useOwnerReady } from "@/components/owner/owner-signer-panel";
+import { useConsoleConfig } from "@/components/providers/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { SelectField, TextField } from "@/components/ui/field";
-import { IconLock, IconPlus } from "@/components/ui/icons";
+import { Countdown } from "@/components/ui/countdown";
+import { IconKey, IconLock, IconPlus } from "@/components/ui/icons";
 import { ProblemAlert } from "@/components/ui/problem-alert";
-import { EmptyState, LoadingState } from "@/components/ui/states";
+import { Callout, EmptyState, LoadingState } from "@/components/ui/states";
 import { Table, Td, Th, THead, Tr } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
-import { DateTimeValue, MoneyValue } from "@/components/ui/values";
+import { DateTimeValue, HexValue, MoneyValue } from "@/components/ui/values";
+import { newIdempotencyKey } from "@/lib/api/client";
 import { apiFetch, useApiList, useIdempotencyKey, useInvalidate, useMutation } from "@/lib/api/hooks";
 import { ApiProblem } from "@/lib/api/problem";
-import { accountLabel, useAccountsIndex, useAgentsIndex } from "@/lib/api/queries";
+import { accountLabel, useAccountsIndex, useAgentsIndex, type Vault } from "@/lib/api/queries";
 import { amountError, formatBps, ratioBps, toMinor } from "@/lib/money";
-import { ownerPayloads } from "@/lib/owner/authorize";
+import { OwnerKeyError } from "@/lib/owner/signer";
+import { earlyWithdrawalTypedData, type EarlyWithdrawalTypedData } from "@/lib/owner/vault-withdrawal";
 
-type Vault = ResponseOf<"getVault">;
-
-function CreateVaultDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CreateVaultDialog({
+  open,
+  onClose,
+  onOperation,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onOperation: (id: string) => void;
+}) {
   const accounts = useAccountsIndex();
   const agents = useAgentsIndex();
   const toast = useToast();
@@ -46,7 +61,7 @@ function CreateVaultDialog({ open, onClose }: { open: boolean; onClose: () => vo
         },
         idempotencyKey: key,
       }),
-    { invalidates: ["listVaults", "getBalances"] },
+    { invalidates: ["listVaults", "getBalances", "listOwnerOperations"] },
   );
   const targetError = target ? amountError(target) : null;
 
@@ -55,8 +70,13 @@ function CreateVaultDialog({ open, onClose }: { open: boolean; onClose: () => vo
     const result = await create.run();
     if (result.ok) {
       rotate();
-      toast({ title: `Vault "${result.data.name}" created` });
+      const operation = result.data.pending_operation_id;
+      toast({
+        title: `Vault "${result.data.name}" created`,
+        description: operation ? "Sign the owner operation that creates it on-chain." : undefined,
+      });
       onClose();
+      if (operation) onOperation(operation);
     }
   }
 
@@ -124,6 +144,17 @@ function CreateVaultDialog({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+type Step =
+  | { kind: "amount" }
+  | { kind: "early"; typedData: EarlyWithdrawalTypedData }
+  | { kind: "operation"; id: string };
+
+/**
+ * Deposit or withdraw. A locked vault's early withdrawal takes two owner
+ * signatures: TimeLockVaults' EIP-712 `EarlyWithdrawal`, then the owner
+ * operation that carries it on-chain. Deposits into locked vaults are owner
+ * operations too.
+ */
 function TransferDialog({
   vault,
   direction,
@@ -135,110 +166,191 @@ function TransferDialog({
 }) {
   const toast = useToast();
   const invalidate = useInvalidate();
+  const owner = useOwnerKey();
+  const { ready, reason } = useOwnerReady();
+  const { chainId } = useConsoleConfig();
   const [amount, setAmount] = useState("");
   const [key, rotate] = useIdempotencyKey();
-  const [needsOwner, setNeedsOwner] = useState(
-    direction === "withdraw" &&
-      vault.kind === "locked" &&
-      (!vault.unlock_at || new Date(vault.unlock_at) > new Date()),
-  );
+  const [step, setStep] = useState<Step>({ kind: "amount" });
+  const [problem, setProblem] = useState<ApiProblem | null>(null);
+  const [walletError, setWalletError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const money = { amount, asset: "USDC" as const };
   const error = amount ? amountError(amount) : null;
-  const transfer = useMutation(
-    () =>
-      apiFetch(direction === "deposit" ? "depositVault" : "withdrawVault", {
-        params: { id: vault.id },
-        body: { amount: money },
-        idempotencyKey: key,
-      }),
-    { invalidates: ["listVaults", "getVault", "getBalances"] },
-  );
 
-  function done() {
+  function finished(next: Vault, title: string) {
     rotate();
-    void invalidate("listVaults", "getBalances");
-    toast({ title: direction === "deposit" ? "Deposit recorded" : "Withdrawal requested" });
+    void invalidate("listVaults", "getVault", "getBalances", "listOwnerOperations");
+    if (next.pending_operation_id) {
+      setStep({ kind: "operation", id: next.pending_operation_id });
+      return;
+    }
+    toast({ title });
     onClose();
   }
 
-  if (needsOwner) {
-    return (
-      <OwnerActionDialog
-        open
-        onClose={onClose}
-        title={`Withdraw early from ${vault.name}`}
-        description="The vault is still locked, so only the owner key can release funds back to its account."
-        request={amount && !error ? ownerPayloads.vaultWithdraw(vault.id, money) : null}
-        submitLabel="Sign and withdraw"
-        onSubmit={async (authorization) => {
-          try {
-            await apiFetch("withdrawVault", {
-              params: { id: vault.id },
-              body: { amount: money, owner_authorization: authorization },
-              idempotencyKey: key,
-            });
-            done();
-            return { ok: true };
-          } catch (e) {
-            return { ok: false, problem: ApiProblem.from(e) };
-          }
-        }}
-      >
-        <TextField
-          label="Amount (USDC)"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          error={error}
-        />
-      </OwnerActionDialog>
-    );
+  async function submitAmount(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setProblem(null);
+    try {
+      const next = await apiFetch(direction === "deposit" ? "depositVault" : "withdrawVault", {
+        params: { id: vault.id },
+        body: { amount: money },
+        idempotencyKey: key,
+      });
+      finished(next, direction === "deposit" ? "Deposit recorded" : "Withdrawal recorded");
+    } catch (e) {
+      const p = ApiProblem.from(e);
+      if (direction === "withdraw" && p.code === "owner_signature_required" && p.extensions.typed_data) {
+        const checked = earlyWithdrawalTypedData(p.extensions.typed_data, {
+          chainId,
+          contract: vault.contract_address,
+          onchainId: vault.onchain_id,
+          amountMinor: toMinor(amount),
+          now: Math.floor(Date.now() / 1000),
+        });
+        if (checked.ok) setStep({ kind: "early", typedData: checked.typedData });
+        else setWalletError(`Not signing: ${checked.reason}`);
+      } else {
+        setProblem(p);
+      }
+    }
+    setBusy(false);
   }
+
+  async function signEarly(typedData: EarlyWithdrawalTypedData) {
+    if (!owner.signer) return;
+    setBusy(true);
+    setProblem(null);
+    setWalletError(null);
+    try {
+      const signature = await owner.signer.signTypedData(typedData);
+      const next = await apiFetch("withdrawVault", {
+        params: { id: vault.id },
+        body: {
+          amount: money,
+          owner_authorization: {
+            signer: owner.signer.address,
+            signature,
+            issued_at: Math.floor(Date.now() / 1000),
+            expires_at: Number(typedData.message.deadline),
+          },
+        },
+        idempotencyKey: newIdempotencyKey(),
+      });
+      finished(next, "Early withdrawal requested");
+    } catch (e) {
+      if (e instanceof OwnerKeyError) setWalletError(e.message);
+      else setProblem(ApiProblem.from(e));
+    }
+    setBusy(false);
+  }
+
+  const title =
+    step.kind === "operation"
+      ? "Sign the vault operation"
+      : step.kind === "early"
+        ? `Withdraw early from ${vault.name}`
+        : direction === "deposit"
+          ? `Deposit into ${vault.name}`
+          : `Withdraw from ${vault.name}`;
 
   return (
     <Dialog
       open
       onClose={onClose}
-      title={direction === "deposit" ? `Deposit into ${vault.name}` : `Withdraw from ${vault.name}`}
+      title={title}
+      tone={step.kind === "amount" ? "default" : "owner"}
       description={
-        direction === "deposit"
-          ? "Moves funds from the account's available balance into the vault."
-          : "Moves funds from the vault back to its account."
+        step.kind === "operation"
+          ? "The vault contract moves the funds once the owner key signs this operation."
+          : step.kind === "early"
+            ? "The vault is still locked, so only the owner key can release funds back to its account."
+            : direction === "deposit"
+              ? "Moves funds from the account's available balance into the vault."
+              : "Moves funds from the vault back to its account."
       }
-      dismissible={!transfer.pending}
+      dismissible={!busy}
     >
-      <form
-        className="space-y-4"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          const result = await transfer.run();
-          if (result.ok) done();
-          else if (result.problem.code === "owner_signature_required") setNeedsOwner(true);
-        }}
-      >
-        <TextField
-          label="Amount (USDC)"
-          inputMode="decimal"
-          required
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          error={error}
-        />
-        {transfer.error ? <ProblemAlert problem={transfer.error} /> : null}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={transfer.pending}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            loading={transfer.pending}
-            disabled={!amount || Boolean(error)}
-          >
-            {direction === "deposit" ? "Deposit" : "Withdraw"}
-          </Button>
+      {step.kind === "operation" ? (
+        <OwnerOperationPanel id={step.id} />
+      ) : step.kind === "early" ? (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-line bg-subtle px-4 py-3 text-sm">
+            <p className="font-medium">You are signing a TimeLockVaults early withdrawal</p>
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+              <dt className="text-muted">Amount</dt>
+              <dd>
+                <MoneyValue money={money} />
+              </dd>
+              <dt className="text-muted">Vault</dt>
+              <dd>
+                {vault.name} <span className="text-xs text-muted">(on-chain #{vault.onchain_id})</span>
+              </dd>
+              <dt className="text-muted">Contract</dt>
+              <dd>
+                <HexValue
+                  value={step.typedData.domain.verifyingContract}
+                  chain={chainId}
+                  label="vault contract"
+                />
+              </dd>
+              <dt className="text-muted">Signature valid until</dt>
+              <dd>
+                <Countdown to={new Date(Number(step.typedData.message.deadline) * 1000).toISOString()} />
+              </dd>
+            </dl>
+          </div>
+          <OwnerSignerPanel />
+          {!ready && reason && owner.signer ? <Callout tone="warn">{reason}</Callout> : null}
+          {walletError ? (
+            <Callout tone="danger" title="Not signed">
+              {walletError}
+            </Callout>
+          ) : null}
+          {problem ? <ProblemAlert problem={problem} /> : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={busy}>
+              Cancel
+            </Button>
+            <Button
+              variant="owner"
+              icon={<IconKey size={16} />}
+              loading={busy}
+              disabled={!ready}
+              onClick={() => void signEarly(step.typedData)}
+            >
+              Sign early withdrawal
+            </Button>
+          </div>
         </div>
-      </form>
+      ) : (
+        <form className="space-y-4" onSubmit={submitAmount}>
+          <TextField
+            label="Amount (USDC)"
+            inputMode="decimal"
+            required
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            error={error}
+          />
+          {walletError ? (
+            <Callout tone="danger" title="Not signed">
+              {walletError}
+            </Callout>
+          ) : null}
+          {problem ? <ProblemAlert problem={problem} /> : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={busy}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={busy} disabled={!amount || Boolean(error)}>
+              {direction === "deposit" ? "Deposit" : "Withdraw"}
+            </Button>
+          </div>
+        </form>
+      )}
     </Dialog>
   );
 }
@@ -254,6 +366,7 @@ export function VaultsCard() {
   const accounts = useAccountsIndex();
   const agents = useAgentsIndex();
   const [creating, setCreating] = useState(false);
+  const [operationId, setOperationId] = useState<string | null>(null);
   const [transfer, setTransfer] = useState<{ vault: Vault; direction: "deposit" | "withdraw" } | null>(null);
 
   return (
@@ -334,6 +447,10 @@ export function VaultsCard() {
                   </Td>
                   <Td align="right">
                     <div className="flex justify-end gap-2">
+                      <PendingOperationButton
+                        operationId={vault.pending_operation_id}
+                        title={`Sign the operation for ${vault.name}`}
+                      />
                       <Button size="sm" onClick={() => setTransfer({ vault, direction: "deposit" })}>
                         Deposit
                       </Button>
@@ -352,7 +469,16 @@ export function VaultsCard() {
           </tbody>
         </Table>
       )}
-      {creating ? <CreateVaultDialog open={creating} onClose={() => setCreating(false)} /> : null}
+      {creating ? (
+        <CreateVaultDialog open={creating} onClose={() => setCreating(false)} onOperation={setOperationId} />
+      ) : null}
+      <OwnerOperationDialog
+        id={operationId}
+        open={operationId !== null}
+        onClose={() => setOperationId(null)}
+        title="Create the vault on-chain"
+        description="Locked vaults live in the TimeLockVaults contract; the owner key creates them."
+      />
       {transfer ? (
         <TransferDialog
           vault={transfer.vault}

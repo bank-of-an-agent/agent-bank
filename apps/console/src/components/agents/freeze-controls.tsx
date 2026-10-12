@@ -4,6 +4,7 @@ import { LOOSENING_DELAY_SECONDS, type OwnerAuthorization } from "@agentbank/cor
 import { useState } from "react";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
 import { Button } from "@/components/ui/button";
+import { Countdown } from "@/components/ui/countdown";
 import { Dialog } from "@/components/ui/dialog";
 import { TextAreaField } from "@/components/ui/field";
 import { IconFreeze } from "@/components/ui/icons";
@@ -11,7 +12,7 @@ import { ProblemAlert } from "@/components/ui/problem-alert";
 import { Callout } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 import { apiFetch, useIdempotencyKey, useMutation } from "@/lib/api/hooks";
-import type { Agent } from "@/lib/api/queries";
+import type { Agent, Org } from "@/lib/api/queries";
 import { formatTime } from "@/lib/format";
 import { ownerPayloads } from "@/lib/owner/authorize";
 
@@ -209,7 +210,7 @@ export function FreezeOrgButton({ size = "md" }: { size?: "sm" | "md" }) {
   );
 }
 
-export function UnfreezeOrgButton({ orgId, size = "md" }: { orgId: string; size?: "sm" | "md" }) {
+export function UnfreezeOrgButton({ org, size = "md" }: { org: Org; size?: "sm" | "md" }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [key, rotate] = useIdempotencyKey();
@@ -219,6 +220,8 @@ export function UnfreezeOrgButton({ orgId, size = "md" }: { orgId: string; size?
       apiFetch("unfreezeOrg", { body: { reason: reason.trim(), owner_authorization }, idempotencyKey: key }),
     { invalidates: ["getCurrentOrg"] },
   );
+  // Already signed: the unfreeze is waiting out the delay.
+  if (org.pending_unfreeze_at) return null;
   return (
     <>
       <Button variant="owner" size={size} onClick={() => setOpen(true)}>
@@ -229,17 +232,18 @@ export function UnfreezeOrgButton({ orgId, size = "md" }: { orgId: string; size?
         onClose={() => setOpen(false)}
         title="Unfreeze the organization"
         description={`Unfreezing needs the owner key and takes effect ${DELAY_MINUTES} minutes after signing.`}
-        request={reason.trim() ? ownerPayloads.orgUnfreeze(orgId, reason.trim()) : null}
+        request={reason.trim() ? ownerPayloads.orgUnfreeze(org.id, reason.trim()) : null}
         submitLabel="Sign and schedule unfreeze"
         onSubmit={async (authorization) => {
           const result = await unfreeze.run(authorization);
           if (!result.ok) return result;
           rotate();
           setReason("");
-          const at = new Date(Date.now() + LOOSENING_DELAY_SECONDS * 1000).toISOString();
           toast({
             title: "Unfreeze scheduled",
-            description: `The org unfreezes at about ${formatTime(at)}.`,
+            description: result.data.pending_unfreeze_at
+              ? `The org unfreezes at ${formatTime(result.data.pending_unfreeze_at)}.`
+              : `The org unfreezes in about ${DELAY_MINUTES} minutes.`,
           });
           return { ok: true };
         }}
@@ -255,5 +259,21 @@ export function UnfreezeOrgButton({ orgId, size = "md" }: { orgId: string; size?
         />
       </OwnerActionDialog>
     </>
+  );
+}
+
+/** Why the org is frozen and, once the owner signed an unfreeze, when it takes effect. */
+export function OrgFreezeDetails({ org }: { org: Org }) {
+  if (org.status !== "frozen") return null;
+  return (
+    <div className="space-y-1">
+      {org.frozen_reason ? <p>Reason: {org.frozen_reason}</p> : null}
+      {org.pending_unfreeze_at ? (
+        <p className="flex flex-wrap items-center gap-2">
+          The owner signed an unfreeze. It takes effect at {formatTime(org.pending_unfreeze_at)}:
+          <Countdown to={org.pending_unfreeze_at} label="Unfreezes" expiredText="Unfreezing" />
+        </p>
+      ) : null}
+    </div>
   );
 }

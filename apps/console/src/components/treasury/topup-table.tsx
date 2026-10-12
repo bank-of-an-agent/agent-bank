@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import useSWR from "swr";
-import { StatusBadge } from "@/components/ui/badge";
+import { OwnerOperationDialog, PendingOperationButton } from "@/components/owner/owner-operation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { IconRefresh } from "@/components/ui/icons";
@@ -11,38 +10,23 @@ import { ProblemAlert } from "@/components/ui/problem-alert";
 import { Callout, EmptyState, LoadingState } from "@/components/ui/states";
 import { Table, Td, Th, THead, Tr } from "@/components/ui/table";
 import { MoneyValue } from "@/components/ui/values";
-import { apiFetch, useApi } from "@/lib/api/hooks";
-import type { ApiProblem } from "@/lib/api/problem";
-import { useAgentsIndex, type Agent } from "@/lib/api/queries";
-import type { ResponseOf } from "@agentbank/core/api";
-import { AutoTopUpEditor } from "./auto-topup";
-
-type Rule = NonNullable<ResponseOf<"getAutoTopUp">>;
-
-/** Auto top-up rules of every agent (one read per agent: the API has no list endpoint). */
-function useTopUpRules(agents: Agent[]) {
-  const ids = useMemo(() => agents.map((a) => a.id).sort(), [agents]);
-  return useSWR<Map<string, Rule | null>, ApiProblem>(
-    ids.length ? (["getAutoTopUp", `many:${ids.join(",")}`] as const) : null,
-    async () => {
-      const results = await Promise.allSettled(ids.map((id) => apiFetch("getAutoTopUp", { params: { id } })));
-      const map = new Map<string, Rule | null>();
-      results.forEach((result, i) => {
-        const id = ids[i];
-        if (!id) return;
-        map.set(id, result.status === "fulfilled" ? (result.value ?? null) : null);
-      });
-      return map;
-    },
-  );
-}
+import { useApi } from "@/lib/api/hooks";
+import { useAgentsIndex, useOwnerInbox, type Agent } from "@/lib/api/queries";
+import { AutoTopUpEditor, RuleStatus } from "./auto-topup";
 
 export function TopUpRulesCard() {
   const org = useApi("getCurrentOrg");
   const agents = useAgentsIndex();
-  const rules = useTopUpRules(agents.agents);
+  const inbox = useOwnerInbox();
+  const list = useApi("listAutoTopUpRules", { query: { limit: 200 } });
+  const byAgent = useMemo(
+    () => new Map((list.data?.data ?? []).map((rule) => [rule.agent_id, rule])),
+    [list.data],
+  );
   const [editing, setEditing] = useState<Agent | null>(null);
+  const [installId, setInstallId] = useState<string | null>(null);
   const treasuryId = org.data?.treasury_account_id ?? null;
+  const loadError = agents.error ?? list.error;
 
   return (
     <Card aria-labelledby="topup-rules-title">
@@ -55,7 +39,7 @@ export function TopUpRulesCard() {
             size="sm"
             variant="ghost"
             icon={<IconRefresh size={14} />}
-            onClick={() => void rules.mutate()}
+            onClick={() => void list.mutate()}
           >
             Refresh
           </Button>
@@ -66,9 +50,12 @@ export function TopUpRulesCard() {
           <Callout tone="info">Set an org treasury account first; top-ups are drawn from it.</Callout>
         </CardBody>
       ) : null}
-      {agents.error ? (
+      {loadError ? (
         <CardBody>
-          <ProblemAlert problem={agents.error} onRetry={() => void agents.mutate()} />
+          <ProblemAlert
+            problem={loadError}
+            onRetry={() => void (agents.error ? agents.mutate() : list.mutate())}
+          />
         </CardBody>
       ) : agents.isLoading ? (
         <LoadingState label="Loading agents" rows={3} />
@@ -90,7 +77,10 @@ export function TopUpRulesCard() {
           </THead>
           <tbody>
             {agents.agents.map((agent) => {
-              const rule = rules.data?.get(agent.id);
+              const rule = byAgent.get(agent.id);
+              const waiting = Boolean(
+                rule?.install_operation_id && inbox.byId.has(rule.install_operation_id),
+              );
               return (
                 <Tr key={agent.id}>
                   <Td>
@@ -108,23 +98,32 @@ export function TopUpRulesCard() {
                     {rule ? <MoneyValue money={rule.max_per_day} /> : <span className="text-muted">—</span>}
                   </Td>
                   <Td>
-                    {rules.isLoading ? (
+                    {list.isLoading ? (
                       <span className="text-muted">Loading…</span>
                     ) : rule ? (
-                      <StatusBadge status={rule.status} />
+                      <RuleStatus rule={rule} waiting={waiting} />
                     ) : (
                       <span className="text-muted">No rule</span>
                     )}
                   </Td>
                   <Td align="right">
-                    <Button
-                      size="sm"
-                      variant="owner"
-                      disabled={!treasuryId}
-                      onClick={() => setEditing(agent)}
-                    >
-                      {rule ? "Change…" : "Set up…"}
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      {rule?.status === "pending_install" ? (
+                        <PendingOperationButton
+                          operationId={rule.install_operation_id}
+                          title={`Install the top-up executor for ${agent.name}`}
+                          label="Sign install…"
+                        />
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="owner"
+                        disabled={!treasuryId}
+                        onClick={() => setEditing(agent)}
+                      >
+                        {rule ? "Change…" : "Set up…"}
+                      </Button>
+                    </div>
                   </Td>
                 </Tr>
               );
@@ -136,7 +135,7 @@ export function TopUpRulesCard() {
         <AutoTopUpEditor
           agent={editing}
           initial={(() => {
-            const rule = rules.data?.get(editing.id);
+            const rule = byAgent.get(editing.id);
             return rule
               ? {
                   refill_to: rule.refill_to.amount,
@@ -147,8 +146,16 @@ export function TopUpRulesCard() {
           })()}
           open
           onClose={() => setEditing(null)}
+          onSaved={(saved) => setInstallId(saved.install_operation_id)}
         />
       ) : null}
+      <OwnerOperationDialog
+        id={installId}
+        open={installId !== null}
+        onClose={() => setInstallId(null)}
+        title="Install the auto top-up executor"
+        description="Installing or updating the treasury's top-up executor is an owner operation."
+      />
     </Card>
   );
 }

@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
   if (!config.staffDashboard) notFound();
   return (
-    <ConfigProvider value={{ ...config, chainId: CHAINS[config.chain].id, features: {} }}>
+    <ConfigProvider value={{ ...config, chainId: CHAINS[config.chain].id, features: {}, usdc: null }}>
       <AppProviders>{children}</AppProviders>
     </ConfigProvider>
   );

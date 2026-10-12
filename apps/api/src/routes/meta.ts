@@ -84,6 +84,8 @@ export const metaHandlers: Pick<Handlers, "health" | "getMeta"> = {
         streams: config.features.streams,
         treasury_sweep: config.features.treasurySweep,
         open_signup: config.allowOpenSignup,
+        // The faucet mints test USDC on the simulated chain and Anvil only (POST /v1/sandbox/faucet).
+        sandbox_faucet: config.chain.name !== "base-sepolia",
       },
     };
   },

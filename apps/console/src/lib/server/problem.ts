@@ -23,8 +23,8 @@ export const problems = {
   staffUnauthorized: () =>
     problem(401, "unauthorized", "Staff sign-in required", "Sign in with an operator token to continue."),
   csrf: (detail: string) => problem(403, "csrf_rejected", "Request blocked", detail),
-  sandboxOnly: () =>
-    problem(403, "sandbox_only", "Sandbox only", "This sign-in method is only available in the sandbox."),
+  sandboxOnly: (detail = "This sign-in method is only available in the sandbox.") =>
+    problem(403, "sandbox_only", "Sandbox only", detail),
   notAvailable: (detail = "This API route is not available from the console.") =>
     problem(404, "not_found", "Not found", detail),
   invalid: (detail: string, extensions?: Record<string, unknown>) =>

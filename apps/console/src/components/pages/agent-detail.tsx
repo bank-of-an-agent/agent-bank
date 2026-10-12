@@ -1,6 +1,7 @@
 "use client";
 
 import { AccountsCard } from "@/components/agents/accounts-card";
+import { EscrowsStreamsCard } from "@/components/agents/escrows-streams-card";
 import { FreezeAgentButton, UnfreezeAgentButton } from "@/components/agents/freeze-controls";
 import { MandatesCard } from "@/components/agents/mandates-card";
 import { PolicySummaryCard } from "@/components/agents/policy-summary";
@@ -20,17 +21,17 @@ import { useApi, useApiList } from "@/lib/api/hooks";
 import { useAccountsIndex, useAgentsIndex, type Account, type Agent } from "@/lib/api/queries";
 import { formatTime } from "@/lib/format";
 
-function AgentPayments({ accounts }: { accounts: Account[] }) {
+function AgentPayments({ agentId, accounts }: { agentId: string; accounts: Account[] }) {
   const agents = useAgentsIndex();
   const index = useAccountsIndex();
   const primary = accounts[0];
-  const list = useApiList(primary ? "listPayments" : null, { query: { account_id: primary?.id, limit: 25 } });
+  const list = useApiList(primary ? "listPayments" : null, { query: { agent_id: agentId, limit: 25 } });
   return (
     <Card aria-labelledby="agent-payments-title">
       <CardHeader
         id="agent-payments-title"
         title="Payments"
-        description="Payments from this agent's account."
+        description="Payments from this agent's accounts."
       />
       {!primary ? (
         <EmptyState icon={<IconPayments size={20} />} title="No account, no payments" />
@@ -176,7 +177,8 @@ export function AgentDetailPage({ id }: { id: string }) {
         </div>
         <SessionsCard agent={a} accounts={agentAccounts} />
         <MandatesCard agent={a} />
-        <AgentPayments accounts={agentAccounts} />
+        <AgentPayments agentId={a.id} accounts={agentAccounts} />
+        <EscrowsStreamsCard accounts={agentAccounts} />
       </div>
     </>
   );

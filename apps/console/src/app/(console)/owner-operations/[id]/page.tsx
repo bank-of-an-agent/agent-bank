@@ -11,6 +11,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       <PageHeader
         title="Owner operation"
         description="An on-chain operation only your owner key can authorize. Agent Bank prepared it and cannot sign it."
+        crumbs={[{ href: "/owner-operations", label: "Owner operations" }, { label: id }]}
       />
       <OwnerOperationCard id={id} title="Sign with the owner key" />
     </>

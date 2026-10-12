@@ -34,6 +34,7 @@ export const OWNER_ACTION_LABELS: Record<OwnerAction, string> = {
   "treasury.set": "Set the org treasury account",
   "vault.withdraw": "Withdraw from a vault",
   "owner.rotate": "Rotate the owner key",
+  "spend_key.set": "Attach an agent's x402 spend key",
 };
 
 /** Sign an owner authorization; the result is the request's `owner_authorization`. */

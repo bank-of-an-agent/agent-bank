@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { ApprovalCard } from "@/components/approvals/approval-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { ProblemAlert } from "@/components/ui/problem-alert";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { useApiList } from "@/lib/api/hooks";
-import { useAgentsIndex, usePayments } from "@/lib/api/queries";
+import { useAgentsIndex } from "@/lib/api/queries";
 
 type Status = "pending" | "approved" | "denied" | "expired";
 
@@ -40,8 +40,6 @@ export function ApprovalsPage() {
     { refreshInterval: status === "pending" ? 10_000 : 0 },
   );
   const agents = useAgentsIndex();
-  const paymentIds = useMemo(() => list.items.map((a) => a.payment_id), [list.items]);
-  const payments = usePayments(paymentIds);
 
   return (
     <>
@@ -85,15 +83,8 @@ export function ApprovalsPage() {
           </Card>
         ) : (
           <>
-            {payments.error ? <ProblemAlert problem={payments.error} /> : null}
             {list.items.map((approval) => (
-              <ApprovalCard
-                key={approval.id}
-                approval={approval}
-                payment={payments.data?.get(approval.payment_id)}
-                paymentLoading={payments.isLoading}
-                agents={agents.byId}
-              />
+              <ApprovalCard key={approval.id} approval={approval} agents={agents.byId} />
             ))}
             {list.hasMore ? (
               <div className="text-center">

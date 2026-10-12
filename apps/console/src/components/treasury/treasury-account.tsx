@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AccountDetails, BalancesView } from "@/components/agents/accounts-card";
+import { TestUsdcButton } from "@/components/agents/faucet";
 import { OwnerActionDialog } from "@/components/owner/owner-action-dialog";
 import { useConsoleConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ export function TreasuryAccountCard() {
           <>
             <AccountDetails account={treasury} />
             <BalancesView accountId={treasury.id} />
+            <TestUsdcButton account={treasury} />
           </>
         ) : treasuryId ? (
           <Callout tone="warn">

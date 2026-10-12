@@ -381,4 +381,28 @@ describe("BFF proxy: allowlist and responses", () => {
     const res = await GET(request("/api/v1/agents", { cookies: { ab_session: cookie } }), ctx(["agents"]));
     expect(res.status).toBe(401);
   });
+
+  it("forwards the test-USDC faucet only from a sandbox console", async () => {
+    const passkey = await seal("session", newPrincipalSession("passkey", "console-session-token"));
+    const faucet = (cookies: Record<string, string>) =>
+      request("/api/v1/sandbox/faucet", {
+        method: "POST",
+        body: JSON.stringify({
+          account_id: "acct_01J9ZQ3W8K7X5V4T3S2R1Q0P9N",
+          amount: { amount: "100.00", asset: "USDC" },
+        }),
+        headers: { origin: ORIGIN, "content-type": "application/json", "x-csrf-token": CSRF },
+        cookies: { ...cookies, ab_csrf: CSRF },
+      });
+    upstream.mockResolvedValueOnce(json({ object: "faucet_transfer" }));
+    expect((await POST(faucet({ ab_session: passkey }), ctx(["sandbox", "faucet"]))).status).toBe(200);
+    expect(lastCall().url).toBe(`${API}/v1/sandbox/faucet`);
+
+    upstream.mockClear();
+    vi.stubEnv("NEXT_PUBLIC_SANDBOX", "false");
+    const res = await POST(faucet({ ab_session: passkey }), ctx(["sandbox", "faucet"]));
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { code: string }).code).toBe("sandbox_only");
+    expect(upstream).not.toHaveBeenCalled();
+  });
 });

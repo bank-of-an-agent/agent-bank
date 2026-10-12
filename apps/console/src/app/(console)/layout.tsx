@@ -26,6 +26,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     chain: deployment.chain,
     chainId: deployment.chainId,
     features: deployment.features,
+    usdc: deployment.usdc,
   };
   return (
     <ConfigProvider value={config}>

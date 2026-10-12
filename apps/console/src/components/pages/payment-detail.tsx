@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { EntriesTable } from "@/components/ledger/entries-table";
 import { OwnerOperationCard } from "@/components/owner/owner-operation";
 import { CounterpartyLabel, DecisionView, kindLabel } from "@/components/payments/payment-bits";
@@ -23,11 +23,11 @@ const CANCELABLE = new Set(["requires_approval", "requires_signature"]);
 const LIVE = new Set(["requires_approval", "requires_signature", "submitted"]);
 
 function LedgerLines({ payment }: { payment: Payment }) {
-  const entries = useApi("listEntries", { params: { id: payment.account_id }, query: { limit: 200 } });
-  const mine = useMemo(
-    () => (entries.data?.data ?? []).filter((e) => e.payment_id === payment.id || e.ref_id === payment.id),
-    [entries.data, payment.id],
-  );
+  const entries = useApi("listEntries", {
+    params: { id: payment.account_id },
+    query: { payment_id: payment.id, limit: 200 },
+  });
+  const mine = entries.data?.data ?? [];
   return (
     <Card aria-labelledby="ledger-lines-title">
       <CardHeader
@@ -48,7 +48,7 @@ function LedgerLines({ payment }: { payment: Payment }) {
           description={
             payment.status === "denied"
               ? "Denied payments never place a hold."
-              : "No entries for this payment among the account's latest 200."
+              : "The ledger has no entries for this payment yet."
           }
         />
       ) : (

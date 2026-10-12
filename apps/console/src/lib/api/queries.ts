@@ -14,6 +14,15 @@ export type Account = ResponseOf<"getAccount">;
 export type Balances = ResponseOf<"getBalances">;
 export type Payment = ResponseOf<"getPayment">;
 export type Approval = ResponseOf<"getApproval">;
+export type Org = ResponseOf<"getCurrentOrg">;
+export type OwnerOperation = ResponseOf<"getOwnerOperation">;
+export type Session = ResponseOf<"getSession">;
+export type Mandate = ResponseOf<"getMandate">;
+export type Escrow = ResponseOf<"getEscrow">;
+export type Stream = ResponseOf<"getStream">;
+export type Vault = ResponseOf<"getVault">;
+export type AutoTopUpRule = NonNullable<ResponseOf<"getAutoTopUp">>;
+export type SweepRule = NonNullable<ResponseOf<"getSweepRule">>;
 
 const LIST_LIMIT = 200;
 
@@ -62,19 +71,19 @@ export function useBalances(accountIds: readonly string[]) {
   return query;
 }
 
-/** Payments by id (e.g. to show the rule hits behind each pending approval). */
-export function usePayments(paymentIds: readonly string[]) {
-  const ids = useMemo(() => [...new Set(paymentIds)].sort(), [paymentIds]);
-  const key = ids.length > 0 ? (["getPayment", `many:${ids.join(",")}`] as const) : null;
-  return useSWR<Map<string, Payment>, ApiProblem>(key, async () => {
-    const results = await Promise.allSettled(ids.map((id) => apiFetch("getPayment", { params: { id } })));
-    const map = new Map<string, Payment>();
-    results.forEach((result, i) => {
-      const id = ids[i];
-      if (id && result.status === "fulfilled") map.set(id, result.value);
-    });
-    return map;
-  });
+/**
+ * Owner operations waiting for the owner key's signature, shared by the nav
+ * badge, the inbox and every card that offers "Sign" for an operation id.
+ */
+export function useOwnerInbox() {
+  const query = useApi(
+    "listOwnerOperations",
+    { query: { status: "requires_signature", limit: LIST_LIMIT } },
+    { refreshInterval: 15_000 },
+  );
+  const operations = useMemo(() => query.data?.data ?? [], [query.data]);
+  const byId = useMemo(() => new Map(operations.map((op) => [op.id, op])), [operations]);
+  return { ...query, operations, byId, truncated: Boolean(query.data?.next_cursor) };
 }
 
 export function isBalances(value: Balances | ApiProblem | undefined): value is Balances {

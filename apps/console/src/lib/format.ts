@@ -66,6 +66,20 @@ export function describeDuration(ms: number): string {
   return parts.join(" ");
 }
 
+const INTERVALS: Record<number, string> = {
+  1: "per second",
+  60: "per minute",
+  3600: "per hour",
+  86_400: "per day",
+  604_800: "per week",
+  2_592_000: "per 30 days",
+};
+
+/** A stream interval in words: 3600 → "per hour", 5400 → "every 1 hour 30 minutes". */
+export function describeInterval(seconds: number): string {
+  return INTERVALS[seconds] ?? `every ${describeDuration(seconds * 1000)}`;
+}
+
 /** `0x1234567890abcdef…` → `0x1234…cdef`. */
 export function shortHex(value: string | null | undefined, head = 6, tail = 4): string {
   if (!value) return "—";

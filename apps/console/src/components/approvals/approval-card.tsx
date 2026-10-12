@@ -10,11 +10,10 @@ import { Card } from "@/components/ui/card";
 import { Countdown, useNow } from "@/components/ui/countdown";
 import { IconCheck, IconClose, IconPasskey } from "@/components/ui/icons";
 import { ProblemAlert } from "@/components/ui/problem-alert";
-import { Skeleton } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 import { DateTimeValue, MoneyValue } from "@/components/ui/values";
 import { apiFetch, useIdempotencyKey, useMutation } from "@/lib/api/hooks";
-import type { Agent, Approval, Payment } from "@/lib/api/queries";
+import type { Agent, Approval } from "@/lib/api/queries";
 import { formatMoney } from "@/lib/money";
 import { approvalAssertion } from "@/lib/passkey";
 
@@ -25,13 +24,9 @@ import { approvalAssertion } from "@/lib/passkey";
  */
 export function ApprovalCard({
   approval,
-  payment,
-  paymentLoading,
   agents,
 }: {
   approval: Approval;
-  payment: Payment | undefined;
-  paymentLoading: boolean;
   /** All agents, to name both the paying agent and an agent counterparty. */
   agents: Map<string, Agent>;
 }) {
@@ -113,12 +108,6 @@ export function ApprovalCard({
               <CounterpartyLabel counterparty={approval.counterparty} agents={agents} />
             </div>
           </div>
-          {payment?.memo ? (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">Memo</p>
-              <p className="mt-1 text-sm">{payment.memo}</p>
-            </div>
-          ) : null}
           {approval.decisions.length > 0 ? (
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted">Decisions</p>
@@ -145,15 +134,10 @@ export function ApprovalCard({
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">Why it needs approval</p>
           <div className="mt-1">
-            {payment?.decision ? (
-              <RuleHits hits={payment.decision.rule_hits} />
-            ) : paymentLoading ? (
-              <div className="space-y-2" aria-hidden="true">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
+            {approval.decision ? (
+              <RuleHits hits={approval.decision.rule_hits} />
             ) : (
-              <p className="text-sm text-muted">Rule hits unavailable.</p>
+              <p className="text-sm text-muted">The API did not record the policy decision.</p>
             )}
           </div>
         </div>
