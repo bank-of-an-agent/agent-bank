@@ -8,6 +8,8 @@ import {
 } from "./client";
 import { ConflictError, InvalidRequestError, PaymentFailedError, PolicyDeniedError } from "./errors";
 import { pollUntil, type WaitOptions } from "./internal/poll";
+import { AgentProofs, type AgentProofOptions } from "./proofs/agent";
+import { createProofFetch, type ProofFetchDetails } from "./proofs/fetch";
 import { signOperationHash, type SpendSigner } from "./signers";
 import type {
   Balances,
@@ -68,7 +70,18 @@ export interface AgentClientOptions extends Omit<ClientOptions, "apiKey" | "sess
   spendKey?: SpendSigner;
   /** x402 client settings. */
   x402?: AgentX402Options;
+  /**
+   * The agent's private-proof secret (`0x…`, e.g. from `generateProofSecret()`). It never
+   * leaves the process; Agent Bank only sees `Poseidon(secret)` (`proofs.enroll()`). With it,
+   * `proofs.prove` works and `fetch` / `fetchWithPayment` answer proof challenges.
+   */
+  proofSecret?: `0x${string}`;
+  /** Private-proof settings (probing guard, scope check, prover). */
+  proofs?: AgentProofOptions;
 }
+
+/** Result of {@link AgentClient.fetchWithPayment}: the x402 details plus the proof details. */
+export type AgentFetchResult = X402FetchResult & ProofFetchDetails;
 
 /**
  * Who to pay: an address (`0x…`), an agent id (`agt_…`), an account id
@@ -234,7 +247,9 @@ function isoTime(value: string | Date): string {
  *   with the session key (EIP-191) → submit → optionally wait for settlement.
  * - {@link createEscrow} / {@link releaseEscrow} / {@link createStream}: the same two-step flow.
  * - {@link fetch}: an x402-aware `fetch` that pays 402 challenges within
- *   policy, signing EIP-3009 authorizations with the spend key.
+ *   policy, signing EIP-3009 authorizations with the spend key, and (with a
+ *   `proofSecret`) answers private-proof challenges (401 `AGENT-PROOF-REQUIRED`) first.
+ * - `proofs`: enroll, prove and reserve funds for private proofs.
  *
  * All low-level namespaces of {@link AgentBankClient} are available too.
  *
@@ -252,6 +267,11 @@ function isoTime(value: string | Date): string {
  */
 export class AgentClient extends AgentBankClient {
   readonly accountId: string;
+  /**
+   * Private proofs: the Proofs operations plus `enroll()`, `prove(request)`,
+   * `reserve({ amount, scope, expiresAt })` and `reservations()` for this account.
+   */
+  declare readonly proofs: AgentProofs;
   readonly #sessionCredentials: SessionCredentials;
   readonly #spendKey: SpendSigner | undefined;
   readonly #x402: AgentX402Options;
@@ -273,6 +293,11 @@ export class AgentClient extends AgentBankClient {
     if (this.#x402.usdc !== undefined && !/^0x[0-9a-fA-F]{40}$/.test(this.#x402.usdc)) {
       throw new InvalidRequestError("invalid_request", "x402.usdc must be a 0x-prefixed address");
     }
+    this.proofs = new AgentProofs(this, {
+      accountId: this.accountId,
+      ...(options.proofSecret !== undefined ? { secret: options.proofSecret } : {}),
+      ...(options.proofs ? { options: options.proofs } : {}),
+    });
     this.#payer = createAgentBankPayer({
       client: this,
       accountId: this.accountId,
@@ -595,6 +620,10 @@ export class AgentClient extends AgentBankClient {
    * authorization that the spend key signs. Refuses prices above
    * `x402.maxAmountPerRequest` (default 1.00 USDC) before asking the API.
    * Use {@link readPaymentResponse} on the result for the settlement.
+   *
+   * With a `proofSecret`, a proof challenge (HTTP 401 with
+   * `AGENT-PROOF-REQUIRED`) is answered first with `proofs.prove`, and the
+   * proof is kept on the paid retry; without one, the 401 is returned as is.
    */
   async fetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
     return (await this.fetchWithPayment(input, init)).response;
@@ -602,7 +631,8 @@ export class AgentClient extends AgentBankClient {
 
   /**
    * Like {@link fetch} but returns payment details: whether it paid, how
-   * much, the Agent Bank payment and the seller's settlement.
+   * much, the Agent Bank payment and the seller's settlement, and whether a
+   * private proof was presented (with the verifier's `nullifier`).
    *
    * @param overrides Per-call settings; `maxAmountPerRequest` may only lower the configured cap.
    */
@@ -610,7 +640,7 @@ export class AgentClient extends AgentBankClient {
     input: string | URL | Request,
     init?: RequestInit,
     overrides: { maxAmountPerRequest?: string } = {},
-  ): Promise<X402FetchResult> {
+  ): Promise<AgentFetchResult> {
     const fetchImpl: FetchLike = this.#x402.fetch ?? ((i, o) => globalThis.fetch(i, o));
     return this.#paidFetch(fetchImpl, input, init, overrides);
   }
@@ -620,10 +650,12 @@ export class AgentClient extends AgentBankClient {
     input: string | URL | Request,
     init: RequestInit | undefined,
     overrides: { maxAmountPerRequest?: string },
-  ): Promise<X402FetchResult> {
+  ): Promise<AgentFetchResult> {
     const requested =
       overrides.maxAmountPerRequest !== undefined ? parseX402Cap(overrides.maxAmountPerRequest) : undefined;
-    return fetchWithX402(fetchImpl, input, init, {
+    // Proof gate first (401), then the paywall (402): the proof session keeps its proof for the paid retry.
+    const proofs = this.proofs.canProve ? createProofFetch(fetchImpl, { prover: this.proofs }) : undefined;
+    const result = await fetchWithX402(proofs?.fetch ?? fetchImpl, input, init, {
       ...(this.#x402.onPayment ? { onPayment: this.#x402.onPayment } : {}),
       payer: this.#payer,
       // Resolved only when a 402 must be paid; the per-call cap can only lower the configured one.
@@ -634,6 +666,7 @@ export class AgentClient extends AgentBankClient {
           : settings;
       },
     });
+    return { ...result, ...(proofs ? proofs.details() : { proofPresented: false }) };
   }
 
   async #signRequest(request: SigningRequest): Promise<`0x${string}`> {

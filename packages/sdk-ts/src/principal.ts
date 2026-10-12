@@ -10,9 +10,11 @@ import { routes, type RequestOf, type RouteDef } from "@agentbank/core/api";
 import type { z } from "zod";
 import { AgentBankClient, type ClientOptions, type RequestOptions } from "./client";
 import { AgentBankError, InvalidRequestError, PermissionDeniedError } from "./errors";
+import { readOptions, writeOptions } from "./internal/options";
 import { pollUntil, type WaitOptions } from "./internal/poll";
 import { formatIssues, summarizeIssues } from "./internal/zod";
 import { ownerAuthorize, type OwnerAuthorizeInput } from "./owner";
+import { PrincipalProofs } from "./proofs/principal";
 import { signOperationHash, type OwnerSigner, type SpendSigner } from "./signers";
 import { signSpendKeyPermit, type SpendKeyPermitOptions } from "./spend-key";
 import { earlyWithdrawalTypedData } from "./vaults";
@@ -144,6 +146,12 @@ const OWNER_OP_DONE: ReadonlySet<OwnerOperation["status"]> = new Set(["succeeded
  * ```
  */
 export class PrincipalClient extends AgentBankClient {
+  /**
+   * Private proofs: the Proofs operations plus `settings(agentId)`, `configure(agentId, …)`
+   * (owner-signed when it widens disclosure), `reservations(accountId)` and
+   * `releaseReservation(id)` (owner-signed).
+   */
+  declare readonly proofs: PrincipalProofs;
   readonly #owner: OwnerSigner | undefined;
   readonly #chainIdOverride: number | undefined;
   #meta: Promise<Meta> | undefined;
@@ -154,6 +162,7 @@ export class PrincipalClient extends AgentBankClient {
     this.#owner = options.owner;
     this.#chainIdOverride = options.chainId;
     if (options.chainId !== undefined) assertTestnet(options.chainId);
+    this.proofs = new PrincipalProofs(this, (input, owner) => this.authorize(input, owner));
   }
 
   /**
@@ -702,30 +711,6 @@ function ownerOptions(options: { owner?: OwnerSigner; wait?: boolean | WaitOptio
   return {
     ...(options.owner ? { owner: options.owner } : {}),
     ...(options.wait ? { wait: options.wait } : {}),
-  };
-}
-
-/** Transport options for a read inside a helper (no idempotency key). */
-function readOptions(options: RequestOptions): RequestOptions {
-  const { signal, timeoutMs, maxRetries, headers } = options;
-  return {
-    ...(signal !== undefined ? { signal } : {}),
-    ...(timeoutMs !== undefined ? { timeoutMs } : {}),
-    ...(maxRetries !== undefined ? { maxRetries } : {}),
-    ...(headers !== undefined ? { headers } : {}),
-  };
-}
-
-/**
- * Transport options for a write inside a helper. A caller-supplied
- * idempotency key is suffixed per step so that the several writes of one
- * helper never share a key (which the API would reject as a conflict).
- */
-function writeOptions(options: RequestOptions, step?: string): RequestOptions {
-  const key = options.idempotencyKey;
-  return {
-    ...readOptions(options),
-    ...(key !== undefined ? { idempotencyKey: step ? `${key}.${step}` : key } : {}),
   };
 }
 

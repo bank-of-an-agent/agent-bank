@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     maxWorkers: 4,
     include: ["test/**/*.test.ts"],
-    testTimeout: 20_000,
+    // The private-proof tests make real Groth16 proofs (about 1.5 s each locally; CI runners are slower).
+    testTimeout: process.env.CI ? 300_000 : 60_000,
+    hookTimeout: process.env.CI ? 300_000 : 60_000,
   },
 });

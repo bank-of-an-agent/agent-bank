@@ -2,6 +2,7 @@ import {
   ConnectionError,
   InsufficientFundsError,
   PolicyDeniedError,
+  ProofError,
   TimeoutError,
   X402Error,
 } from "@agentbank/sdk";
@@ -10,7 +11,15 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { createAgentBankMcpServer, TOOL_NAMES, type AgentBankMcpServerOptions } from "../src";
-import { decision, fetchResult, mockBackend, payment } from "./fixtures";
+import {
+  decision,
+  fetchResult,
+  mockBackend,
+  NULLIFIER,
+  payment,
+  proofRequest,
+  reservation,
+} from "./fixtures";
 
 const clients: Client[] = [];
 
@@ -39,7 +48,7 @@ function errorOf(result: CallToolResult): { code: string; detail: string; [k: st
 }
 
 describe("tool catalog", () => {
-  it("exposes exactly the eight money tools with schemas and descriptions", async () => {
+  it("exposes exactly the ten tools with schemas and descriptions", async () => {
     const { client } = await connect({ maxX402PerCall: "0.25" });
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([...TOOL_NAMES].sort());
@@ -56,7 +65,24 @@ describe("tool catalog", () => {
     expect(tools.find((t) => t.name === "get_balance")?.annotations?.readOnlyHint).toBe(true);
     expect(tools.find((t) => t.name === "fetch_paid_resource")?.description).toContain("0.25 USDC");
     const names = tools.map((t) => t.name).join(" ");
-    expect(names).not.toMatch(/withdraw|policy|limit|unfreeze|session/);
+    expect(names).not.toMatch(/withdraw|policy|limit|unfreeze|session|disclose|settings/);
+
+    // prove_claims changes nothing but discloses facts to a third party; reserving holds funds.
+    const prove = tools.find((t) => t.name === "prove_claims");
+    expect(prove?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: true,
+    });
+    expect(prove?.description).toMatch(/pseudonym/);
+    expect(prove?.description).toMatch(/does not learn which agent/);
+    expect(prove?.description).toMatch(/narrow the values down/);
+    const reserve = tools.find((t) => t.name === "reserve_funds_for_proof");
+    expect(reserve?.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(reserve?.description).toMatch(/cannot spend the funds/);
+    expect(tools.find((t) => t.name === "fetch_paid_resource")?.description).toContain(
+      "AGENT-PROOF-REQUIRED",
+    );
   });
 
   it("gives the model usage instructions", async () => {
@@ -331,5 +357,160 @@ describe("tools", () => {
     };
     expect(structured.transactions).toHaveLength(2);
     expect(structured.next_cursor).toBe("c2");
+  });
+});
+
+describe("private-proof tools", () => {
+  it("prove_claims proves a request object or a header value and returns the AGENT-PROOF header", async () => {
+    const { call, backend } = await connect();
+    const result = await call("prove_claims", { request: proofRequest() });
+    expect(result.isError).toBeFalsy();
+    expect(backend.proofs.answer).toHaveBeenCalledWith(proofRequest(), {});
+    expect(result.structuredContent).toMatchObject({
+      scope: "api.seller.example",
+      header_name: "AGENT-PROOF",
+      header_value: "eyJyZXF1ZXN0Ijp7fX0=",
+      nullifier: NULLIFIER,
+      expires_at: "2025-10-09T08:58:20.000Z",
+      constrained: ["principal_verification", "per_tx_limit"],
+      presentation: { type: "agentbank.proof.v1", nullifier: NULLIFIER },
+    });
+
+    await call("prove_claims", {
+      challenge: "eyJ0eXBlIjoiYWdlbnRiYW5rIn0=",
+      reservation_id: "prv_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    });
+    expect(backend.proofs.answer).toHaveBeenLastCalledWith("eyJ0eXBlIjoiYWdlbnRiYW5rIn0=", {
+      reservationId: "prv_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    });
+    expect(errorOf(await call("prove_claims", {})).detail).toContain("exactly one");
+    expect(
+      errorOf(await call("prove_claims", { request: proofRequest(), challenge: "eyJ9" })).detail,
+    ).toContain("exactly one");
+  });
+
+  it("prove_claims refuses clearly without a proof secret, and explains refusals", async () => {
+    const { call, backend } = await connect();
+    backend.proofs.canProve = false;
+    const missing = errorOf(await call("prove_claims", { request: proofRequest() }));
+    expect(missing).toMatchObject({ code: "invalid_request", reason: "proof_secret_missing" });
+    expect(missing.detail).toContain("AGENTBANK_PROOF_SECRET");
+    expect(backend.proofs.answer).not.toHaveBeenCalled();
+
+    backend.proofs.canProve = true;
+    backend.proofs.answer.mockRejectedValueOnce(
+      new ProofError("reservation_required", "reserve first", {
+        reservationNeeded: {
+          amount: "500.00",
+          scope: "api.seller.example",
+          scopeTag: "7",
+          until: 1_760_003_600,
+        },
+      }),
+    );
+    expect(errorOf(await call("prove_claims", { request: proofRequest() }))).toEqual({
+      code: "invalid_state",
+      detail: "reserve first",
+      reason: "reservation_required",
+      reservation_needed: {
+        amount: "500.00",
+        scope: "api.seller.example",
+        scope_tag: "7",
+        until: "2025-10-09T09:53:20.000Z",
+      },
+    });
+    backend.proofs.answer.mockRejectedValueOnce(
+      new ProofError("undisclosed", "not disclosed", {
+        attributes: ["balance"],
+        undisclosedClasses: ["balance"],
+      }),
+    );
+    expect(errorOf(await call("prove_claims", { request: proofRequest() }))).toMatchObject({
+      reason: "undisclosed",
+      attributes: ["balance"],
+      undisclosed_classes: ["balance"],
+    });
+    backend.proofs.answer.mockRejectedValueOnce(
+      new ProofError("rate_limited", "slow down", { retryAfterMs: 1_500 }),
+    );
+    expect(errorOf(await call("prove_claims", { request: proofRequest() }))).toMatchObject({
+      code: "rate_limited",
+      retry_after_seconds: 2,
+    });
+  });
+
+  it("reserve_funds_for_proof holds funds for one verifier", async () => {
+    const { call, backend } = await connect();
+    const result = await call("reserve_funds_for_proof", {
+      amount: "500.00",
+      scope: "api.seller.example",
+      expires_in_seconds: 3_600,
+      idempotency_key: "reserve-0001",
+    });
+    expect(backend.proofs.reserve).toHaveBeenCalledWith(
+      { amount: "500.00", scope: "api.seller.example", forSeconds: 3_600 },
+      { idempotencyKey: "reserve-0001" },
+    );
+    expect(result.structuredContent).toMatchObject({
+      reservation_id: "prv_01JABCDEFGHJKMNPQRSTVWXYZ0",
+      status: "pending",
+      amount: { amount: "500.00", asset: "USDC" },
+      scope_tag: "1311768467463790320",
+    });
+    expect((result.structuredContent as { message: string }).message).toContain("next attested root");
+
+    backend.proofs.reserve.mockResolvedValueOnce(reservation({ status: "active" }));
+    const active = await call("reserve_funds_for_proof", {
+      amount: "1",
+      scope: "api.seller.example",
+      expires_in_seconds: 120,
+    });
+    expect(backend.proofs.reserve).toHaveBeenLastCalledWith(
+      { amount: "1", scope: "api.seller.example", forSeconds: 120 },
+      undefined,
+    );
+    expect((active.structuredContent as { message: string }).message).toContain("provable now");
+
+    const tooLong = await call("reserve_funds_for_proof", {
+      amount: "1",
+      scope: "api.seller.example",
+      expires_in_seconds: 604_801,
+    });
+    expect(tooLong.isError).toBe(true);
+    const tooShort = await call("reserve_funds_for_proof", {
+      amount: "1",
+      scope: "api.seller.example",
+      expires_in_seconds: 60,
+    });
+    expect(tooShort.isError).toBe(true);
+    expect(backend.proofs.reserve).toHaveBeenCalledTimes(2);
+  });
+
+  it("fetch_paid_resource reports a presented proof and its nullifier, and proof refusals", async () => {
+    const { call, backend } = await connect();
+    backend.fetchWithPayment.mockResolvedValueOnce(
+      fetchResult({ proofPresented: true, nullifier: NULLIFIER }),
+    );
+    const result = await call("fetch_paid_resource", { url: "https://api.seller.example/report" });
+    expect(result.structuredContent).toMatchObject({
+      status: 200,
+      proof_presented: true,
+      nullifier: NULLIFIER,
+    });
+
+    const plain = await call("fetch_paid_resource", { url: "https://a.test/x" });
+    expect(plain.structuredContent).toMatchObject({ proof_presented: false, nullifier: null });
+
+    backend.fetchWithPayment.mockRejectedValueOnce(
+      new ProofError("proof_rejected", "The verifier refused the proof (root_revoked)", {
+        verifierReason: "root_revoked",
+      }),
+    );
+    expect(errorOf(await call("fetch_paid_resource", { url: "https://api.seller.example/report" }))).toEqual({
+      code: "unauthorized",
+      detail: "The verifier refused the proof (root_revoked)",
+      reason: "proof_rejected",
+      verifier_reason: "root_revoked",
+    });
   });
 });

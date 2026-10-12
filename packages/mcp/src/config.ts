@@ -1,6 +1,7 @@
 import {
   AgentBankError,
   isPrivateKey,
+  isProofSecret,
   normalizeAmount,
   signerFromPrivateKey,
   x402ChainId,
@@ -20,8 +21,9 @@ import type { PrivateKeyAccount } from "viem/accounts";
  * | `AGENTBANK_ACCOUNT_ID` | The agent's account (`acct_…`), required |
  * | `AGENTBANK_SESSION_ID` | The session (`ses_…`), required |
  * | `AGENTBANK_SESSION_KEY` | Session private key (0x…), or use `AGENTBANK_KEYSTORE` |
- * | `AGENTBANK_KEYSTORE` | Path of a `FileKeyStore` (0600) holding `session:<ses_id>` (or `session`) and optionally `spend` |
+ * | `AGENTBANK_KEYSTORE` | Path of a `FileKeyStore` (0600) holding `session:<ses_id>` (or `session`) and optionally `spend` and `proof` |
  * | `AGENTBANK_SPEND_KEY` | x402 spend key (0x…); without one, `fetch_paid_resource` cannot pay |
+ * | `AGENTBANK_PROOF_SECRET` | Private-proof secret (0x…, 32 bytes); without one, `prove_claims` refuses and proof challenges stay unanswered |
  * | `AGENTBANK_MAX_X402_PER_CALL` | Cap per paid request in USDC (default `1.00`) |
  * | `AGENTBANK_X402_NETWORK` | Optional CAIP-2 network to pay x402 on (default: the deployment's, from `GET /v1/meta`) |
  * | `AGENTBANK_MCP_HTTP_TOKEN` | Bearer token required by the HTTP transport (required when binding beyond loopback) |
@@ -36,6 +38,8 @@ export interface McpConfig {
   sessionId: string;
   sessionKey: PrivateKeyAccount;
   spendKey: SpendSigner | undefined;
+  /** The agent's private-proof secret (never logged); `undefined` = proofs disabled. */
+  proofSecret: `0x${string}` | undefined;
   maxX402PerCall: string;
   /** Explicit x402 network (CAIP-2); `undefined` = the deployment's, from `GET /v1/meta`. */
   x402Network: string | undefined;
@@ -58,6 +62,18 @@ function required(env: Record<string, string | undefined>, name: string): string
   const value = env[name]?.trim();
   if (!value) throw new ConfigError(`${name} is required`);
   return value;
+}
+
+const PROOF_SECRET_MESSAGE =
+  "must be a 0x-prefixed 32-byte hex BN254 field element (generate one with `agentbank-prove identity`)";
+
+function proofSecret(value: string | undefined, name: string): `0x${string}` | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(trimmed) || !isProofSecret(trimmed)) {
+    throw new ConfigError(`${name} ${PROOF_SECRET_MESSAGE}`);
+  }
+  return trimmed as `0x${string}`;
 }
 
 function key(env: Record<string, string | undefined>, name: string): PrivateKeyAccount | undefined {
@@ -91,9 +107,10 @@ export async function loadConfig(env: Record<string, string | undefined> = proce
 
   let sessionKey = key(env, "AGENTBANK_SESSION_KEY");
   let spendKey: SpendSigner | undefined = key(env, "AGENTBANK_SPEND_KEY");
+  let proof = proofSecret(env.AGENTBANK_PROOF_SECRET, "AGENTBANK_PROOF_SECRET");
   let sessionKeySource: McpConfig["sessionKeySource"] = "env";
   const keystorePath = env.AGENTBANK_KEYSTORE?.trim();
-  if (keystorePath && (!sessionKey || !spendKey)) {
+  if (keystorePath && (!sessionKey || !spendKey || !proof)) {
     const store = new FileKeyStore({ path: keystorePath });
     try {
       if (!sessionKey) {
@@ -107,7 +124,12 @@ export async function loadConfig(env: Record<string, string | undefined> = proce
         const stored = (await store.get(`spend:${accountId}`)) ?? (await store.get("spend"));
         if (stored) spendKey = signerFromPrivateKey(stored);
       }
+      if (!proof) {
+        const stored = (await store.get(`proof:${accountId}`)) ?? (await store.get("proof"));
+        proof = proofSecret(stored, 'The "proof" entry of AGENTBANK_KEYSTORE');
+      }
     } catch (error) {
+      if (error instanceof ConfigError) throw error;
       throw new ConfigError(
         `AGENTBANK_KEYSTORE: ${error instanceof AgentBankError || error instanceof Error ? error.message : "unreadable"}`,
       );
@@ -155,6 +177,7 @@ export async function loadConfig(env: Record<string, string | undefined> = proce
     sessionId,
     sessionKey,
     spendKey,
+    proofSecret: proof,
     maxX402PerCall,
     x402Network,
     httpToken,

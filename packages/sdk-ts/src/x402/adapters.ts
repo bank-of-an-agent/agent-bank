@@ -3,18 +3,19 @@ import type { Paywall, PaywallDecision, PaywallResponse } from "./paywall";
 
 /**
  * Framework adapters for {@link Paywall}. They only use structural types, so
- * the SDK has no runtime dependency on Express, Fastify or Hono.
+ * the SDK has no runtime dependency on Express, Fastify or Hono. The response
+ * helpers are shared with the proof-gate adapters (`../proofs/gate-adapters`).
  *
  * @packageDocumentation
  */
 
 type Verified = Extract<PaywallDecision, { kind: "verified" }>;
 
-function toWebResponse(response: PaywallResponse): Response {
+export function toWebResponse(response: PaywallResponse): Response {
   return new Response(response.body, { status: response.status, headers: response.headers });
 }
 
-function withHeaders(response: Response, headers: Record<string, string>): Response {
+export function withHeaders(response: Response, headers: Record<string, string>): Response {
   const merged = new Headers(response.headers);
   for (const [name, value] of Object.entries(headers)) merged.set(name, value);
   return new Response(response.body, {
@@ -118,7 +119,7 @@ function nodeRequestUrl(req: IncomingMessage): string {
   return `${protocol}://${host}${r.originalUrl ?? req.url ?? "/"}`;
 }
 
-function sendNode(res: ServerResponse, response: PaywallResponse): void {
+export function sendNode(res: ServerResponse, response: PaywallResponse): void {
   res.statusCode = response.status;
   for (const [name, value] of Object.entries(response.headers)) res.setHeader(name, value);
   res.setHeader("Content-Length", new TextEncoder().encode(response.body).byteLength);
@@ -310,7 +311,7 @@ function fastifyUrl(request: FastifyRequestLike): string {
   return `${request.protocol ?? "http"}://${host}${request.url}`;
 }
 
-function sendFastify(reply: FastifyReplyLike, response: PaywallResponse): unknown {
+export function sendFastify(reply: FastifyReplyLike, response: PaywallResponse): unknown {
   reply.code(response.status);
   for (const [name, value] of Object.entries(response.headers)) reply.header(name, value);
   return reply.send(response.body);

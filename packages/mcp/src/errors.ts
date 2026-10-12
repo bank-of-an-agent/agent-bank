@@ -1,4 +1,11 @@
-import { AgentBankError, ConnectionError, PolicyDeniedError, TimeoutError, X402Error } from "@agentbank/sdk";
+import {
+  AgentBankError,
+  ConnectionError,
+  PolicyDeniedError,
+  ProofError,
+  TimeoutError,
+  X402Error,
+} from "@agentbank/sdk";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 /**
@@ -22,6 +29,30 @@ export interface ToolErrorBody {
 export function describeError(error: unknown): ToolErrorBody {
   if (error instanceof X402Error) {
     return { code: error.code, detail: error.message, reason: error.reason };
+  }
+  if (error instanceof ProofError) {
+    const needed = error.reservationNeeded;
+    return {
+      code: error.code,
+      detail: error.message,
+      reason: error.reason,
+      ...(error.attributes.length > 0 ? { attributes: [...error.attributes] } : {}),
+      ...(error.undisclosedClasses.length > 0 ? { undisclosed_classes: [...error.undisclosedClasses] } : {}),
+      ...(needed
+        ? {
+            reservation_needed: {
+              amount: needed.amount,
+              scope: needed.scope ?? null,
+              scope_tag: needed.scopeTag ?? null,
+              until: needed.until > 0 ? new Date(needed.until * 1000).toISOString() : null,
+            },
+          }
+        : {}),
+      ...(error.verifierReason ? { verifier_reason: error.verifierReason } : {}),
+      ...(error.retryAfterMs !== undefined
+        ? { retry_after_seconds: Math.ceil(error.retryAfterMs / 1000) }
+        : {}),
+    };
   }
   if (error instanceof PolicyDeniedError) {
     const hits = error.decision?.rule_hits.filter((h) => h.effect !== "info" && h.effect !== "allow");

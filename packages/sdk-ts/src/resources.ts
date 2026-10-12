@@ -46,6 +46,19 @@ import type {
   PolicyCheckInput,
   PolicyDecision,
   PrepareOwnerSwapInput,
+  CreateProofReservationInput,
+  EnrollProofIdentityInput,
+  ProofCircuit,
+  ProofIdentity,
+  ProofPresentation,
+  ProofRequest,
+  ProofReservation,
+  ProofRoot,
+  ProofSettings,
+  ProofVerification,
+  ProofWitness,
+  ReleaseProofReservationInput,
+  UpdateProofSettingsInput,
   PutAutoTopUpInput,
   PutPolicyInput,
   PutSweepRuleInput,
@@ -620,5 +633,108 @@ export class Sandbox extends Resource {
    */
   faucet(body: SandboxFaucetInput, options?: RequestOptions): Promise<SandboxFaucetResult> {
     return this.client.request("sandboxFaucet", { ...options, body });
+  }
+}
+
+/**
+ * Private proofs (docs/private-proofs.md): an agent proves facts Agent Bank attests about it
+ * ("a verified company backs me", "$500 is reserved for you") without revealing which agent it
+ * is. The circuit, roots and server-side verification are public; settings are the owner's
+ * (principal); identity, witnesses and reservations belong to the agent.
+ *
+ * The high-level flows live on `AgentClient.proofs` (`enroll`, `prove`, `reserve`) and
+ * `PrincipalClient.proofs` (`configure`, `releaseReservation`); sellers verify with
+ * `@agentbank/sdk/proof-server`.
+ */
+export class Proofs extends Resource {
+  /** The claims circuit: attributes, disclosure classes, verification key and registry (public). */
+  circuit(options?: RequestOptions): Promise<ProofCircuit> {
+    return this.client.request("getProofCircuit", { ...options });
+  }
+  /** Attested-facts roots, newest first (public). */
+  listRoots(query: QueryOf<"listProofRoots"> = {}, options?: RequestOptions): Promise<Page<ProofRoot>> {
+    return this.client.request("listProofRoots", { ...options, query });
+  }
+  /** A root's epoch, validity window, leaf count and status (public; `0x…` 32-byte hex). */
+  retrieveRoot(root: string, options?: RequestOptions): Promise<ProofRoot> {
+    return this.client.request("getProofRoot", { ...options, params: { root } });
+  }
+  /**
+   * Check a presentation against a request on Agent Bank's side (public): expiry, request
+   * hash, root and Groth16 proof. Nonce freshness stays the verifier's concern; verifiers
+   * normally check locally with `@agentbank/sdk/proof-server`.
+   */
+  verify(
+    request: ProofRequest,
+    presentation: ProofPresentation,
+    options?: RequestOptions,
+  ): Promise<ProofVerification> {
+    return this.client.request("verifyProof", { ...options, body: { request, presentation } });
+  }
+  /** What the agent may prove (`GET /v1/agents/{id}/proofs/settings`, principal). */
+  retrieveSettings(agentId: string, options?: RequestOptions): Promise<ProofSettings> {
+    return this.client.request("getProofSettings", { ...options, params: { id: agentId } });
+  }
+  /**
+   * Enable proofs and choose disclosure classes (principal). Widening needs an owner
+   * authorization (`proofs.disclose`); `PrincipalClient.proofs.configure` signs only then.
+   */
+  updateSettings(
+    agentId: string,
+    body: UpdateProofSettingsInput,
+    options?: RequestOptions,
+  ): Promise<ProofSettings> {
+    return this.client.request("updateProofSettings", { ...options, params: { id: agentId }, body });
+  }
+  /** Enroll the identity commitment `Poseidon(secret)` (agent). `AgentClient.proofs.enroll` computes it. */
+  enrollIdentity(
+    accountId: string,
+    body: EnrollProofIdentityInput,
+    options?: RequestOptions,
+  ): Promise<ProofIdentity> {
+    return this.client.request("enrollProofIdentity", { ...options, params: { id: accountId }, body });
+  }
+  /** The enrolled identity commitment (agent or principal). */
+  retrieveIdentity(accountId: string, options?: RequestOptions): Promise<ProofIdentity> {
+    return this.client.request("getProofIdentity", { ...options, params: { id: accountId } });
+  }
+  /** The agent's leaf values and Merkle path (agent): the base leaf, or a reservation's leaf. */
+  witness(
+    accountId: string,
+    query: QueryOf<"getProofWitness"> = {},
+    options?: RequestOptions,
+  ): Promise<ProofWitness> {
+    return this.client.request("getProofWitness", { ...options, params: { id: accountId }, query });
+  }
+  /** Reserve funds for one verifier (agent). `AgentClient.proofs.reserve` builds the body. */
+  createReservation(
+    accountId: string,
+    body: CreateProofReservationInput,
+    options?: RequestOptions,
+  ): Promise<ProofReservation> {
+    return this.client.request("createProofReservation", { ...options, params: { id: accountId }, body });
+  }
+  /** The account's reservations (agent or principal). */
+  listReservations(
+    accountId: string,
+    query: QueryOf<"listProofReservations"> = {},
+    options?: RequestOptions,
+  ): Promise<Page<ProofReservation>> {
+    return this.client.request("listProofReservations", { ...options, params: { id: accountId }, query });
+  }
+  /** One reservation (agent or principal). */
+  retrieveReservation(id: string, options?: RequestOptions): Promise<ProofReservation> {
+    return this.client.request("getProofReservation", { ...options, params: { id } });
+  }
+  /**
+   * Release a reservation early with an owner authorization (`proofs.reservation.release`,
+   * principal). `PrincipalClient.proofs.releaseReservation(id)` signs it.
+   */
+  releaseReservation(
+    id: string,
+    body: ReleaseProofReservationInput,
+    options?: RequestOptions,
+  ): Promise<ProofReservation> {
+    return this.client.request("releaseProofReservation", { ...options, params: { id }, body });
   }
 }

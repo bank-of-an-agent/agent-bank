@@ -17,6 +17,20 @@ import {
   type ErrorCode,
 } from "@agentbank/core";
 import * as R from "@agentbank/core/api";
+import { loadManifest } from "@agentbank/proofs/artifacts";
+import { fromBytes32, isFieldElement, scopeTagOf } from "@agentbank/proofs/field";
+import {
+  ATTRIBUTES,
+  CLAIMS_SCHEMA,
+  CLASS_ATTRIBUTES,
+  DISCLOSURE_CLASSES,
+  disclosureMask,
+  FULL_DISCLOSURE_MASK,
+  type Attribute,
+  type DisclosureClass,
+} from "@agentbank/proofs/schema";
+import { buildWitness, ClaimsTree, leafHash } from "@agentbank/proofs/tree";
+import { rootInfoFromApi, VERIFICATION_KEY, verifyPresentation } from "@agentbank/proofs/verifier";
 import {
   getAddress,
   keccak256,
@@ -48,6 +62,27 @@ type OwnerOperation = z.output<typeof R.OwnerOperation>;
 type Account = z.output<typeof R.Account>;
 type Decision = NonNullable<Payment["decision"]>;
 type Vault = z.output<typeof R.Vault>;
+type ProofSettings = z.output<typeof R.ProofSettings>;
+type ProofIdentity = z.output<typeof R.ProofIdentity>;
+type ProofReservation = z.output<typeof R.ProofReservation>;
+type ProofRoot = z.output<typeof R.ProofRoot>;
+
+/** Attested values of every account's base leaf unless overridden (a verified company, $1,250). */
+export const FAKE_PROOF_ATTRIBUTES: Readonly<Record<Attribute, bigint>> = {
+  principal_verification: 2n,
+  per_tx_limit: 25_000_000n,
+  per_day_limit: 200_000_000n,
+  balance: 1_250_000_000n,
+  reserved_amount: 0n,
+  reserved_until: 0n,
+  reserved_for: 0n,
+  account_created_on: 1_749_945_600n,
+  payments_settled: 42n,
+  volume_settled: 1_337_000_000n,
+  escrows_completed: 3n,
+  disputes_lost: 0n,
+  counterparties: 7n,
+};
 
 export interface RecordedRequest {
   method: string;
@@ -80,6 +115,17 @@ export interface FakeApiConfig {
   vaults?: Partial<Vault>[];
   /** Make the early-withdrawal challenge lie about one field (to test the SDK refuses to sign). */
   tamperEarlyWithdrawal?: "contract" | "amount" | "chain" | "deadline" | "domain" | "vault";
+  /** Private proofs. */
+  proofs?: {
+    /** Attested values of the base leaf (default {@link FAKE_PROOF_ATTRIBUTES}). */
+    attributes?: Partial<Record<Attribute, bigint>>;
+    /** Settings of agents never configured (default: disabled, nothing disclosed). */
+    defaultSettings?: { enabled: boolean; disclose: DisclosureClass[] };
+    /** Other agents' leaves in every tree (default 20, so the anonymity set is at least 16). */
+    otherLeaves?: number;
+    /** Status of new reservations (default `active`: in a root at once). */
+    reservationStatus?: "pending" | "active";
+  };
 }
 
 /** Address of the fake deployment's TimeLockVaults contract (`meta.contracts.vaults`). */
@@ -103,6 +149,11 @@ export interface FakeApi {
   sessions: Map<string, Session>;
   ownerOperations: Map<string, OwnerOperation>;
   accounts: Map<string, Account>;
+  proofSettings: Map<string, ProofSettings>;
+  proofIdentities: Map<string, ProofIdentity>;
+  proofReservations: Map<string, ProofReservation>;
+  /** Published roots by lowercase hex (every witness served registers its root). */
+  proofRoots: Map<string, ProofRoot>;
   /** Fail the next matching requests with an injected response. */
   inject(failure: Injected, times?: number): void;
   close(): Promise<void>;
@@ -210,6 +261,10 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
     sessions: new Map(),
     ownerOperations: new Map(),
     accounts: new Map((config.accounts ?? []).map((a) => [a.id as string, makeAccount(a)])),
+    proofSettings: new Map(),
+    proofIdentities: new Map(),
+    proofReservations: new Map(),
+    proofRoots: new Map(),
   };
 
   const app = Fastify({ logger: false });
@@ -1149,6 +1204,273 @@ export async function startFakeApi(config: FakeApiConfig = {}): Promise<FakeApi>
     const stream = state.streams.get(params(request).id);
     if (!stream) return sendProblem(reply, "not_found", "No such stream");
     return stream;
+  });
+
+  // ------------------------------------------------------------ private proofs
+  // Every witness is served from a real depth-20 Poseidon tree (the account's base leaf, its
+  // active reservations' leaves, then other agents), and its root is registered as published,
+  // so proofs made from it verify against GET /v1/proofs/roots/{root}.
+
+  const proofDefaults = config.proofs?.defaultSettings ?? { enabled: false, disclose: [] };
+  const settingsOf = (agentId: string): ProofSettings =>
+    state.proofSettings.get(agentId) ?? {
+      object: "proof_settings",
+      agent_id: agentId,
+      enabled: proofDefaults.enabled,
+      disclose: DISCLOSURE_CLASSES.filter((c) => proofDefaults.disclose.includes(c)),
+      disclosure_mask: disclosureMask(proofDefaults.disclose),
+      updated_at: null,
+    };
+  let epoch = 0n;
+  const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
+
+  on("getProofCircuit", () => {
+    const manifest = loadManifest();
+    return {
+      object: "proof_circuit",
+      schema: CLAIMS_SCHEMA,
+      protocol: "groth16",
+      curve: "bn128",
+      tree_depth: 20,
+      attributes: [...ATTRIBUTES],
+      disclosure_classes: CLASS_ATTRIBUTES,
+      public_signals: manifest.public_signals,
+      constraints: manifest.constraints,
+      verification_key: VERIFICATION_KEY,
+      sha256: manifest.sha256,
+      chain_id: 84532,
+      registry: null,
+      verifier: null,
+    };
+  });
+
+  on("listProofRoots", (request) => {
+    const query = request.query as { status?: string };
+    const data = [...state.proofRoots.values()]
+      .filter((r) => !query.status || r.status === query.status)
+      .reverse();
+    return { data, next_cursor: null };
+  });
+
+  on("getProofRoot", (request, reply) => {
+    const root = state.proofRoots.get((request.params as { root: string }).root.toLowerCase());
+    if (!root) return sendProblem(reply, "not_found", "No such root");
+    return root;
+  });
+
+  on("verifyProof", async (request) => {
+    const input = body<z.output<typeof R.VerifyProofRequest>>(request);
+    const result = await verifyPresentation({
+      request: input.request,
+      presentation: input.presentation,
+      rootResolver: async ({ root }) => {
+        const record = state.proofRoots.get(root.toLowerCase());
+        return record ? rootInfoFromApi(record) : null;
+      },
+    });
+    return {
+      object: "proof_verification",
+      valid: result.valid,
+      reason: result.reason,
+      nullifier: result.nullifier,
+      root: result.root,
+      root_status: result.root ? (state.proofRoots.get(result.root)?.status ?? null) : null,
+    };
+  });
+
+  on("getProofSettings", (request) => settingsOf(params(request).id));
+
+  on("updateProofSettings", async (request, reply) => {
+    const { id } = params(request);
+    const input = body<z.output<typeof R.UpdateProofSettingsRequest>>(request);
+    const current = settingsOf(id);
+    const disclose = DISCLOSURE_CLASSES.filter((c) => input.disclose.includes(c));
+    const widens = (input.enabled && !current.enabled) || disclose.some((c) => !current.disclose.includes(c));
+    if (input.owner_authorization) {
+      const denied = await checkOwner(
+        reply,
+        input.owner_authorization,
+        ownerPayloads.proofsDisclose(id, { enabled: input.enabled, disclose }),
+      );
+      if (denied) return denied;
+    } else if (widens) {
+      return sendProblem(reply, "owner_signature_required", "Widening disclosure needs proofs.disclose");
+    }
+    const next: ProofSettings = {
+      object: "proof_settings",
+      agent_id: id,
+      enabled: input.enabled,
+      disclose,
+      disclosure_mask: disclosureMask(disclose),
+      updated_at: NOW(),
+    };
+    state.proofSettings.set(id, next);
+    return next;
+  });
+
+  on("enrollProofIdentity", (request, reply) => {
+    const { id } = params(request);
+    const input = body<z.output<typeof R.EnrollProofIdentityRequest>>(request);
+    const commitment = fromBytes32(input.identity_commitment);
+    if (commitment === 0n || !isFieldElement(commitment)) {
+      return sendProblem(reply, "invalid_request", "identity_commitment must be a non-zero field element");
+    }
+    const previous = state.proofIdentities.get(id);
+    const identity: ProofIdentity = {
+      object: "proof_identity",
+      account_id: id,
+      identity_commitment: input.identity_commitment.toLowerCase(),
+      created_at: previous?.created_at ?? NOW(),
+      updated_at: NOW(),
+    };
+    state.proofIdentities.set(id, identity);
+    return identity;
+  });
+
+  on("getProofIdentity", (request, reply) => {
+    const identity = state.proofIdentities.get(params(request).id);
+    if (!identity) return sendProblem(reply, "not_found", "No identity enrolled");
+    return identity;
+  });
+
+  on("getProofWitness", (request, reply) => {
+    const { id } = params(request);
+    const query = request.query as { reservation_id?: string };
+    const identity = state.proofIdentities.get(id);
+    if (!identity) {
+      return sendProblem(reply, "not_found", "Enroll an identity commitment first", {
+        reason: "not_enrolled",
+      });
+    }
+    const settings = settingsOf(getAccount(id).agent_id ?? "");
+    if (!settings.enabled)
+      return sendProblem(reply, "invalid_state", "Proofs are not enabled for this agent");
+    const base = { ...FAKE_PROOF_ATTRIBUTES, ...config.proofs?.attributes };
+    const reservations = [...state.proofReservations.values()]
+      .filter((r) => r.account_id === id && r.status === "active")
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const entries = [
+      { attributes: base, reservationId: null as string | null },
+      ...reservations.map((r) => ({
+        attributes: {
+          ...base,
+          reserved_amount: parseAmount(r.amount.amount, 6),
+          reserved_until: BigInt(Math.floor(Date.parse(r.expires_at) / 1000)),
+          reserved_for: BigInt(r.scope_tag),
+        },
+        reservationId: r.id as string | null,
+      })),
+    ];
+    const index = query.reservation_id
+      ? entries.findIndex((e) => e.reservationId === query.reservation_id)
+      : 0;
+    const entry = entries[index];
+    if (!entry) return sendProblem(reply, "not_found", "No active reservation with that id");
+    const commitment = fromBytes32(identity.identity_commitment);
+    const leaves = entries.map((e) => leafHash(commitment, e.attributes, settings.disclosure_mask));
+    for (let i = 0; i < (config.proofs?.otherLeaves ?? 20); i++) {
+      leaves.push(
+        leafHash(BigInt(1_000 + i), { ...base, payments_settled: BigInt(i) }, FULL_DISCLOSURE_MASK),
+      );
+    }
+    const tree = new ClaimsTree(leaves);
+    const rootHex = `0x${tree.root.toString(16).padStart(64, "0")}`;
+    let record = state.proofRoots.get(rootHex);
+    if (!record) {
+      epoch += 1n;
+      const snapshotAt = Math.floor(Date.now() / 1000) - 30;
+      record = {
+        object: "proof_root",
+        root: rootHex,
+        epoch: epoch.toString(),
+        snapshot_at: iso(snapshotAt),
+        published_at: iso(snapshotAt + 12),
+        valid_until: iso(snapshotAt + 7_200),
+        leaf_count: tree.size,
+        status: "published",
+        tx_hash: randomHash(),
+        chain_id: 84532,
+        registry: null,
+      };
+      state.proofRoots.set(rootHex, record);
+    }
+    return buildWitness({
+      tree,
+      index,
+      attributes: entry.attributes,
+      disclosureMask: settings.disclosure_mask,
+      accountId: id,
+      chainId: 84532,
+      registry: null,
+      epoch: BigInt(record.epoch),
+      snapshotAt: Math.floor(Date.parse(record.snapshot_at) / 1000),
+      validUntil: Math.floor(Date.parse(record.valid_until) / 1000),
+      reservationId: entry.reservationId,
+    });
+  });
+
+  on("createProofReservation", (request, reply) => {
+    const { id } = params(request);
+    const input = body<z.output<typeof R.CreateProofReservationRequest>>(request);
+    const expires = Date.parse(input.expires_at);
+    if (expires <= Date.now() || expires > Date.now() + 7 * 86_400_000 + 60_000) {
+      return sendProblem(
+        reply,
+        "invalid_request",
+        "expires_at must be in the future and at most 7 days ahead",
+      );
+    }
+    const status = config.proofs?.reservationStatus ?? "active";
+    const reservation: ProofReservation = {
+      id: newId("proofReservation"),
+      object: "proof_reservation",
+      account_id: id,
+      agent_id: getAccount(id).agent_id ?? newId("agent"),
+      amount: input.amount,
+      scope_tag: input.scope !== undefined ? scopeTagOf(input.scope).toString() : (input.scope_tag as string),
+      expires_at: new Date(expires).toISOString(),
+      status,
+      hold_id: newId("hold"),
+      created_at: NOW(),
+      released_at: null,
+      included_in_epoch: status === "active" ? (epoch + 1n).toString() : null,
+    };
+    state.proofReservations.set(reservation.id, reservation);
+    return reservation;
+  });
+
+  on("listProofReservations", (request) => {
+    const { id } = params(request);
+    const query = request.query as { status?: string; limit?: string; cursor?: string };
+    const all = [...state.proofReservations.values()]
+      .filter((r) => r.account_id === id && (!query.status || r.status === query.status))
+      .reverse();
+    const limit = Number(query.limit ?? 50);
+    const start = query.cursor ? Number(query.cursor) : 0;
+    const data = all.slice(start, start + limit);
+    return { data, next_cursor: start + limit < all.length ? String(start + limit) : null };
+  });
+
+  on("getProofReservation", (request, reply) => {
+    const reservation = state.proofReservations.get(params(request).id);
+    if (!reservation) return sendProblem(reply, "not_found", "No such reservation");
+    return reservation;
+  });
+
+  on("releaseProofReservation", async (request, reply) => {
+    const { id } = params(request);
+    const reservation = state.proofReservations.get(id);
+    if (!reservation) return sendProblem(reply, "not_found", "No such reservation");
+    const input = body<z.output<typeof R.ReleaseProofReservationRequest>>(request);
+    const denied = await checkOwner(
+      reply,
+      input.owner_authorization,
+      ownerPayloads.proofReservationRelease(id),
+    );
+    if (denied) return denied;
+    reservation.status = "released";
+    reservation.released_at = NOW();
+    return reservation;
   });
 
   await app.listen({ port: 0, host: "127.0.0.1" });

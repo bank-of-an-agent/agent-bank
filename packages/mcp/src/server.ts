@@ -1,5 +1,5 @@
-import type { AgentClient, Escrow, Payment } from "@agentbank/sdk";
-import { formatAmount, normalizeAmount, parseAmount } from "@agentbank/sdk";
+import type { AgentClient, Escrow, Payment, ProofRequest, ProofReservation } from "@agentbank/sdk";
+import { formatAmount, normalizeAmount, parseAmount, ProofError } from "@agentbank/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
@@ -9,12 +9,13 @@ import { MCP_SERVER_VERSION } from "./version";
 /**
  * The Agent Bank MCP server: money tools for agents, and nothing else.
  *
- * Eight tools: `get_balance`, `check_spend`, `pay`, `fetch_paid_resource`,
- * `request_payment`, `create_escrow`, `release_escrow`, `list_transactions`.
- * None of them can loosen limits, change policy, or withdraw to the owner:
- * the server holds only the agent's session key (and optional x402 spend
- * key), and every payment is checked by the owner's policy and co-signed by
- * Agent Bank. Amounts are decimal strings in USDC.
+ * Ten tools: `get_balance`, `check_spend`, `pay`, `fetch_paid_resource`,
+ * `request_payment`, `create_escrow`, `release_escrow`, `list_transactions`,
+ * and the private-proof tools `prove_claims` and `reserve_funds_for_proof`.
+ * None of them can loosen limits, change policy or disclosure, or withdraw to
+ * the owner: the server holds only the agent's session key (and optional x402
+ * spend key and proof secret), and every payment is checked by the owner's
+ * policy and co-signed by Agent Bank. Amounts are decimal strings in USDC.
  *
  * @packageDocumentation
  */
@@ -31,7 +32,10 @@ export type AgentBankBackend = Pick<
   | "createEscrow"
   | "releaseEscrow"
   | "listTransactions"
->;
+> & {
+  /** Private proofs (`AgentClient.proofs`): whether a proof secret is set, proving, reserving. */
+  readonly proofs: Pick<AgentClient["proofs"], "canProve" | "answer" | "reserve">;
+};
 
 /** Options of {@link createAgentBankMcpServer}. */
 export interface AgentBankMcpServerOptions {
@@ -75,6 +79,10 @@ const IdempotencyKey = z
   .describe(
     "Optional. A unique string (8-255 chars) for this logical payment. If a call times out or fails with a network error, retry with the SAME key: the payment is then never made twice.",
   );
+const ReservationId = z
+  .string()
+  .regex(new RegExp(`^prv_${ID_BODY}$`), "must be a reservation id like prv_01J…")
+  .describe("Agent Bank proof reservation id (prv_…)");
 const Money = z.object({ amount: z.string(), asset: z.string() });
 const RuleHit = z.object({ rule: z.string(), effect: z.string(), detail: z.string() });
 
@@ -171,11 +179,17 @@ function paymentMessage(status: string): string {
   }
 }
 
+function reservationMessage(r: ProofReservation): string {
+  return r.status === "active"
+    ? `Reserved: provable now ("${r.amount.amount} USDC reserved for you"). The funds stay held until ${r.expires_at}; you cannot spend or release them before.`
+    : `Reserved: provable once the next attested root includes it (status pending, then active). The funds stay held until ${r.expires_at}; you cannot spend or release them before.`;
+}
+
 const TEXT_TYPES =
   /^(text\/|application\/(json|xml|javascript|x-www-form-urlencoded|ld\+json|problem\+json)|[^;]*\+(json|xml))/i;
 
 /**
- * Create the MCP server with the eight money tools, backed by an
+ * Create the MCP server with the ten tools, backed by an
  * {@link AgentBankBackend} (an SDK `AgentClient` in production).
  */
 export function createAgentBankMcpServer(
@@ -194,7 +208,8 @@ export function createAgentBankMcpServer(
         'All amounts are decimal strings in USDC, e.g. "2.50".',
         "Use check_spend before a large or unusual payment. A denied payment (policy_denied) is final: do not retry it with smaller split amounts to get around limits; tell the user instead.",
         "Payments above approval thresholds wait for a human (status requires_approval).",
-        `fetch_paid_resource pays x402 paywalls automatically, at most ${cap} USDC per request.`,
+        `fetch_paid_resource pays x402 paywalls automatically, at most ${cap} USDC per request, and answers private-proof challenges (401 AGENT-PROOF-REQUIRED) when a proof secret is configured.`,
+        "prove_claims proves facts Agent Bank attests about you (verified backer, limits, funds, track record) to one verifier without revealing who you are; each answer still reveals that the requested thresholds hold, so only prove to verifiers you intend to deal with. reserve_funds_for_proof holds funds for one verifier and cannot be undone before it expires.",
         "When retrying pay or create_escrow after a timeout or network error, reuse the same idempotency_key.",
       ].join(" "),
     },
@@ -352,7 +367,7 @@ export function createAgentBankMcpServer(
     "fetch_paid_resource",
     {
       title: "Fetch a paid web resource (x402)",
-      description: `Fetch an http(s) URL. If the server answers 402 Payment Required with an x402 offer, pay it automatically in USDC from this agent's x402 float, within the owner's policy and never more than ${cap} USDC per request (lower it with max_amount), then return the response. Free resources are returned without paying. Text bodies are returned (truncated to ${maxChars} characters); binary bodies are summarized.`,
+      description: `Fetch an http(s) URL. If the server answers 401 with an Agent Bank proof request (AGENT-PROOF-REQUIRED) and this server has a proof secret, prove the requested facts privately (see prove_claims; only for the URL's own host) and retry. If it answers 402 Payment Required with an x402 offer, pay it automatically in USDC from this agent's x402 float, within the owner's policy and never more than ${cap} USDC per request (lower it with max_amount), then return the response. Free resources are returned without paying. Text bodies are returned (truncated to ${maxChars} characters); binary bodies are summarized.`,
       inputSchema: {
         url: z.url().describe("http(s) URL to fetch"),
         method: z
@@ -371,6 +386,11 @@ export function createAgentBankMcpServer(
         amount_paid: z.string().nullable(),
         payment_id: z.string().nullable(),
         transaction: z.string().nullable().describe("On-chain settlement transaction reported by the seller"),
+        proof_presented: z.boolean().describe("Whether a private proof was sent to the server"),
+        nullifier: z
+          .string()
+          .nullable()
+          .describe("Your pseudonym at that server, when it accepted a proof (the same on every visit)"),
         content_type: z.string().nullable(),
         body: z.string(),
         truncated: z.boolean(),
@@ -424,6 +444,8 @@ export function createAgentBankMcpServer(
           amount_paid: result.paid ? (result.amount ?? null) : null,
           payment_id: result.payment?.id ?? null,
           transaction: result.settlement?.transaction || null,
+          proof_presented: result.proofPresented,
+          nullifier: result.nullifier ?? null,
           content_type: contentType,
           body,
           truncated,
@@ -628,6 +650,132 @@ export function createAgentBankMcpServer(
     },
   );
 
+  server.registerTool(
+    "prove_claims",
+    {
+      title: "Prove claims privately (zero-knowledge)",
+      description:
+        "Answer a verifier's Agent Bank proof request (agentbank.proof_request.v1) with a zero-knowledge proof of facts Agent Bank attests about you: e.g. a verified company backs you, your per-transaction limit is at least $5, you hold (or have reserved for this verifier) at least $X, or a track record. Privacy: the verifier learns only that every constraint in the request holds, plus a pseudonym (nullifier) that is the same each time you prove to that verifier and unlinkable across verifiers; it does not learn which agent, account, address or company you are, nor the actual values. Each answer still truthfully reveals that the requested thresholds hold, so many requests with different thresholds can narrow the values down: the client allows a limited number of proofs per verifier per hour, and you should only prove to verifiers you intend to deal with. Give the request object or the base64 AGENT-PROOF-REQUIRED header value. Nothing is sent: retry your request to the verifier with the returned header. fetch_paid_resource does all of this automatically for HTTP resources.",
+      inputSchema: {
+        request: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("The verifier's proof request as a JSON object (type agentbank.proof_request.v1)"),
+        challenge: z
+          .string()
+          .min(1)
+          .max(16_384)
+          .optional()
+          .describe("Or: the base64 value of the verifier's AGENT-PROOF-REQUIRED header"),
+        reservation_id: ReservationId.optional().describe(
+          "Prove from this reservation (by default a matching active reservation is used when the request asks for reserved funds)",
+        ),
+      },
+      outputSchema: {
+        scope: z.string().describe("The verifier the proof is for"),
+        header_name: z.string().describe("AGENT-PROOF"),
+        header_value: z
+          .string()
+          .describe("Send as the AGENT-PROOF header when retrying the verifier's request"),
+        nullifier: z
+          .string()
+          .describe("Your pseudonym for this verifier (the same every time you prove to it)"),
+        root: z.string().describe("The attested-facts root the proof is against"),
+        expires_at: z.string().describe("When the verifier's request expires; send the proof before"),
+        constrained: z.array(z.string()).describe("The attributes the proof makes a statement about"),
+        presentation: z.record(z.string(), z.unknown()).describe("The proof itself (agentbank.proof.v1)"),
+      },
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    },
+    async (input) => {
+      if ((input.request === undefined) === (input.challenge === undefined)) {
+        return toolInputError("Give exactly one of request or challenge");
+      }
+      if (!backend.proofs.canProve) {
+        return toolError(
+          new ProofError(
+            "proof_secret_missing",
+            "This server has no proof secret (AGENTBANK_PROOF_SECRET), so it cannot prove anything about this agent. Ask the owner to configure and enroll one.",
+          ),
+        );
+      }
+      try {
+        const answer = await backend.proofs.answer(
+          (input.request as ProofRequest | undefined) ?? (input.challenge as string),
+          input.reservation_id ? { reservationId: input.reservation_id } : {},
+        );
+        return ok({
+          scope: answer.request.scope,
+          header_name: answer.headerName,
+          header_value: answer.header,
+          nullifier: answer.presentation.nullifier,
+          root: answer.presentation.root,
+          expires_at: new Date(answer.request.expires_at * 1000).toISOString(),
+          constrained: Object.keys(answer.request.constraints),
+          presentation: answer.presentation as unknown as Record<string, unknown>,
+        });
+      } catch (error) {
+        return toolError(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "reserve_funds_for_proof",
+    {
+      title: "Reserve funds for one verifier (proof of funds)",
+      description:
+        "Hold USDC from this agent's available balance for one verifier, so you can then prove \"at least this amount is reserved for you until then\" with prove_claims (or fetch_paid_resource) without revealing who you are. Use it when a verifier's proof request asks for reserved funds (reserved_amount / reserved_until / reserved_for). The reservation is tied to that verifier's scope (its host name) and is worthless to anyone else. You cannot spend the funds through Agent Bank or cancel the reservation before it expires; only the owner can release it early. It becomes provable at the next attested root (status pending, then active). Reserving does not pay the verifier.",
+      inputSchema: {
+        amount: Amount,
+        scope: z
+          .string()
+          .min(1)
+          .max(253)
+          .describe("The verifier's scope: its host name, as in its proof request (scope field)"),
+        expires_in_seconds: z
+          .number()
+          .int()
+          .min(120)
+          .max(604_800)
+          .describe("How long to hold the funds, in seconds (at least 120, at most 604800 = 7 days)"),
+        idempotency_key: IdempotencyKey.optional(),
+      },
+      outputSchema: {
+        reservation_id: z.string(),
+        status: z.string().describe("pending (not yet provable), active, released or expired"),
+        amount: Money,
+        scope_tag: z.string().describe("The 64-bit tag of the verifier's scope the funds are reserved for"),
+        expires_at: z.string(),
+        message: z.string(),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (input) => {
+      try {
+        const reservation = await backend.proofs.reserve(
+          { amount: input.amount, scope: input.scope, forSeconds: input.expires_in_seconds },
+          input.idempotency_key ? { idempotencyKey: input.idempotency_key } : undefined,
+        );
+        return ok({
+          reservation_id: reservation.id,
+          status: reservation.status,
+          amount: reservation.amount,
+          scope_tag: reservation.scope_tag,
+          expires_at: reservation.expires_at,
+          message: reservationMessage(reservation),
+        });
+      } catch (error) {
+        return toolError(error);
+      }
+    },
+  );
+
   return server;
 }
 
@@ -641,4 +789,6 @@ export const TOOL_NAMES = [
   "create_escrow",
   "release_escrow",
   "list_transactions",
+  "prove_claims",
+  "reserve_funds_for_proof",
 ] as const;

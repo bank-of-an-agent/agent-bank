@@ -52,13 +52,15 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agentbank/proofs": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
+    "poseidon-lite": "0.3.0",
+    "snarkjs": "0.7.6",
     "viem": "^2.57.4",
     "zod": "^4.6.6"
   },
   "devDependencies": {
     "@agentbank/core": "workspace:*",
+    "@agentbank/proofs": "workspace:*",
     "@agentbank/sdk": "workspace:*",
     "tsup": "^8.5.1"
   }

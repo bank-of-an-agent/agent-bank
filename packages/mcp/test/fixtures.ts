@@ -1,10 +1,13 @@
 import type {
+  AgentFetchResult,
   Balances,
   Escrow,
   Payment,
   PaymentRequest,
   PolicyDecision,
-  X402FetchResult,
+  ProofAnswer,
+  ProofRequest,
+  ProofReservation,
 } from "@agentbank/sdk";
 import { vi } from "vitest";
 import type { AgentBankBackend } from "../src";
@@ -123,7 +126,7 @@ export function paymentRequest(): PaymentRequest {
   };
 }
 
-export function fetchResult(overrides: Partial<X402FetchResult> = {}): X402FetchResult {
+export function fetchResult(overrides: Partial<AgentFetchResult> = {}): AgentFetchResult {
   return {
     response: new Response(JSON.stringify({ temp: 21 }), {
       status: 200,
@@ -133,6 +136,68 @@ export function fetchResult(overrides: Partial<X402FetchResult> = {}): X402Fetch
     amount: "0.01",
     payment: payment({ kind: "x402", status: "requires_signature" }),
     settlement: { success: true, transaction: `0x${"cd".repeat(32)}`, network: "eip155:84532" },
+    proofPresented: false,
+    ...overrides,
+  };
+}
+
+export const NULLIFIER: `0x${string}` = `0x${"0a".repeat(32)}`;
+
+export function proofRequest(): ProofRequest {
+  return {
+    type: "agentbank.proof_request.v1",
+    scope: "api.seller.example",
+    request_id: "9f2c1b0e5a7d4c3b8e6f1a2b3c4d5e6f",
+    nonce: `0x${"5e".repeat(31)}`,
+    issued_at: 1_760_000_000,
+    expires_at: 1_760_000_300,
+    constraints: { principal_verification: { min: "2", max: "2" }, per_tx_limit: { min: "5.00" } },
+    max_root_age_seconds: 7_200,
+    min_anonymity_set: 16,
+    chain_id: 84532,
+    registry: null,
+  };
+}
+
+export function proofAnswer(): ProofAnswer {
+  return {
+    request: proofRequest(),
+    presentation: {
+      type: "agentbank.proof.v1",
+      request_hash: `0x${"0b".repeat(32)}`,
+      root: `0x${"0c".repeat(32)}`,
+      nullifier: NULLIFIER,
+      proof: {
+        pi_a: ["1", "2", "1"],
+        pi_b: [
+          ["1", "2"],
+          ["3", "4"],
+          ["1", "0"],
+        ],
+        pi_c: ["1", "2", "1"],
+        protocol: "groth16",
+        curve: "bn128",
+      },
+    },
+    headerName: "AGENT-PROOF",
+    header: "eyJyZXF1ZXN0Ijp7fX0=",
+  };
+}
+
+export function reservation(overrides: Partial<ProofReservation> = {}): ProofReservation {
+  return {
+    id: "prv_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    object: "proof_reservation",
+    account_id: ACCT,
+    agent_id: "agt_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    amount: { amount: "500.00", asset: "USDC" },
+    scope_tag: "1311768467463790320",
+    expires_at: NOW,
+    status: "pending",
+    hold_id: "hld_01JABCDEFGHJKMNPQRSTVWXYZ0",
+    created_at: NOW,
+    released_at: null,
+    included_in_epoch: null,
     ...overrides,
   };
 }
@@ -161,5 +226,10 @@ export function mockBackend() {
       data: [payment(), payment({ id: "pay_01JABCDEFGHJKMNPQRSTVWXYZ1", status: "submitted" })],
       next_cursor: "c2",
     })),
+    proofs: {
+      canProve: true as boolean,
+      answer: vi.fn<AgentBankBackend["proofs"]["answer"]>(async () => proofAnswer()),
+      reserve: vi.fn<AgentBankBackend["proofs"]["reserve"]>(async () => reservation()),
+    },
   } satisfies AgentBankBackend;
 }

@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FileKeyStore } from "@agentbank/sdk/node";
+import { generateProofSecret } from "@agentbank/sdk";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ConfigError, createAgentClient, loadConfig } from "../src";
@@ -108,6 +109,48 @@ describe("loadConfig", () => {
     }
   });
 
+  it("reads an optional proof secret (environment or key store) and enables proofs with it", async () => {
+    const base = {
+      AGENTBANK_ACCOUNT_ID: ACCT,
+      AGENTBANK_SESSION_ID: SES,
+      AGENTBANK_SESSION_KEY: generatePrivateKey(),
+    };
+    const without = await loadConfig(base);
+    expect(without.proofSecret).toBeUndefined();
+    expect(createAgentClient(without).proofs.canProve).toBe(false);
+
+    const secret = generateProofSecret();
+    const config = await loadConfig({ ...base, AGENTBANK_PROOF_SECRET: ` ${secret} ` });
+    expect(config.proofSecret).toBe(secret);
+    const client = createAgentClient(config);
+    expect(client.proofs.canProve).toBe(true);
+    expect(client.proofs.identityCommitment).toMatch(/^0x[0-9a-f]{64}$/);
+
+    const path = join(dir, "agent.keystore.json");
+    const store = new FileKeyStore({ path });
+    await store.set("session", generatePrivateKey());
+    await store.set(`proof:${ACCT}`, secret);
+    const stored = await loadConfig({
+      AGENTBANK_ACCOUNT_ID: ACCT,
+      AGENTBANK_SESSION_ID: SES,
+      AGENTBANK_KEYSTORE: path,
+    });
+    expect(stored.proofSecret).toBe(secret);
+
+    // A key-store entry that is not a BN254 field element is refused by name, without its value.
+    const outOfField: `0x${string}` = `0x4${"0".repeat(62)}1`;
+    await store.set("proof", outOfField);
+    await store.delete(`proof:${ACCT}`);
+    const error = await loadConfig({
+      AGENTBANK_ACCOUNT_ID: ACCT,
+      AGENTBANK_SESSION_ID: SES,
+      AGENTBANK_KEYSTORE: path,
+    }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ConfigError);
+    expect((error as Error).message).toMatch(/"proof" entry of AGENTBANK_KEYSTORE/);
+    expect((error as Error).message).not.toContain(outOfField.slice(2));
+  });
+
   it("reads keys from a FileKeyStore", async () => {
     const path = join(dir, "agent.keystore.json");
     const store = new FileKeyStore({ path });
@@ -183,6 +226,24 @@ describe("loadConfig", () => {
           AGENTBANK_KEYSTORE: join(dir, "missing.json"),
         },
         /No session key/,
+      ],
+      [
+        {
+          AGENTBANK_ACCOUNT_ID: ACCT,
+          AGENTBANK_SESSION_ID: SES,
+          AGENTBANK_SESSION_KEY: generatePrivateKey(),
+          AGENTBANK_PROOF_SECRET: secretish,
+        },
+        /AGENTBANK_PROOF_SECRET must be a 0x-prefixed 32-byte hex/,
+      ],
+      [
+        {
+          AGENTBANK_ACCOUNT_ID: ACCT,
+          AGENTBANK_SESSION_ID: SES,
+          AGENTBANK_SESSION_KEY: generatePrivateKey(),
+          AGENTBANK_PROOF_SECRET: `0x${"0".repeat(64)}`,
+        },
+        /AGENTBANK_PROOF_SECRET/,
       ],
     ];
     for (const [env, message] of cases) {

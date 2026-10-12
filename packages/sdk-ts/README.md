@@ -21,6 +21,9 @@ non-custodial USDC account with hard spending limits, pay other agents and HTTP 
   agent's spend key, after Agent Bank checks policy. Interoperates with the official x402 packages.
 - x402 seller: `createPaywall` with Express, Fastify, Hono, Next.js and Node `http` adapters;
   settles before serving above $1.
+- Private proofs: an agent proves what Agent Bank attests about it (a verified company backs it,
+  its limits, funds reserved for you, its track record) without revealing which agent it is;
+  sellers admit agents with `@agentbank/sdk/proof-server`.
 - Webhook verification and typed event parsing; a 0600 file key store for Node.
 
 ## Requirements
@@ -82,6 +85,72 @@ const paywall = createPaywall({ facilitatorUrl: "http://localhost:8080/v1/x402",
 const handler = nodePaywall(paywall, (_req, res) => res.end(JSON.stringify({ ok: true })));
 ```
 
+### Private proofs
+
+An agent proves facts Agent Bank attests about it ("a verified company backs me", "I can pay $5 a
+call", "$500 is reserved for you") without revealing which agent, account or company it is
+([design](../../docs/private-proofs.md)). The secret never leaves the agent; Agent Bank only sees
+`Poseidon(secret)`. The owner decides what may be disclosed.
+
+```ts
+import { AgentClient, generateProofSecret } from "@agentbank/sdk";
+
+// Owner: enable proofs and choose classes (owner-signed only when it widens disclosure).
+await principal.proofs.configure(agentId, {
+  enabled: true,
+  disclose: ["principal", "limits", "reservations"],
+});
+
+// Agent: keep the secret like a key, enroll its commitment once.
+const agent = new AgentClient({ baseUrl, accountId, session, spendKey, proofSecret: generateProofSecret() });
+await agent.proofs.enroll();
+
+// Proof challenges (401 AGENT-PROOF-REQUIRED) are answered before x402 payments, in one call.
+const { response, proofPresented, nullifier, paid } = await agent.fetchWithPayment(
+  "https://api.seller.example/report",
+);
+
+// Proof of funds: hold $500 for one verifier (no spending or cancelling it until it expires);
+// a request asking for reserved funds is then proved from it automatically.
+await agent.proofs.reserve({ amount: "500.00", scope: "api.seller.example", forSeconds: 3600 });
+const { header } = await agent.proofs.answer(request); // send as AGENT-PROOF
+```
+
+`prove` / `answer` refuse locally with a typed `ProofError` (`unsatisfiable`, `undisclosed`,
+`reservation_required`, `scope_mismatch`, …) and answer at most 30 requests per verifier and hour
+(`proofs.maxPresentationsPerScopePerHour`), since many questions with different thresholds would
+narrow the values down. Proving runs in Node (about 1.5 s); the circuit files ship in `dist/circuits/`.
+
+Sellers verify locally, statelessly, against roots anchored on Base:
+
+```ts
+import {
+  apiRootResolver,
+  canPayPerTx,
+  createProofGate,
+  honoProofGate,
+  verifiedCompany,
+} from "@agentbank/sdk/proof-server";
+import { honoPaywall } from "@agentbank/sdk/x402-server";
+
+const gate = createProofGate({
+  scope: "api.seller.example", // your host name
+  key: process.env.PROOF_GATE_KEY!, // at least 32 bytes; nonces are HMACs, no per-challenge state
+  require: [verifiedCompany(), canPayPerTx("5.00")],
+  rootResolver: apiRootResolver("https://api.agentbank.example"), // or chainRootResolver(client, registry)
+});
+// Gate first, then the paywall: the agent's paid retry reuses its proof.
+app.get(
+  "/report",
+  honoProofGate(gate, { beforePaywall: true }),
+  honoPaywall(paywall),
+  (c) => c.json({ agent: c.get("agentProof").nullifier }), // a stable pseudonym, different at every seller
+);
+```
+
+Adapters: `withProofGate` (Web `Request`/`Response`), `honoProofGate`, `expressProofGate`,
+`nodeProofGate`, `fastifyProofGate`; `proofOf(request)` returns the verified proof.
+
 Runnable versions: [`examples/`](examples) (principal setup, agent payment, x402 fetch, seller
 paywall). Guides: the [documentation site](../../apps/docs).
 
@@ -89,7 +158,8 @@ paywall). Guides: the [documentation site](../../apps/docs).
 
 ```bash
 pnpm --filter @agentbank/sdk test        # fake API that verifies signatures; x402 interop with @x402/*
-pnpm --filter @agentbank/sdk build       # ESM + CJS + types in dist/, @agentbank/core bundled
+pnpm --filter @agentbank/sdk build       # ESM + CJS + types in dist/, @agentbank/core and /proofs bundled
+pnpm --filter @agentbank/sdk smoke:dist  # the built SDK (ESM and CJS) proves with dist/circuits/
 ```
 
 A test fails whenever an operation in the route registry has no SDK method.

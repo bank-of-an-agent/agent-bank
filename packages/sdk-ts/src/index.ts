@@ -11,6 +11,9 @@
  *   `setupAgentAccount` (account → spend key + float-recovery permit →
  *   first session), `grantSession`, policies, mandates, owner rotation and
  *   other owner-signed changes.
+ * - Private proofs: `agent.proofs.enroll/prove/reserve`, proof challenges
+ *   answered by `fetchWithPayment` ({@link fetchWithProof} standalone),
+ *   `principal.proofs.configure`. Verifiers use `@agentbank/sdk/proof-server`.
  * - x402 client helpers ({@link wrapFetch}), webhook verification, key
  *   generation and key stores. Seller middleware lives in
  *   `@agentbank/sdk/x402-server`; the Node file key store in `@agentbank/sdk/node`.
@@ -43,6 +46,7 @@ export {
   toPaymentTarget,
   type AgentBankPayerOptions,
   type AgentClientOptions,
+  type AgentFetchResult,
   type AgentX402Options,
   type CheckSpendInput,
   type CreateEscrowFlowInput,
@@ -63,6 +67,43 @@ export {
   type SetupAgentAccountInput,
   type SetupAgentAccountResult,
 } from "./principal";
+
+export {
+  AgentProofs,
+  DEFAULT_MAX_PRESENTATIONS_PER_SCOPE_PER_HOUR,
+  isProofSecret,
+  MAX_RESERVATION_SECONDS,
+  MIN_RESERVATION_SECONDS,
+  releaseProofResources,
+  type AgentProofOptions,
+  type AgentProofsConfig,
+  type ProofAnswer,
+  type ProveOptions,
+  type Prover,
+  type ProverArtifacts,
+  type ProverInput,
+  type ReserveInput,
+} from "./proofs/agent";
+export { PrincipalProofs, type ConfigureProofsInput, type OwnerAuthorizer } from "./proofs/principal";
+export {
+  createProofFetch,
+  fetchWithProof,
+  scopeMatchesHost,
+  type ProofAnswerer,
+  type ProofFetchDetails,
+  type ProofFetchOptions,
+  type ProofFetchResult,
+  type ProofFetchSession,
+} from "./proofs/fetch";
+export {
+  ProofError,
+  type ProofErrorContext,
+  type ProofErrorReason,
+  type ReservationNeeded,
+} from "./proofs/errors";
+export { generateProofSecret, identityCommitment } from "@agentbank/proofs/tree";
+export { scopeField, scopeTagOf } from "@agentbank/proofs/field";
+export { parseProofRequest, requestHash } from "@agentbank/proofs/request";
 
 export {
   EARLY_WITHDRAWAL_TYPES,

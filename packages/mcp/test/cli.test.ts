@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { verifyRequest } from "@agentbank/core";
+import { generateProofSecret } from "@agentbank/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -18,6 +19,7 @@ import { balances } from "./fixtures";
 const ACCT = "acct_01JABCDEFGHJKMNPQRSTVWXYZ0";
 const SES = "ses_01JABCDEFGHJKMNPQRSTVWXYZ0";
 const sessionKey = generatePrivateKey();
+const proofSecret = generateProofSecret();
 const sessionAddress = privateKeyToAccount(sessionKey).address;
 
 let api: Server;
@@ -83,6 +85,7 @@ describe("agentbank-mcp over stdio", () => {
         AGENTBANK_ACCOUNT_ID: ACCT,
         AGENTBANK_SESSION_ID: SES,
         AGENTBANK_SESSION_KEY: sessionKey,
+        AGENTBANK_PROOF_SECRET: proofSecret,
       },
       stderr: "pipe",
     });
@@ -107,6 +110,8 @@ describe("agentbank-mcp over stdio", () => {
     }
     expect(stderr).toContain("ready on stdio");
     expect(stderr).toContain("x402 disabled");
+    expect(stderr).toContain("private proofs enabled");
     expect(stderr).not.toContain(sessionKey.slice(2));
+    expect(stderr).not.toContain(proofSecret.slice(2));
   }, 30_000);
 });

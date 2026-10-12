@@ -1,7 +1,7 @@
 {
   "name": "@agentbank/sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for Agent Bank: a typed client for the REST API, session keys and RFC 9421 request signing, owner authorizations, an x402 paying fetch, x402 seller middleware and webhook verification.",
+  "description": "TypeScript SDK for Agent Bank: a typed client for the REST API, session keys and RFC 9421 request signing, owner authorizations, an x402 paying fetch, x402 seller middleware, private proofs (agent proving and a seller proof gate) and webhook verification.",
   "keywords": [
     "agent-bank",
     "ai-agents",
@@ -10,7 +10,9 @@
     "payments",
     "base",
     "rfc9421",
-    "eip-3009"
+    "eip-3009",
+    "zero-knowledge",
+    "groth16"
   ],
   "license": "Apache-2.0",
   "repository": {
@@ -26,6 +28,7 @@
     ".": "./src/index.ts",
     "./node": "./src/node.ts",
     "./x402-server": "./src/x402-server.ts",
+    "./proof-server": "./src/proof-server.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -64,6 +67,16 @@
           "default": "./dist/x402-server.cjs"
         }
       },
+      "./proof-server": {
+        "import": {
+          "types": "./dist/proof-server.d.ts",
+          "default": "./dist/proof-server.js"
+        },
+        "require": {
+          "types": "./dist/proof-server.d.cts",
+          "default": "./dist/proof-server.cjs"
+        }
+      },
       "./package.json": "./package.json"
     }
   },
@@ -73,6 +86,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "smoke:dist": "tsx scripts/smoke-dist.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -80,12 +94,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agentbank/proofs": "workspace:*",
+    "poseidon-lite": "0.3.0",
+    "snarkjs": "0.7.6",
     "viem": "^2.57.4",
     "zod": "^4.6.6"
   },
   "devDependencies": {
     "@agentbank/core": "workspace:*",
+    "@agentbank/proofs": "workspace:*",
     "@types/express": "^5.0.6",
     "@x402/core": "2.28.0",
     "@x402/evm": "2.28.0",

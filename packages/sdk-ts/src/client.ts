@@ -35,6 +35,7 @@ import {
   PaymentRequests,
   Payments,
   Policies,
+  Proofs,
   Sandbox,
   Sessions,
   Streams,
@@ -159,7 +160,7 @@ interface RawResponse {
 /** Status codes worth retrying for retry-safe requests. */
 const RETRYABLE_STATUS = new Set([408, 500, 502, 503, 504]);
 /** POST routes without an idempotency key that are nevertheless safe to repeat (read-only). */
-const SAFE_POSTS = new Set<string>(["checkPolicy", "x402Verify"]);
+const SAFE_POSTS = new Set<string>(["checkPolicy", "x402Verify", "verifyProof"]);
 
 const DEFAULT_BASE_URL = "http://localhost:8080";
 
@@ -214,6 +215,8 @@ export class AgentBankClient {
   readonly webhooks: Webhooks;
   readonly billing: Billing;
   readonly sandbox: Sandbox;
+  /** Private proofs: circuit, roots and verification (public), settings, identity, witnesses, reservations. */
+  readonly proofs: Proofs;
 
   /** Session credentials used to sign agent requests (if configured). */
   readonly #session: SessionCredentials | undefined;
@@ -285,6 +288,7 @@ export class AgentBankClient {
     this.webhooks = new Webhooks(this);
     this.billing = new Billing(this);
     this.sandbox = new Sandbox(this);
+    this.proofs = new Proofs(this);
   }
 
   /**

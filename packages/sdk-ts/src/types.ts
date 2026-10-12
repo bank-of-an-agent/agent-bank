@@ -248,3 +248,44 @@ export type CreateWebhookEndpointInput = z.input<typeof R.CreateWebhookEndpointR
 export type Event = z.output<typeof R.Event>;
 /** RFC 9457 problem details as returned by the API (`application/problem+json`). */
 export type Problem = z.output<typeof R.Problem>;
+
+// ------------------------------------------------------------------ private proofs
+
+/** A disclosure class an owner may let an agent prove (`principal`, `limits`, `balance`, …). */
+export type DisclosureClass = z.output<typeof R.DisclosureClass>;
+/** One of the 13 attested attributes of schema `agentbank.claims.v1`. */
+export type ProofAttribute = z.output<typeof R.ProofAttribute>;
+/** Why a presentation was refused (`malformed`, `request_expired`, `nonce_reused`, …). */
+export type ProofFailureReason = z.output<typeof R.ProofFailureReason>;
+/** Inclusive `[min, max]` bound on one attribute (decimal USDC for money attributes). */
+export type ProofBound = z.output<typeof R.ProofBound>;
+/** A verifier's proof request (`AGENT-PROOF-REQUIRED`). */
+export type ProofRequest = z.output<typeof R.ProofRequest>;
+/** An agent's answer to a proof request (sent in `AGENT-PROOF` with the request). */
+export type ProofPresentation = z.output<typeof R.ProofPresentation>;
+/** The claims circuit, its verification key and where its roots are published. */
+export type ProofCircuit = z.output<typeof R.ProofCircuit>;
+/** A Merkle root of attested facts anchored on Base. */
+export type ProofRoot = z.output<typeof R.ProofRoot>;
+/** Lifecycle status of a root. */
+export type ProofRootStatus = z.output<typeof R.ProofRootStatus>;
+/** What an agent may prove about itself (the owner's decision). */
+export type ProofSettings = z.output<typeof R.ProofSettings>;
+/** Body of `PUT /v1/agents/{id}/proofs/settings`. */
+export type UpdateProofSettingsInput = z.input<typeof R.UpdateProofSettingsRequest>;
+/** The agent's enrolled identity commitment, `Poseidon(secret)`. */
+export type ProofIdentity = z.output<typeof R.ProofIdentity>;
+/** Body of `PUT /v1/accounts/{id}/proofs/identity`. */
+export type EnrollProofIdentityInput = z.input<typeof R.EnrollProofIdentityRequest>;
+/** The agent's leaf values and Merkle path against a published root. */
+export type ProofWitness = z.output<typeof R.ProofWitness>;
+/** Funds held for one verifier (proof of funds). */
+export type ProofReservation = z.output<typeof R.ProofReservation>;
+/** Lifecycle status of a reservation: `pending` until a root includes it, then `active`, `released` or `expired`. */
+export type ProofReservationStatus = z.output<typeof R.ProofReservationStatus>;
+/** Body of `POST /v1/accounts/{id}/proofs/reservations`. */
+export type CreateProofReservationInput = z.input<typeof R.CreateProofReservationRequest>;
+/** Body of `POST /v1/proofs/reservations/{id}/release` (owner authorization). */
+export type ReleaseProofReservationInput = z.input<typeof R.ReleaseProofReservationRequest>;
+/** Result of `POST /v1/proofs/verify`. */
+export type ProofVerification = z.output<typeof R.VerifyProofResponse>;
