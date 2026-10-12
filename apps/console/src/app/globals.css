@@ -1,0 +1,228 @@
+@import "tailwindcss";
+
+/*
+ * Agent Bank console theme. Brand palette (dark / light):
+ *   background #070B16 → #0D1630 / #FFFFFF, #F6F8FD   surface #0F1A35 / #FFFFFF
+ *   border #263A66 / #D3DCEE   text #F1F4FB / #0B1222   muted #93A1C2 / #5B6680
+ *   blue #5B8CFF / #2F5BEA   teal (session key) #2DD4BF / #0D9488
+ *   amber (owner key) #F5B947 / #D99A1E   violet (co-signer) #A78BFA / #8B5CF6
+ * Text variants (`*-fg`) are darkened in light mode where the brand hue is below
+ * WCAG AA on white; brand hues stay for fills, rings and icons.
+ */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-field: var(--field);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+
+  --color-blue: var(--blue);
+  --color-blue-fg: var(--blue-fg);
+  --color-blue-bg: var(--blue-bg);
+  --color-teal: var(--teal);
+  --color-teal-fg: var(--teal-fg);
+  --color-teal-bg: var(--teal-bg);
+  --color-amber: var(--amber);
+  --color-amber-fg: var(--amber-fg);
+  --color-amber-bg: var(--amber-bg);
+  --color-on-amber: var(--on-amber);
+  --color-violet: var(--violet);
+  --color-violet-fg: var(--violet-fg);
+  --color-violet-bg: var(--violet-bg);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-bg: var(--danger-bg);
+  --color-on-danger: var(--on-danger);
+  --color-warn: var(--warn);
+  --color-warn-fg: var(--warn-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-neutral-fg: var(--neutral-fg);
+  --color-neutral-bg: var(--neutral-bg);
+}
+
+:root {
+  color-scheme: light;
+  --page: #f6f8fd;
+  --page-top: #ffffff;
+  --page-bottom: #eef3ff;
+  --surface: #ffffff;
+  --subtle: #f1f5fc;
+  --line: #d3dcee;
+  --field: #7a88a8;
+  --fg: #0b1222;
+  --muted: #5b6680;
+  --ring: #2f5bea;
+
+  --primary: #2f5bea;
+  --primary-hover: #2449c7;
+  --on-primary: #ffffff;
+
+  --blue: #2f5bea;
+  --blue-fg: #2f5bea;
+  --blue-bg: #eaf0fe;
+  --teal: #0d9488;
+  --teal-fg: #0f766e;
+  --teal-bg: #e6f6f4;
+  --amber: #d99a1e;
+  --amber-fg: #8a5a00;
+  --amber-bg: #fdf3de;
+  --on-amber: #0b1222;
+  --violet: #8b5cf6;
+  --violet-fg: #6d28d9;
+  --violet-bg: #f1ecfe;
+  --danger: #c62828;
+  --danger-fg: #b42318;
+  --danger-bg: #fdecec;
+  --on-danger: #ffffff;
+  --warn: #b45309;
+  --warn-fg: #9a3412;
+  --warn-bg: #fff1e6;
+  --neutral-fg: #5b6680;
+  --neutral-bg: #eef1f7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #070b16;
+    --page-top: #070b16;
+    --page-bottom: #0d1630;
+    --surface: #0f1a35;
+    --subtle: #13203f;
+    --line: #263a66;
+    --field: #5674b3;
+    --fg: #f1f4fb;
+    --muted: #93a1c2;
+    --ring: #8fb0ff;
+    --primary: #5b8cff;
+    --primary-hover: #7aa2ff;
+    --on-primary: #070b16;
+    --blue: #5b8cff;
+    --blue-fg: #8fb0ff;
+    --blue-bg: #14244a;
+    --teal: #2dd4bf;
+    --teal-fg: #2dd4bf;
+    --teal-bg: #0e2b33;
+    --amber: #f5b947;
+    --amber-fg: #f5b947;
+    --amber-bg: #2e2414;
+    --on-amber: #0b1222;
+    --violet: #a78bfa;
+    --violet-fg: #c4b5fd;
+    --violet-bg: #221a45;
+    --danger: #ff7b7b;
+    --danger-fg: #ff9b9b;
+    --danger-bg: #341719;
+    --on-danger: #070b16;
+    --warn: #fb923c;
+    --warn-fg: #fdba74;
+    --warn-bg: #33200f;
+    --neutral-fg: #b4c0dc;
+    --neutral-bg: #1a2747;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #070b16;
+  --page-top: #070b16;
+  --page-bottom: #0d1630;
+  --surface: #0f1a35;
+  --subtle: #13203f;
+  --line: #263a66;
+  --field: #5674b3;
+  --fg: #f1f4fb;
+  --muted: #93a1c2;
+  --ring: #8fb0ff;
+  --primary: #5b8cff;
+  --primary-hover: #7aa2ff;
+  --on-primary: #070b16;
+  --blue: #5b8cff;
+  --blue-fg: #8fb0ff;
+  --blue-bg: #14244a;
+  --teal: #2dd4bf;
+  --teal-fg: #2dd4bf;
+  --teal-bg: #0e2b33;
+  --amber: #f5b947;
+  --amber-fg: #f5b947;
+  --amber-bg: #2e2414;
+  --on-amber: #0b1222;
+  --violet: #a78bfa;
+  --violet-fg: #c4b5fd;
+  --violet-bg: #221a45;
+  --danger: #ff7b7b;
+  --danger-fg: #ff9b9b;
+  --danger-bg: #341719;
+  --on-danger: #070b16;
+  --warn: #fb923c;
+  --warn-fg: #fdba74;
+  --warn-bg: #33200f;
+  --neutral-fg: #b4c0dc;
+  --neutral-bg: #1a2747;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--page);
+    background-image: linear-gradient(180deg, var(--page-top) 0%, var(--page-bottom) 100%);
+    background-attachment: fixed;
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--blue) 30%, transparent);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  dialog::backdrop {
+    background: rgb(7 11 22 / 0.6);
+    backdrop-filter: blur(2px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
