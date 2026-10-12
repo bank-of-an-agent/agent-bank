@@ -64,11 +64,11 @@ endpoint service that allowlists one consumer account and requires explicit acce
 +----------------------------------------------+   +--------------------------+
 ```
 
-| Account | Holds | Inbound from | Outbound to |
-| --- | --- | --- | --- |
-| **co-signer** | Policy engine + co-signer (Fargate), the secp256k1 KMS key, `COSIGNER_SHARED_SECRET`, the audit archive (S3 Object Lock), key-usage CloudTrail trail | API account only, via PrivateLink (allowlisted, accepted) | AWS APIs through VPC endpoints only (KMS, Secrets Manager, ECR, Logs, S3 restricted to ECR layers and its own audit prefix). No internet route exists. |
-| **api** | Public ALB + WAF, `api`, `facilitator`, `console`, ledger PostgreSQL 16, vendor secrets (Pimlico, KYB, screening, RPC, webhook key, testnet relayer key) | Internet (HTTPS); indexer account (only `/internal/*`, via PrivateLink) | Co-signer (PrivateLink), vendors and RPC (NAT), audit archive (S3 API, `api/` prefix, PutObject only) |
-| **indexer** | Chain indexer + reconciliation worker, its own PostgreSQL, RPC URL, reconciliation and lag alarms | Nothing | RPC provider (NAT), API `/internal/*` (PrivateLink) |
+| Account       | Holds                                                                                                                                                    | Inbound from                                                            | Outbound to                                                                                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **co-signer** | Policy engine + co-signer (Fargate), the secp256k1 KMS key, `COSIGNER_SHARED_SECRET`, the audit archive (S3 Object Lock), key-usage CloudTrail trail     | API account only, via PrivateLink (allowlisted, accepted)               | AWS APIs through VPC endpoints only (KMS, Secrets Manager, ECR, Logs, S3 restricted to ECR layers and its own audit prefix). No internet route exists. |
+| **api**       | Public ALB + WAF, `api`, `facilitator`, `console`, ledger PostgreSQL 16, vendor secrets (Pimlico, KYB, screening, RPC, webhook key, testnet relayer key) | Internet (HTTPS); indexer account (only `/internal/*`, via PrivateLink) | Co-signer (PrivateLink), vendors and RPC (NAT), audit archive (S3 API, `api/` prefix, PutObject only)                                                  |
+| **indexer**   | Chain indexer + reconciliation worker, its own PostgreSQL, RPC URL, reconciliation and lag alarms                                                        | Nothing                                                                 | RPC provider (NAT), API `/internal/*` (PrivateLink)                                                                                                    |
 
 Properties enforced in code:
 
@@ -81,7 +81,7 @@ Properties enforced in code:
 - **Fail closed.** The API learns the co-signer's address only from `COSIGNER_URL`. Without
   it, or while the co-signer is down, payments must be refused. The co-signer has its own
   latency, availability and healthy-target alarms in its own account.
-- **No secret values in code, plans or state.** Only secret *containers* are created. Values
+- **No secret values in code, plans or state.** Only secret _containers_ are created. Values
   are written out of band. Each secret's resource policy denies `GetSecretValue` to everyone
   except the consuming service's execution role, so operators can write values but cannot
   read them back. RDS master passwords are RDS-managed.
@@ -93,8 +93,8 @@ Properties enforced in code:
 - **Mainnet guard.** Every root's `chain_id` variable rejects 8453 and accepts only 84532, and
   `tofu test` proves it.
 
-KMS note: AWS KMS has no CloudTrail *data event* type. Every KMS call, including each `Sign`,
-is a *management* event. The `cosigner-kms` module therefore creates a dedicated trail that
+KMS note: AWS KMS has no CloudTrail _data event_ type. Every KMS call, including each `Sign`,
+is a _management_ event. The `cosigner-kms` module therefore creates a dedicated trail that
 records all management events (KMS included). It also records S3 data events for the audit
 prefixes, delivers to the WORM bucket and CloudWatch Logs, and raises real-time alarms on any
 unexpected signer, any key policy or state change, and any denied call against the key.
@@ -121,11 +121,11 @@ written by OpenTofu; Terraform users run `terraform init -upgrade` once.
 
 ## Required inputs
 
-| Root | Required | Cross-account inputs (outputs of other roots) |
-| --- | --- | --- |
-| `envs/sandbox/cosigner` | `account_id`, `api_account_id`, `image_tag` | `accepted_api_endpoint_ids` <- api `cosigner_vpc_endpoint_id` |
-| `envs/sandbox/api` | `account_id`, `image_tag`, `api_hostname`, `facilitator_hostname`, `console_hostname`, `alb_certificate_arn` | `cosigner_endpoint_service_name`, `audit_log_bucket_arn`, `audit_log_kms_key_arn` <- cosigner; `indexer_account_id`; `accepted_indexer_endpoint_ids` <- indexer `api_internal_vpc_endpoint_id` |
-| `envs/sandbox/indexer` | `account_id`, `image_tag` | `api_internal_endpoint_service_name` <- api `internal_api_endpoint_service_name` |
+| Root                    | Required                                                                                                     | Cross-account inputs (outputs of other roots)                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `envs/sandbox/cosigner` | `account_id`, `api_account_id`, `image_tag`                                                                  | `accepted_api_endpoint_ids` <- api `cosigner_vpc_endpoint_id`                                                                                                                                  |
+| `envs/sandbox/api`      | `account_id`, `image_tag`, `api_hostname`, `facilitator_hostname`, `console_hostname`, `alb_certificate_arn` | `cosigner_endpoint_service_name`, `audit_log_bucket_arn`, `audit_log_kms_key_arn` <- cosigner; `indexer_account_id`; `accepted_indexer_endpoint_ids` <- indexer `api_internal_vpc_endpoint_id` |
+| `envs/sandbox/indexer`  | `account_id`, `image_tag`                                                                                    | `api_internal_endpoint_service_name` <- api `internal_api_endpoint_service_name`                                                                                                               |
 
 Each root ships a `terraform.tfvars.example`. Real `*.tfvars` files are git-ignored.
 `region` defaults to `us-east-1` and must be the same in all three accounts, because
@@ -187,13 +187,13 @@ final snapshot.
 
 What the infrastructure provides to, and expects from, the apps:
 
-| Service | Port | Env (non-secret) | Secrets (Secrets Manager -> env) |
-| --- | --- | --- | --- |
-| cosigner | 8081 | `KMS_KEY_ID`, `AUDIT_LOG_BUCKET`, `AUDIT_LOG_PREFIX=cosigner/`, `METRICS_NAMESPACE=AgentBank/Cosigner` | `COSIGNER_SHARED_SECRET` |
-| api | 8080 | `COSIGNER_URL` (absent = refuse payments), `PUBLIC_BASE_URL`, `AUDIT_LOG_BUCKET`, `AUDIT_LOG_PREFIX=api/`, `METRICS_NAMESPACE=AgentBank/Api` | `DATABASE_URL`, `COSIGNER_SHARED_SECRET`, `PIMLICO_API_KEY`, `WEBHOOK_SIGNING_KEY`, `SCREENING_API_KEY`, `KYB_API_KEY`, `CHAIN_RPC_URL`, `INTERNAL_API_SHARED_SECRET` |
-| facilitator | 8083 | `PUBLIC_BASE_URL`, `X402_NETWORK=base-sepolia`, `METRICS_NAMESPACE=AgentBank/Facilitator` | `DATABASE_URL`, `FACILITATOR_RELAYER_KEY` (testnet gas wallet), `SCREENING_API_KEY`, `CHAIN_RPC_URL` |
-| console | 3000 | `API_BASE_URL`, `PUBLIC_BASE_URL`, `HOSTNAME=0.0.0.0` (no AWS credentials) | `CONSOLE_SESSION_SECRET` |
-| indexer | 8082 | `API_INTERNAL_URL`, `RECONCILIATION_WINDOW=20`, `METRICS_NAMESPACE=AgentBank/Indexer`, `RECONCILIATION_METRICS_NS=AgentBank/Reconciliation` | `DATABASE_URL` (indexer DB), `CHAIN_RPC_URL`, `INTERNAL_API_SHARED_SECRET` |
+| Service     | Port | Env (non-secret)                                                                                                                             | Secrets (Secrets Manager -> env)                                                                                                                                      |
+| ----------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cosigner    | 8081 | `KMS_KEY_ID`, `AUDIT_LOG_BUCKET`, `AUDIT_LOG_PREFIX=cosigner/`, `METRICS_NAMESPACE=AgentBank/Cosigner`                                       | `COSIGNER_SHARED_SECRET`                                                                                                                                              |
+| api         | 8080 | `COSIGNER_URL` (absent = refuse payments), `PUBLIC_BASE_URL`, `AUDIT_LOG_BUCKET`, `AUDIT_LOG_PREFIX=api/`, `METRICS_NAMESPACE=AgentBank/Api` | `DATABASE_URL`, `COSIGNER_SHARED_SECRET`, `PIMLICO_API_KEY`, `WEBHOOK_SIGNING_KEY`, `SCREENING_API_KEY`, `KYB_API_KEY`, `CHAIN_RPC_URL`, `INTERNAL_API_SHARED_SECRET` |
+| facilitator | 8083 | `PUBLIC_BASE_URL`, `X402_NETWORK=base-sepolia`, `METRICS_NAMESPACE=AgentBank/Facilitator`                                                    | `DATABASE_URL`, `FACILITATOR_RELAYER_KEY` (testnet gas wallet), `SCREENING_API_KEY`, `CHAIN_RPC_URL`                                                                  |
+| console     | 3000 | `API_BASE_URL`, `PUBLIC_BASE_URL`, `HOSTNAME=0.0.0.0` (no AWS credentials)                                                                   | `CONSOLE_SESSION_SECRET`                                                                                                                                              |
+| indexer     | 8082 | `API_INTERNAL_URL`, `RECONCILIATION_WINDOW=20`, `METRICS_NAMESPACE=AgentBank/Indexer`, `RECONCILIATION_METRICS_NS=AgentBank/Reconciliation`  | `DATABASE_URL` (indexer DB), `CHAIN_RPC_URL`, `INTERNAL_API_SHARED_SECRET`                                                                                            |
 
 Every service also gets `NODE_ENV=production`, `APP_ENV=sandbox`, `CHAIN_ID=84532`,
 `LOG_LEVEL`, `PORT`, `AWS_REGION` (except console) and `HEALTHCHECK_PATH=/healthz`. Apps must:
@@ -207,13 +207,13 @@ Every service also gets `NODE_ENV=production`, `APP_ENV=sandbox`, `CHAIN_ID=8453
 - Publish these metrics without dimensions. CloudWatch Embedded Metric Format (EMF) works with
   no extra permissions, which matters for the co-signer, whose VPC has no monitoring endpoint.
 
-| Namespace | Metric | Alarm |
-| --- | --- | --- |
-| `AgentBank/Cosigner` | `DecisionLatency` (ms) | p99 > 300 ms in 3 of 5 minutes |
-| `AgentBank/Cosigner` | `Requests`, `Errors` (count) | availability < 99.9% (policy denials are not errors) |
-| `AgentBank/Reconciliation` | `UnmatchedEvents` (count) | any value > 0 |
-| `AgentBank/Indexer` | `BlockLag` (blocks) | > 20 for 3 minutes, or no data |
-| `AgentBank/Webhooks` | `DeadLetteredDeliveries` (count) | any value > 0 |
+| Namespace                  | Metric                           | Alarm                                                |
+| -------------------------- | -------------------------------- | ---------------------------------------------------- |
+| `AgentBank/Cosigner`       | `DecisionLatency` (ms)           | p99 > 300 ms in 3 of 5 minutes                       |
+| `AgentBank/Cosigner`       | `Requests`, `Errors` (count)     | availability < 99.9% (policy denials are not errors) |
+| `AgentBank/Reconciliation` | `UnmatchedEvents` (count)        | any value > 0                                        |
+| `AgentBank/Indexer`        | `BlockLag` (blocks)              | > 20 for 3 minutes, or no data                       |
+| `AgentBank/Webhooks`       | `DeadLetteredDeliveries` (count) | any value > 0                                        |
 
 AWS-native alarms are also created: API target 5xx rate > 1%, co-signer healthy NLB targets,
 ECS running task counts, RDS CPU and free storage, and co-signer key misuse

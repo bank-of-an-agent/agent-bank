@@ -7,3 +7,6 @@ pnpm-lock.yaml
 **/.vitepress/dist
 infra/**/.terraform
 docs/design.md
+docs/openapi.json
+apps/docs/api/*.md
+!apps/docs/api/index.md

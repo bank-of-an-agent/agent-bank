@@ -46,7 +46,9 @@ describe("SqlClient", () => {
   });
 
   it("detects unique violations", async () => {
-    await expect(db.query("INSERT INTO t_tx VALUES (1)")).rejects.toSatisfy((e: unknown) => isUniqueViolation(e));
+    await expect(db.query("INSERT INTO t_tx VALUES (1)")).rejects.toSatisfy((e: unknown) =>
+      isUniqueViolation(e),
+    );
   });
 
   it("migrations are idempotent and seed plans", async () => {
