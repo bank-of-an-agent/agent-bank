@@ -72,6 +72,9 @@
       "name": "Admin"
     },
     {
+      "name": "Sandbox"
+    },
+    {
       "name": "Meta"
     }
   ],
@@ -5597,6 +5600,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListAutoTopUpRulesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandbox/faucet": {
+      "post": {
+        "operationId": "sandboxFaucet",
+        "summary": "Mint test USDC (simulated chain and Anvil only)",
+        "description": "Local development only. Returns 403 feature_gated on Base Sepolia, where test USDC comes from Circle's faucet.",
+        "tags": [
+          "Sandbox"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-agentbank-auth": [
+          "principal"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical operation. Retries with the same key return the original result.",
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SandboxFaucetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxFaucetResponse"
                 }
               }
             }
@@ -11553,6 +11619,63 @@
           "features"
         ],
         "description": "Deployment facts clients need: chain, USDC, contract addresses, feature flags."
+      },
+      "SandboxFaucetRequest": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "pattern": "^acct_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM address",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          }
+        },
+        "required": [
+          "amount"
+        ]
+      },
+      "SandboxFaucetResponse": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "faucet_transfer"
+          },
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "EVM address",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "tx_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "address",
+          "amount",
+          "tx_hash"
+        ],
+        "description": "Test USDC minted on the simulated chain or Anvil. Unavailable on Base Sepolia (use Circle's faucet)."
       },
       "Problem": {
         "type": "object",

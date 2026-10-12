@@ -1161,6 +1161,33 @@ export const Meta = z
     description: "Deployment facts clients need: chain, USDC, contract addresses, feature flags.",
   });
 
+// ---------------------------------------------------------------- sandbox
+
+export const SandboxFaucetRequest = z
+  .object({
+    account_id: idSchema("account").optional(),
+    address: AddressSchema.optional(),
+    amount: MoneySchema,
+  })
+  .refine(
+    (r) => [r.account_id, r.address].filter(Boolean).length === 1,
+    "set exactly one of account_id, address",
+  )
+  .meta({ id: "SandboxFaucetRequest" });
+
+export const SandboxFaucetResponse = z
+  .object({
+    object: z.literal("faucet_transfer"),
+    address: AddressSchema,
+    amount: MoneySchema,
+    tx_hash: Bytes32Schema.nullable(),
+  })
+  .meta({
+    id: "SandboxFaucetResponse",
+    description:
+      "Test USDC minted on the simulated chain or Anvil. Unavailable on Base Sepolia (use Circle's faucet).",
+  });
+
 // ---------------------------------------------------------------- misc
 
 export const Health = z.object({

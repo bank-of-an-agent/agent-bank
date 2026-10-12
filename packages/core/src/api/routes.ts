@@ -1080,6 +1080,19 @@ export const routes = {
     params: Id("account"),
     response: R.SweepRule.nullable(),
   }),
+  sandboxFaucet: route({
+    operationId: "sandboxFaucet",
+    method: "POST",
+    path: "/v1/sandbox/faucet",
+    summary: "Mint test USDC (simulated chain and Anvil only)",
+    description:
+      "Local development only. Returns 403 feature_gated on Base Sepolia, where test USDC comes from Circle's faucet.",
+    tags: ["Sandbox"],
+    auth: ["principal"],
+    idempotent: true,
+    body: R.SandboxFaucetRequest,
+    response: R.SandboxFaucetResponse,
+  }),
   getMeta: route({
     operationId: "getMeta",
     method: "GET",
