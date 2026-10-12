@@ -1,0 +1,45 @@
+{
+  "name": "@agentbank/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Bank public REST API: orgs, agents, accounts, sessions, policies, payments, x402, escrow, streams, savings, webhooks and billing, plus the background worker.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:local": "AGENTBANK_CHAIN=simulated COSIGNER_MODE=inprocess DATABASE_URL=${DATABASE_URL:-pglite://memory} MIGRATE_ON_START=true ALLOW_OPEN_SIGNUP=true PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-http://localhost:8080} INTERNAL_API_SHARED_SECRET=${INTERNAL_API_SHARED_SECRET:-local-dev-internal-secret-0123456789abcdef} tsx watch src/index.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "start:worker": "node dist/worker.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke:local": "tsx scripts/local-smoke.ts"
+  },
+  "dependencies": {
+    "@agentbank/chain": "workspace:*",
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@agentbank/ledger": "workspace:*",
+    "@agentbank/policy": "workspace:*",
+    "@agentbank/reconciliation": "workspace:*",
+    "@electric-sql/pglite": "^0.5.8",
+    "@fastify/cookie": "^11.1.3",
+    "@fastify/cors": "^11.3.1",
+    "@fastify/rate-limit": "^11.2.1",
+    "@noble/hashes": "^2.4.0",
+    "@simplewebauthn/server": "^14.0.3",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.37.1",
+    "pino": "^10.4.0",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@agentbank/cosigner": "workspace:*",
+    "@types/pg": "^8.23.1",
+    "fast-check": "^4.10.2",
+    "tsup": "^8.5.1"
+  }
+}
