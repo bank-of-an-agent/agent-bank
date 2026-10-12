@@ -1,0 +1,19 @@
+{
+  "name": "@agentbank/example-vercel-ai-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quickstart: give a Vercel AI SDK agent (Claude via @ai-sdk/anthropic) Agent Bank money tools with hard spending limits.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentbank/sdk": "workspace:*",
+    "@ai-sdk/anthropic": "^4.0.78",
+    "ai": "^7.0.137",
+    "zod": "^4.6.6"
+  }
+}

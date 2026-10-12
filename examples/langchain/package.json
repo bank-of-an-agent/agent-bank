@@ -1,0 +1,21 @@
+{
+  "name": "@agentbank/example-langchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quickstart: give a LangChain.js / LangGraph agent (Claude via @langchain/anthropic) Agent Bank money tools with hard spending limits.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentbank/sdk": "workspace:*",
+    "@langchain/anthropic": "^1.5.12",
+    "@langchain/core": "^1.2.17",
+    "@langchain/langgraph": "^1.4.21",
+    "langchain": "^1.5.16",
+    "zod": "^4.6.6"
+  }
+}

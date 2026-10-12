@@ -1,0 +1,21 @@
+{
+  "name": "@agentbank/example-mcp-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quickstart: connect any MCP client to the Agent Bank MCP server (stdio or streamable HTTP) and call its money tools safely.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@agentbank/mcp": "workspace:*",
+    "@agentbank/sdk": "workspace:*"
+  }
+}
