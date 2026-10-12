@@ -24,6 +24,7 @@
     "@agentbank/ledger": "workspace:*",
     "@agentbank/mcp": "workspace:*",
     "@agentbank/policy": "workspace:*",
+    "@agentbank/proofs": "workspace:*",
     "@agentbank/reconciliation": "workspace:*",
     "@agentbank/sdk": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",

@@ -22,6 +22,7 @@
     "@agentbank/db": "workspace:*",
     "@agentbank/ledger": "workspace:*",
     "@agentbank/policy": "workspace:*",
+    "@agentbank/proofs": "workspace:*",
     "@agentbank/reconciliation": "workspace:*",
     "@electric-sql/pglite": "^0.5.8",
     "@fastify/cookie": "^11.1.3",

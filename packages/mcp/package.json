@@ -52,6 +52,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@agentbank/proofs": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "viem": "^2.57.4",
     "zod": "^4.6.6"
