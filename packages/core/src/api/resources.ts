@@ -251,7 +251,13 @@ export const SpendKeyPermit = z
   });
 
 export const AttachSpendKeyRequest = z
-  .object({ spend_key_address: AddressSchema, permit: SpendKeyPermit })
+  .object({
+    spend_key_address: AddressSchema,
+    permit: SpendKeyPermit,
+    owner_authorization: OwnerAuthorizationSchema.meta({
+      description: 'OwnerAuthorization with action "spend_key.set" over { account_id, spend_key_address }',
+    }),
+  })
   .meta({
     id: "AttachSpendKeyRequest",
     description:

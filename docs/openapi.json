@@ -8027,11 +8027,16 @@
           },
           "permit": {
             "$ref": "#/components/schemas/SpendKeyPermit"
+          },
+          "owner_authorization": {
+            "description": "OwnerAuthorization with action \"spend_key.set\" over { account_id, spend_key_address }",
+            "$ref": "#/components/schemas/OwnerAuthorization"
           }
         },
         "required": [
           "spend_key_address",
-          "permit"
+          "permit",
+          "owner_authorization"
         ],
         "description": "Attach the agent's x402 spend key. The permit is executed on-chain in the account's next owner operation (normally the setup operation that installs the first session)."
       },

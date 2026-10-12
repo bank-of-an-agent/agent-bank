@@ -47,6 +47,7 @@ export const CosignerRoutes = {
   registerMandate: { method: "POST", path: "/internal/v1/mandates" },
   setTreasury: { method: "POST", path: "/internal/v1/treasury" },
   rotateOwner: { method: "POST", path: "/internal/v1/owner" },
+  registerSpendKey: { method: "POST", path: "/internal/v1/spend-keys" },
   revokeMandate: { method: "DELETE", path: "/internal/v1/mandates/:id" },
   freeze: { method: "POST", path: "/internal/v1/freeze" },
   unfreeze: { method: "POST", path: "/internal/v1/unfreeze" },
@@ -112,6 +113,21 @@ export const SetTreasuryInternal = z.object({
   owner_address: AddressSchema,
   account_id: z.string(),
   treasury_address: AddressSchema,
+  owner_authorization: OwnerAuthorizationSchema,
+});
+
+/**
+ * Pin an agent account's x402 spend key (owner-authorized `spend_key.set`). Refills may only go to
+ * the pinned key, and x402 authorizations are only issued for it.
+ */
+export const RegisterSpendKeyInternal = z.object({
+  org_id: z.string(),
+  agent_id: z.string(),
+  account_id: z.string(),
+  account_address: AddressSchema,
+  chain_id: z.number().int(),
+  owner_address: AddressSchema,
+  spend_key_address: AddressSchema,
   owner_authorization: OwnerAuthorizationSchema,
 });
 
@@ -269,6 +285,7 @@ export type RegisterMandateInternal = z.infer<typeof RegisterMandateInternal>;
 export type FreezeInternal = z.infer<typeof FreezeInternal>;
 export type SetTreasuryInternal = z.infer<typeof SetTreasuryInternal>;
 export type RotateOwnerInternal = z.infer<typeof RotateOwnerInternal>;
+export type RegisterSpendKeyInternal = z.infer<typeof RegisterSpendKeyInternal>;
 export type UnfreezeInternal = z.infer<typeof UnfreezeInternal>;
 export type IntentInternal = z.infer<typeof IntentInternal>;
 export type EvaluateInternal = z.infer<typeof EvaluateInternal>;
@@ -291,6 +308,7 @@ export interface CosignerClient {
   registerMandate(input: RegisterMandateInternal): Promise<void>;
   setTreasury(input: SetTreasuryInternal): Promise<void>;
   rotateOwner(input: RotateOwnerInternal): Promise<void>;
+  registerSpendKey(input: RegisterSpendKeyInternal): Promise<void>;
   revokeMandate(mandateId: string): Promise<void>;
   freeze(input: FreezeInternal): Promise<void>;
   unfreeze(input: UnfreezeInternal): Promise<{ effective_at: string }>;

@@ -90,6 +90,15 @@ export const ownerPayloads = {
     subject: orgId,
     payload: { new_owner_address: newOwnerAddress },
   }),
+  /**
+   * `PUT /v1/accounts/{id}/spend-key`: subject = account id; payload = `{ account_id, spend_key_address }`.
+   * Pins the agent's x402 spend key in the co-signer; refills may only ever go to it (ADR 0001).
+   */
+  spendKeySet: (accountId: string, spendKeyAddress: string): OwnerActionPayload<"spend_key.set"> => ({
+    action: "spend_key.set",
+    subject: accountId,
+    payload: { account_id: accountId, spend_key_address: spendKeyAddress },
+  }),
 } as const;
 
 /**
