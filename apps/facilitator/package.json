@@ -1,0 +1,35 @@
+{
+  "name": "@agentbank/facilitator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Bank x402 facilitator: verifies and settles payer-signed EIP-3009 (exact scheme) payments on Base Sepolia for sellers charging per call.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentbank/chain": "workspace:*",
+    "@agentbank/core": "workspace:*",
+    "@agentbank/db": "workspace:*",
+    "@electric-sql/pglite": "^0.5.8",
+    "@noble/curves": "1.9.1",
+    "@noble/hashes": "^2.4.0",
+    "@rhinestone/module-sdk": "^0.4.0",
+    "fastify": "^5.12.5",
+    "permissionless": "^0.4.1",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "viem": "^2.57.4",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@x402/core": "2.28.0",
+    "@x402/evm": "2.28.0",
+    "tsup": "^8.5.1"
+  }
+}
