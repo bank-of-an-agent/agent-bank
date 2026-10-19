@@ -14,7 +14,7 @@
     "@agentbank/sdk": "workspace:*",
     "@langchain/anthropic": "^1.5.12",
     "@langchain/core": "^1.2.17",
-    "@langchain/langgraph": "^1.4.21",
+    "@langchain/langgraph": "^1.5.0",
     "langchain": "^1.5.16",
     "zod": "^4.6.6"
   }
