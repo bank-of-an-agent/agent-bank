@@ -16,7 +16,7 @@
     "@agentbank/chain": "workspace:*",
     "@agentbank/core": "workspace:*",
     "@agentbank/db": "workspace:*",
-    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite": "^0.5.10",
     "@fastify/rate-limit": "^11.2.1",
     "@noble/curves": "1.9.1",
     "@noble/hashes": "^2.4.0",
