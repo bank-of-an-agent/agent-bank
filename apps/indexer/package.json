@@ -20,7 +20,7 @@
     "@agentbank/chain": "workspace:*",
     "@agentbank/core": "workspace:*",
     "@agentbank/db": "workspace:*",
-    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite": "^0.5.10",
     "@noble/curves": "1.9.1",
     "@noble/hashes": "^2.4.0",
     "@rhinestone/module-sdk": "^0.4.0",
