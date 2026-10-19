@@ -34,7 +34,7 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@noble/curves": "1.9.1",
+    "@noble/curves": "2.4.0",
     "tsup": "^8.5.1"
   }
 }
