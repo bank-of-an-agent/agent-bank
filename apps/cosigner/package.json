@@ -35,6 +35,6 @@
   },
   "devDependencies": {
     "@noble/curves": "1.9.1",
-    "tsup": "^8.5.1"
+    "tsup": "^9.0.0"
   }
 }
