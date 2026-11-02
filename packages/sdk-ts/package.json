@@ -114,13 +114,13 @@
     "@agentbank/core": "workspace:*",
     "@agentbank/proofs": "workspace:*",
     "@types/express": "^5.0.6",
-    "@x402/core": "2.28.0",
-    "@x402/evm": "2.28.0",
-    "@x402/express": "2.28.0",
-    "@x402/hono": "2.28.0",
+    "@x402/core": "2.29.0",
+    "@x402/evm": "2.29.0",
+    "@x402/express": "2.29.0",
+    "@x402/hono": "2.29.0",
     "express": "^5.3.0",
     "fastify": "^5.12.5",
-    "hono": "^4.13.13",
-    "tsup": "^8.5.1"
+    "hono": "^4.13.14",
+    "tsup": "^9.0.0"
   }
 }
