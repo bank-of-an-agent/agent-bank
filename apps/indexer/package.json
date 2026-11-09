@@ -33,6 +33,6 @@
   "devDependencies": {
     "@agentbank/ledger": "workspace:*",
     "@agentbank/reconciliation": "workspace:*",
-    "tsup": "^8.5.1"
+    "tsup": "^9.0.0"
   }
 }
