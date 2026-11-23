@@ -62,6 +62,6 @@
     "@agentbank/core": "workspace:*",
     "@agentbank/proofs": "workspace:*",
     "@agentbank/sdk": "workspace:*",
-    "tsup": "^8.5.1"
+    "tsup": "^9.0.0"
   }
 }
