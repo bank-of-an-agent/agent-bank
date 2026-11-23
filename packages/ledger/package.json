@@ -19,6 +19,6 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "fast-check": "^4.10.2"
+    "fast-check": "^4.10.3"
   }
 }
